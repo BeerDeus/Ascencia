@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dbwfvaqfl55mn"]
+
+[ext_resource type="Script" uid="uid://bxyur2yqfnxtx" path="res://BulleNote.gd" id="1_km424"]
+
+[node name="BulleNote" type="Button" unique_id=67134535]
+offset_right = 8.0
+offset_bottom = 8.0
+script = ExtResource("1_km424")

@@ -1,6 +1,7 @@
 extends Resource
 class_name MonstreResource
 
+@export var icone_texture: Texture2D # Permettra de glisser une image PNG
 @export var id: String = ""
 @export var nom: String = ""
 @export var pv_max: int = 20
