@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://b1t4fqxwgyj8q"]
 
-[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://MonstreResource.gd" id="1_dgqrk"]
+[ext_resource type="Texture2D" uid="uid://cm8vy20ucdc72" path="res://Assets/Sprites/Monstres/slime_seve.png" id="1_ron61"]
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Donnees/MonstreResource.gd" id="2_isdg0"]
 [ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://LootItem.gd" id="2_ron61"]
 [ext_resource type="Resource" uid="uid://dbmxo0othi084" path="res://Donnees/Items/Composants/PeauSlime.tres" id="3_isdg0"]
 
@@ -12,8 +13,10 @@ quantite_max = 2
 metadata/_custom_type_script = "uid://dat65m2wjs47m"
 
 [resource]
-script = ExtResource("1_dgqrk")
+script = ExtResource("2_isdg0")
+icone_texture = ExtResource("1_ron61")
 id = "slime_seve"
 nom = "Slime de Sève"
+tempo_attaque = 1.0
 table_loot = Array[ExtResource("2_ron61")]([SubResource("Resource_qeuxq")])
 metadata/_custom_type_script = "uid://dnhaqfsmyb3na"

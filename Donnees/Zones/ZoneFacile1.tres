@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ZoneResource" format=3 uid="uid://bd0rix73ii82m"]
 
-[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://MonstreResource.gd" id="1_6v7s8"]
-[ext_resource type="Script" uid="uid://ddj7egiysw43" path="res://ZoneResource.gd" id="2_ge2hs"]
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Donnees/MonstreResource.gd" id="1_6v7s8"]
+[ext_resource type="Script" uid="uid://ddj7egiysw43" path="res://Donnees/ZoneResource.gd" id="2_ge2hs"]
 [ext_resource type="Resource" uid="uid://b1t4fqxwgyj8q" path="res://Donnees/Monstres/SlimeSeve.tres" id="2_r7rh1"]
 
 [resource]

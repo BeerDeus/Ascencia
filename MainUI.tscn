@@ -3,6 +3,18 @@
 [ext_resource type="Script" uid="uid://crt0y44lr5ja4" path="res://MainUI.gd" id="1_fm43k"]
 [ext_resource type="Script" uid="uid://v22yaef6hc2a" path="res://EcranCombat.gd" id="2_750b3"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dxq3g"]
+bg_color = Color(0.14509805, 0.14509805, 0.14509805, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hob4h"]
+bg_color = Color(0.8627451, 0, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oll0h"]
+bg_color = Color(0.14348021, 0.14348021, 0.14348021, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b60e2"]
+bg_color = Color(0.8635783, 0, 0.19942722, 1)
+
 [node name="MainUI" type="Control" unique_id=672740381]
 layout_mode = 3
 anchors_preset = 15
@@ -10,6 +22,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_fm43k")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2080279015]
@@ -19,13 +32,16 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="ZoneContenu" type="PanelContainer" parent="VBoxContainer" unique_id=1438598801]
 layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="EcranCombat" type="Control" parent="VBoxContainer/ZoneContenu" unique_id=1936628429]
 layout_mode = 2
+mouse_filter = 2
 script = ExtResource("2_750b3")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ZoneContenu/EcranCombat" unique_id=1220272994]
@@ -40,9 +56,36 @@ grow_vertical = 2
 layout_mode = 2
 text = "Zone : Les Périphéries d'Aubier"
 
+[node name="ConteneurMesure" type="HBoxContainer" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer" unique_id=781200463]
+layout_mode = 2
+
+[node name="Note1" type="Label" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/ConteneurMesure" unique_id=789226644]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note2" type="Label" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/ConteneurMesure" unique_id=1601718065]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note3" type="Label" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/ConteneurMesure" unique_id=896244671]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note4" type="Label" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/ConteneurMesure" unique_id=326071578]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
 [node name="EncadréMonstre" type="PanelContainer" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer" unique_id=1704954432]
 layout_mode = 2
-size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre" unique_id=1738473864]
 layout_mode = 2
@@ -51,6 +94,8 @@ layout_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
 stretch_mode = 3
 
 [node name="NomMonstreText" type="Label" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=835590472]
@@ -59,13 +104,23 @@ text = "\"Sélectionnez un adversaire\""
 
 [node name="BarreVieMonstre" type="ProgressBar" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1170659319]
 layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_dxq3g")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hob4h")
 
-[node name="BarreTempoMonstre" type="TextureProgressBar" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1107773517]
+[node name="BarreTempoMonstre" type="ProgressBar" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=85560701]
 layout_mode = 2
 
 [node name="Button" type="Button" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=861263053]
 layout_mode = 2
-text = "ATTACK"
+text = "LANCER SORT (DO + DO)"
+
+[node name="BarreVieJoueur" type="ProgressBar" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1654010946]
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_oll0h")
+theme_override_styles/fill = SubResource("StyleBoxFlat_b60e2")
+
+[node name="BarreTempoJoueur" type="ProgressBar" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1616032735]
+layout_mode = 2
 
 [node name="GrilleBoutonsMonstres" type="GridContainer" parent="VBoxContainer/ZoneContenu/EcranCombat/VBoxContainer" unique_id=131995664]
 layout_mode = 2
