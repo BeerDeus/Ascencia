@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://b1t4fqxwgyj8q"]
+
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://MonstreResource.gd" id="1_dgqrk"]
+[ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://LootItem.gd" id="2_ron61"]
+[ext_resource type="Resource" uid="uid://dbmxo0othi084" path="res://Donnees/Items/Composants/PeauSlime.tres" id="3_isdg0"]
+
+[sub_resource type="Resource" id="Resource_qeuxq"]
+script = ExtResource("2_ron61")
+item = ExtResource("3_isdg0")
+chance_pourcentage = 40.0
+quantite_max = 2
+metadata/_custom_type_script = "uid://dat65m2wjs47m"
+
+[resource]
+script = ExtResource("1_dgqrk")
+id = "slime_seve"
+nom = "Slime de Sève"
+table_loot = Array[ExtResource("2_ron61")]([SubResource("Resource_qeuxq")])
+metadata/_custom_type_script = "uid://dnhaqfsmyb3na"
