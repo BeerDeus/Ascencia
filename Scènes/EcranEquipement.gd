@@ -59,13 +59,23 @@ func afficher_equipement() -> void:
 				tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				tex_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 				btn_slot.add_child(tex_rect)
+				
+			# NOUVEAU : On affiche la quantité dynamique si l'objet est un Raccourci Consommable
+			if item_res.type_item == ItemResource.TypeItem.CONSOMMABLE:
+				var quantite = GameState.inventaire.get(item_id, 0)
+				var lbl_qty = Label.new()
+				lbl_qty.text = str(quantite)
+				lbl_qty.add_theme_font_size_override("font_size", 12)
+				lbl_qty.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+				lbl_qty.position += Vector2(-4, -2)
+				btn_slot.add_child(lbl_qty)
 		else:
 			btn_slot.text = TEXTES_SLOTS.get(slot_nom, "")
 			btn_slot.modulate = Color(0.6, 0.6, 0.6, 0.8)
 			
 		btn_slot.pressed.connect(_ouvrir_modal_pour_slot.bind(slot_nom))
 		grille.add_child(btn_slot)
-
+		
 # Convertit l'ID du slot (ex: anneau_1) en catégorie de recherche (ex: anneau)
 func get_categorie_recherche(slot: String) -> String:
 	if slot.begins_with("anneau"): return "anneau"
@@ -76,33 +86,38 @@ func _ouvrir_modal_pour_slot(slot_nom: String) -> void:
 	slot_en_cours_edition = slot_nom
 	titre_modal.text = "Équiper : " + slot_nom.capitalize()
 	
-	# Gère l'affichage du bouton déséquiper
 	btn_desequiper.disabled = (GameState.equipement.get(slot_nom, "") == "")
 	
 	var cat_recherche = get_categorie_recherche(slot_nom)
 	
-	# Vide la modale
 	for enfant in grille_modal.get_children():
 		enfant.queue_free()
 		
-	# Filtre l'inventaire pour n'afficher que les objets correspondants
 	for item_id in GameState.inventaire.keys():
 		var item: ItemResource = GameState.item_database.get(item_id)
-		if item and item.categorie_equipement == cat_recherche:
-			var btn_item = Button.new()
-			btn_item.custom_minimum_size = Vector2(60, 60)
-			
-			if item.icone_texture != null:
-				btn_item.icon = item.icone_texture
-				btn_item.expand_icon = true
-			else:
-				btn_item.text = item.nom.substr(0, 3) # Sécurité si pas d'icône
+		if item:
+			# Tolérance d'erreur : On accepte l'objet s'il valide la catégorie OU son type global
+			var est_compatible = false
+			if item.categorie_equipement == cat_recherche:
+				est_compatible = true
+			elif cat_recherche == "consommable" and item.type_item == ItemResource.TypeItem.CONSOMMABLE:
+				est_compatible = true
 				
-			btn_item.pressed.connect(_on_selection_modal_item.bind(item_id))
-			grille_modal.add_child(btn_item)
-			
+			if est_compatible:
+				var btn_item = Button.new()
+				btn_item.custom_minimum_size = Vector2(60, 60)
+				
+				if item.icone_texture != null:
+					btn_item.icon = item.icone_texture
+					btn_item.expand_icon = true
+				else:
+					btn_item.text = item.nom.substr(0, 3) 
+					
+				btn_item.pressed.connect(_on_selection_modal_item.bind(item_id))
+				grille_modal.add_child(btn_item)
+				
 	modal.show()
-
+	
 func _on_selection_modal_item(item_id: String) -> void:
 	GameState.equiper_item(item_id, slot_en_cours_edition)
 	modal.hide()

@@ -23,7 +23,7 @@ var minage_xp: int = 0
 # --- INVENTAIRE ---
 var inventaire: Dictionary = {
 	"eclats_pierre": 5,
-	"viande_crue": 0
+	"viande_cuite": 5 
 }
 
 # Capacité de base de la grille d'inventaire

@@ -35,14 +35,16 @@ func afficher_inventaire() -> void:
 		var quantite = GameState.inventaire[item_id]
 		if quantite <= 0: continue
 		
+		# NOUVEAU : Masquer visuellement le stack s'il est équipé en consommable
+		if GameState.equipement.get("consommable", "") == item_id:
+			continue # On saute cet objet, il a migré dans l'onglet Équipement !
+		
 		var btn_slot = Button.new()
 		btn_slot.custom_minimum_size = Vector2(60, 60)
-		btn_slot.clip_contents = true # Sécurité mobile : empêche l'icône de déborder du bouton
+		btn_slot.clip_contents = true 
 		
 		if GameState.item_database.has(item_id):
 			var item_res: ItemResource = GameState.item_database[item_id]
-			
-			# Ajout de l'image de l'objet au centre du slot
 			if item_res.icone_texture != null:
 				var tex_rect = TextureRect.new()
 				tex_rect.texture = item_res.icone_texture
@@ -51,27 +53,25 @@ func afficher_inventaire() -> void:
 				tex_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 				btn_slot.add_child(tex_rect)
 		
-		# Label de quantité positionné de manière stable en bas à droite
 		var lbl_qty = Label.new()
 		lbl_qty.text = str(quantite)
 		lbl_qty.add_theme_font_size_override("font_size", 12)
 		lbl_qty.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-		lbl_qty.position += Vector2(-4, -2) # Léger offset pour le confort visuel
+		lbl_qty.position += Vector2(-4, -2) 
 		btn_slot.add_child(lbl_qty)
 		
 		btn_slot.pressed.connect(_on_item_clique.bind(item_id))
 		inventaire_grid.add_child(btn_slot)
 		slots_occupes += 1
 		
-	# Remplissage responsive du reste de la grille par des cases vides non interactives
 	var slots_restants = max(0, GameState.max_emplacements - slots_occupes)
 	for i in range(slots_restants):
 		var btn_vide = Button.new()
 		btn_vide.custom_minimum_size = Vector2(60, 60)
 		btn_vide.disabled = true
-		btn_vide.modulate.a = 0.25 # Aspect grisé / vide transparent
+		btn_vide.modulate.a = 0.25 
 		inventaire_grid.add_child(btn_vide)
-
+		
 # Sélectionne un objet, affiche ses effets uniques et configure le curseur de vente numérique
 func _on_item_clique(item_id: String) -> void:
 	details_panel.visible = true
