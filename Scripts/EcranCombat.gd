@@ -22,7 +22,7 @@ var pv_actuels_monstre: int = 0
 var combat_en_cours: bool = false
 
 var temps_ecoule_monstre: float = 0.0
-var bulle_note_scene = preload("res://BulleNote.tscn")
+var bulle_note_scene = preload("res://scènes/BulleNote.tscn")
 
 # Stats du joueur (Le Métronome)
 var joueur_tempo_attaque: float = 2.0 # Attaque de base toutes les 2s

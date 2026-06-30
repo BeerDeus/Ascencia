@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cqqak6vn7ohhh"]
+
+[ext_resource type="Script" uid="uid://c0ubgathk32ni" path="res://Scripts/NavBar.gd" id="1_fy352"]
+
+[node name="NavBar" type="VBoxContainer" unique_id=1893941712]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_fy352")
+
+[node name="SousMenu" type="HBoxContainer" parent="." unique_id=6687274]
+layout_mode = 2
+
+[node name="MenuPrincipal" type="HBoxContainer" parent="." unique_id=107783135]
+layout_mode = 2
+
+[node name="BoutonProfil" type="Button" parent="MenuPrincipal" unique_id=1744342707]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Profil"
+
+[node name="BoutonVillage" type="Button" parent="MenuPrincipal" unique_id=25409881]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Village"
+
+[node name="BoutonAventure" type="Button" parent="MenuPrincipal" unique_id=967183843]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Aventure"
+
+[node name="BoutonFief" type="Button" parent="MenuPrincipal" unique_id=1052778136]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fief"
+
+[node name="BoutonSocial" type="Button" parent="MenuPrincipal" unique_id=32779386]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Social"

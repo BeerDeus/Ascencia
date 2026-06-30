@@ -1,0 +1,110 @@
+[gd_scene format=3 uid="uid://bp3x5ft51qdep"]
+
+[ext_resource type="Script" uid="uid://v22yaef6hc2a" path="res://Scripts/EcranCombat.gd" id="1_c2xxg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dxq3g"]
+bg_color = Color(0.14509805, 0.14509805, 0.14509805, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hob4h"]
+bg_color = Color(0.8627451, 0, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oll0h"]
+bg_color = Color(0.14348021, 0.14348021, 0.14348021, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b60e2"]
+bg_color = Color(0.8635783, 0, 0.19942722, 1)
+
+[node name="EcranCombat" type="Control" unique_id=1977724682]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+script = ExtResource("1_c2xxg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1487936462]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LabelZone" type="Label" parent="VBoxContainer" unique_id=1638273494]
+layout_mode = 2
+text = "Zone : Les Périphéries d'Aubier"
+
+[node name="ConteneurMesure" type="HBoxContainer" parent="VBoxContainer" unique_id=431291081]
+layout_mode = 2
+
+[node name="Note1" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=1123519760]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note2" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=817362109]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note3" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=911197079]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note4" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=568703840]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="EncadréMonstre" type="PanelContainer" parent="VBoxContainer" unique_id=956388425]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/EncadréMonstre" unique_id=487087256]
+layout_mode = 2
+
+[node name="SpriteMonstre" type="TextureRect" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=387962640]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_vertical = 3
+expand_mode = 1
+stretch_mode = 3
+
+[node name="NomMonstreText" type="Label" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1187999127]
+layout_mode = 2
+text = "\"Sélectionnez un adversaire\""
+
+[node name="BarreVieMonstre" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=145127548]
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_dxq3g")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hob4h")
+
+[node name="BarreTempoMonstre" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1752153404]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1892216098]
+layout_mode = 2
+text = "LANCER SORT (DO + DO)"
+
+[node name="BarreVieJoueur" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=177022497]
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_oll0h")
+theme_override_styles/fill = SubResource("StyleBoxFlat_b60e2")
+
+[node name="BarreTempoJoueur" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1155819907]
+layout_mode = 2
+
+[node name="GrilleBoutonsMonstres" type="GridContainer" parent="VBoxContainer" unique_id=1146553205]
+layout_mode = 2
+
+[node name="BoutonSlime" type="Button" parent="VBoxContainer/GrilleBoutonsMonstres" unique_id=1515365004]
+layout_mode = 2
+text = "1. Slime de Sève (0/10 Kills)
+"
+
+[connection signal="pressed" from="VBoxContainer/EncadréMonstre/VBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/GrilleBoutonsMonstres/BoutonSlime" to="." method="_on_bouton_slime_pressed"]

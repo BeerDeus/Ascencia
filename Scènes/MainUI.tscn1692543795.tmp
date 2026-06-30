@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cvmrh8nd1lqvi"]
+
+[ext_resource type="Script" uid="uid://crt0y44lr5ja4" path="res://Scripts/MainUI.gd" id="1_fm43k"]
+[ext_resource type="PackedScene" uid="uid://kvrqtvsevcsa" path="res://Scènes/Header.tscn" id="2_vgjsi"]
+[ext_resource type="PackedScene" uid="uid://cqqak6vn7ohhh" path="res://Scènes/NavBar.tscn" id="3_ik1mc"]
+
+[node name="MainUI" type="Control" unique_id=672740381]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_fm43k")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2080279015]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Header" parent="VBoxContainer" unique_id=362540718 instance=ExtResource("2_vgjsi")]
+layout_mode = 2
+
+[node name="ZoneContenu" type="PanelContainer" parent="VBoxContainer" unique_id=1438598801]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="NavBar" parent="VBoxContainer" unique_id=1893941712 instance=ExtResource("3_ik1mc")]
+layout_mode = 2

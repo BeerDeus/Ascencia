@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://g6ri3clf4378"]
+
+[node name="EcranInventaire" type="Control" unique_id=351650001]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Label" type="Label" parent="." unique_id=1245422365]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "Mon Sac à dos - Objets obtenus"

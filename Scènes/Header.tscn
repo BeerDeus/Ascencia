@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://kvrqtvsevcsa"]
+
+[ext_resource type="Script" uid="uid://cdftv0wtxrvmt" path="res://Scènes/Header.gd" id="1_nrjna"]
+
+[node name="Header" type="PanelContainer" unique_id=362540718]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_nrjna")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1701317743]
+layout_mode = 2
+
+[node name="NomLabel" type="Label" parent="HBoxContainer" unique_id=1825919748]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PvLabel" type="Label" parent="HBoxContainer" unique_id=465841971]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnduranceLabel" type="Label" parent="HBoxContainer" unique_id=295784482]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OrLabel" type="Label" parent="HBoxContainer" unique_id=1528050154]
+layout_mode = 2
+size_flags_horizontal = 3
