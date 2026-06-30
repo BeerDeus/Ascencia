@@ -26,6 +26,26 @@ var inventaire: Dictionary = {
 	"viande_crue": 0
 }
 
+# Capacité de base de la grille d'inventaire
+var max_emplacements: int = 10
+
+# Slots d'équipement actifs du joueur (Clé = Emplacement, Valeur = ID de l'objet)
+var equipement: Dictionary = {
+	"casque": "",
+	"consommable": "", # Slot en haut à droite pour la nourriture rapide
+	"arme": "",
+	"plastron": "",
+	"bouclier": "",
+	"anneau_1": "",
+	"jambieres": "",
+	"anneau_2": "",
+	"bottes": "",
+	"amulette": "",
+	"acc_1": "",
+	"acc_2": "",
+	"acc_3": ""
+}
+
 # --- PROGRESSION ET AUTO-BATTLE (Cahier des charges V2.1) ---
 var monstres_kills: Dictionary = {
 	"slime_seve": 0,
@@ -68,12 +88,11 @@ func _charger_items_dossier_rec(chemin: String) -> void:
 					_charger_items_dossier_rec(chemin + "/" + file_name)
 			else:
 				if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
-					# On nettoie le nom du fichier pour le chargement
 					var clean_name = file_name.replace(".tres.remap", "").replace(".tres", "")
 					var chemin_complet = chemin + "/" + clean_name + ".tres"
 					
 					var res = load(chemin_complet)
-					# OPTIMISATION ARCHITECTURE : On utilise l'ID interne de l'objet comme clé
+					# FIX : On utilise res.id (ex: "peau_slime") au lieu de clean_name
 					if res is ItemResource and res.id != "":
 						item_database[res.id] = res
 			file_name = dir.get_next()
@@ -148,3 +167,49 @@ func enregistrer_mort_monstre(monstre: MonstreResource, est_un_boss: bool) -> vo
 			print("🔥 AUTO-BATTLE DÉBLOQUÉ pour le monstre : ", monstre.nom, " !")
 	else:
 		print("👑 Boss vaincu ! Zone complétée.")
+
+# Fichier: res://Scripts/GameState.gd
+# Gère l'équipement d'un objet et renvoie l'ancien équipement dans l'inventaire
+# Équipe un objet dans un emplacement précis et gère le remplacement
+func equiper_item(item_id: String, slot_cible: String) -> void:
+	if not item_database.has(item_id): return
+	var item: ItemResource = item_database[item_id]
+	
+	# Si un objet occupe déjà l'emplacement, on le déséquipe proprement d'abord
+	if equipement.has(slot_cible) and equipement[slot_cible] != "":
+		desequiper_item(slot_cible)
+		
+	# Installation du nouvel équipement
+	equipement[slot_cible] = item_id
+	
+	# ARCHITECTURE MOBILE : Les consommables agissent comme des raccourcis pointant vers l'inventaire.
+	# On ne réduit la quantité (-1) que pour les équipements uniques (Armes, Armures...).
+	if item.type_item != ItemResource.TypeItem.CONSOMMABLE:
+		modifier_quantite_item(item_id, -1)
+		
+	print("🛡️ Équipement mis à jour : ", item.nom, " placé dans le slot : ", slot_cible)
+	
+func desequiper_item(slot: String) -> void:
+	if not equipement.has(slot) or equipement[slot] == "": return
+	
+	var item_id = equipement[slot]
+	var item: ItemResource = item_database.get(item_id)
+	
+	equipement[slot] = ""
+	
+	# On ne réinjecte l'objet (+1) dans l'inventaire que s'il n'était pas un simple raccourci
+	if item and item.type_item != ItemResource.TypeItem.CONSOMMABLE:
+		modifier_quantite_item(item_id, 1)
+		
+	print("🔓 Objet retiré du slot : ", slot)
+	
+func vendre_item(item_id: String, quantite: int) -> void:
+	if not inventaire.has(item_id): return
+	var quantite_dispo = inventaire[item_id]
+	var quantite_a_vendre = clamp(quantite, 1, quantite_dispo)
+	
+	if item_database.has(item_id):
+		var item: ItemResource = item_database[item_id]
+		or_actuel += item.valeur_or * quantite_a_vendre
+		modifier_quantite_item(item_id, -quantite_a_vendre)
+		print("🪙 Transaction effectuée : Vente de ", quantite_a_vendre, "x ", item.nom)

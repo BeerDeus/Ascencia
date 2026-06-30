@@ -29,6 +29,27 @@ func afficher_sous_menu_aventure() -> void:
 	
 	sous_menu.add_child(btn_combat)
 	sous_menu.add_child(btn_minage)
+	
+func afficher_sous_menu_profil() -> void:
+	vider_sous_menu()
+	
+	var btn_inventaire = Button.new()
+	btn_inventaire.text = "Inventaire"
+	btn_inventaire.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_inventaire.pressed.connect(func(): emit_signal("sous_menu_change", "inventaire"))
+	sous_menu.add_child(btn_inventaire)
+	
+	var btn_equipement = Button.new()
+	btn_equipement.text = "Équipement"
+	btn_equipement.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_equipement.pressed.connect(func(): emit_signal("sous_menu_change", "equipement"))
+	sous_menu.add_child(btn_equipement)
+
+# IMPORTANT : N'oublie pas d'aller dans NavBar.tscn, de cliquer sur ton BoutonProfil,
+# et de connecter son signal "pressed" à cette fonction !
+func _on_bouton_profil_pressed() -> void:
+	afficher_sous_menu_profil()
+	emit_signal("menu_change", "profil")
 
 # N'oublie pas de connecter le signal "pressed" de ton BoutonAventure 
 # depuis l'éditeur vers cette fonction !

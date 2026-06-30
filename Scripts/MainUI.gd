@@ -9,6 +9,7 @@ var ecran_actuel: Node = null
 var scene_combat = preload("res://Scènes/EcranCombat.tscn")
 var scene_minage = preload("res://Scènes/EcranMinage.tscn")
 var scene_inventaire = preload("res://Scènes/EcranInventaire.tscn")
+var scene_equipement = preload("res://Scènes/EcranEquipement.tscn")
 
 func _ready() -> void:
 	nav_bar.menu_change.connect(_on_menu_change)
@@ -31,6 +32,8 @@ func changer_ecran(nom_ecran: String) -> void:
 			ecran_actuel = scene_minage.instantiate()
 		"inventaire":
 			ecran_actuel = scene_inventaire.instantiate()
+		"equipement":
+			ecran_actuel = scene_equipement.instantiate()
 			
 	if ecran_actuel != null:
 		zone_contenu.add_child(ecran_actuel)

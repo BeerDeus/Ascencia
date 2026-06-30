@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://kvrqtvsevcsa"]
 
-[ext_resource type="Script" uid="uid://cdftv0wtxrvmt" path="res://Scènes/Header.gd" id="1_nrjna"]
+[ext_resource type="Script" uid="uid://cdftv0wtxrvmt" path="res://Scripts/Header.gd" id="1_nrjna"]
 
 [node name="Header" type="PanelContainer" unique_id=362540718]
 offset_right = 40.0

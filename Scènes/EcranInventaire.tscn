@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://g6ri3clf4378"]
 
-[ext_resource type="Script" uid="uid://b8sin0cabrx64" path="res://Scènes/EcranInventaire.gd" id="1_qtkay"]
+[ext_resource type="Script" uid="uid://b8sin0cabrx64" path="res://Scripts/EcranInventaire.gd" id="1_qtkay"]
 
 [node name="EcranInventaire" type="Control" unique_id=351650001]
 layout_mode = 3
@@ -81,16 +81,31 @@ layout_mode = 2
 [node name="NomItemLabel" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=1336209651]
 layout_mode = 2
 
-[node name="DescItemLabel" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=969579932]
+[node name="EffetItemLabel" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=1095166592]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=398291766]
+[node name="HBoxVente" type="HBoxContainer" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=398291766]
 layout_mode = 2
 
-[node name="Équiper" type="Button" parent="MainVBox/DetailsPanel/VBoxDetails/HBoxContainer" unique_id=260624551]
+[node name="SliderVente" type="HSlider" parent="MainVBox/DetailsPanel/VBoxDetails/HBoxVente" unique_id=1927783000]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LabelSliderQuantite" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails/HBoxVente" unique_id=1576751492]
+layout_mode = 2
+text = "1 / 7"
+
+[node name="BtnVendre" type="Button" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=1134235281]
+layout_mode = 2
+text = "Vendre"
+
+[node name="BtnEquiper" type="Button" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=260624551]
 layout_mode = 2
 text = "Équiper"
 
-[node name="Vendre" type="Button" parent="MainVBox/DetailsPanel/VBoxDetails/HBoxContainer" unique_id=1134235281]
+[node name="DescItemLabel" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=969579932]
 layout_mode = 2
-text = "Vendre"
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

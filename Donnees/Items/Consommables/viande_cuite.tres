@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemResource" format=3 uid="uid://crxt6pjqq7mhu"]
+
+[ext_resource type="Script" uid="uid://cw1xepqn4fk8l" path="res://Donnees/ItemResource.gd" id="1_6yvam"]
+[ext_resource type="Texture2D" uid="uid://bwd55frpm6ufg" path="res://Assets/Sprites/Items/Consommables/cooked_meat.png" id="1_ttwpu"]
+
+[resource]
+script = ExtResource("1_6yvam")
+id = "viande_cuite"
+nom = "Viande Cuite"
+description = "Une douce odeur de viande fumée au feu de bois se dégage de cet aliment."
+valeur_or = 3
+icone_texture = ExtResource("1_ttwpu")
+type_item = 3
+categorie_equipement = "consommable"
+valeur_effet = 5
+metadata/_custom_type_script = "uid://cw1xepqn4fk8l"
