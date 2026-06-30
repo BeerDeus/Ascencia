@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ZoneResource" format=3 uid="uid://b382xenoh6ir4"]
+
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Scripts/MonstreResource.gd" id="1_84a2w"]
+[ext_resource type="Script" uid="uid://ddj7egiysw43" path="res://Scripts/ZoneResource.gd" id="2_06667"]
+[ext_resource type="Resource" uid="uid://455pc1frepjl" path="res://Donnees/Monstres/arraignee.tres" id="2_qxr20"]
+
+[resource]
+script = ExtResource("2_06667")
+id = "facile_2"
+nom_zone = "Nid des arraignées"
+liste_monstres = Array[ExtResource("1_84a2w")]([ExtResource("2_qxr20")])
+metadata/_custom_type_script = "uid://ddj7egiysw43"

@@ -28,9 +28,13 @@ stretch_mode = 5
 
 [node name="NomLabel" type="Label" parent="VBoxContainer/BoutonManuel/VBoxContainer" unique_id=27940969]
 layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="LabelKills" type="Label" parent="VBoxContainer" unique_id=354454353]
 layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BoutonAuto" type="Button" parent="VBoxContainer" unique_id=1586800429]
 layout_mode = 2

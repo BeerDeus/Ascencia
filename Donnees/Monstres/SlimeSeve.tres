@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://b1t4fqxwgyj8q"]
 
 [ext_resource type="Texture2D" uid="uid://cm8vy20ucdc72" path="res://Assets/Sprites/Monstres/slime_seve.png" id="1_ron61"]
-[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Donnees/MonstreResource.gd" id="2_isdg0"]
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Scripts/MonstreResource.gd" id="2_isdg0"]
 [ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://Scripts/LootItem.gd" id="2_ron61"]
 [ext_resource type="Resource" uid="uid://dbmxo0othi084" path="res://Donnees/Items/Composants/PeauSlime.tres" id="3_isdg0"]
 

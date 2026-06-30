@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://c3b371h2s3syu"]
 
 [ext_resource type="Texture2D" uid="uid://hssqqf02vl0l" path="res://Assets/Sprites/Monstres/slime_bleu.png" id="1_70xkp"]
-[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Donnees/MonstreResource.gd" id="2_i8pap"]
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Scripts/MonstreResource.gd" id="2_i8pap"]
 [ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://Scripts/LootItem.gd" id="3_c4dvu"]
 
 [resource]

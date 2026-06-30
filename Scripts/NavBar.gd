@@ -44,6 +44,27 @@ func afficher_sous_menu_profil() -> void:
 	btn_equipement.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_equipement.pressed.connect(func(): emit_signal("sous_menu_change", "equipement"))
 	sous_menu.add_child(btn_equipement)
+	
+func afficher_sous_menu_village() -> void:
+	vider_sous_menu()
+	
+	var btn_forge = Button.new()
+	btn_forge.text = "Forge"
+	btn_forge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_forge.pressed.connect(func(): emit_signal("sous_menu_change", "forge"))
+	sous_menu.add_child(btn_forge)
+	
+	var btn_cuisine = Button.new()
+	btn_cuisine.text = "Cuisine"
+	btn_cuisine.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_cuisine.pressed.connect(func(): emit_signal("sous_menu_change", "cuisine"))
+	sous_menu.add_child(btn_cuisine)
+
+# IMPORTANT : N'oublie pas d'aller dans NavBar.tscn, de cliquer sur ton BoutonVillage,
+# et de connecter son signal "pressed" à cette fonction !
+func _on_bouton_village_pressed() -> void:
+	afficher_sous_menu_village()
+	emit_signal("menu_change", "village")
 
 # IMPORTANT : N'oublie pas d'aller dans NavBar.tscn, de cliquer sur ton BoutonProfil,
 # et de connecter son signal "pressed" à cette fonction !

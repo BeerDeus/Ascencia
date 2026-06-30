@@ -6,8 +6,9 @@ extends Control
 @onready var modal: PanelContainer = $ModalSelection
 @onready var titre_modal: Label = $ModalSelection/VBoxModal/TitreModal
 @onready var grille_modal: GridContainer = $ModalSelection/VBoxModal/ScrollModal/GrilleModal
-@onready var btn_desequiper: Button = $ModalSelection/VBoxModal/HBoxActions/BtnDesequiper
 @onready var btn_fermer: Button = $ModalSelection/VBoxModal/HBoxActions/BtnFermer
+# NOUVEAU : Référence à la zone de défilement
+@onready var scroll_modal: ScrollContainer = $ModalSelection/VBoxModal/ScrollModal
 
 const LAYOUT_GRILLE = [
 	"vide", "casque", "consommable",
@@ -29,8 +30,13 @@ var slot_en_cours_edition: String = ""
 
 func _ready() -> void:
 	modal.hide()
+	
+	# --- FIX UI : Forcer l'affichage du ScrollContainer et centrer la Modale ---
+	scroll_modal.custom_minimum_size = Vector2(0, 250) # Force une hauteur de 250 pixels
+	scroll_modal.size_flags_vertical = Control.SIZE_EXPAND_FILL # Prend l'espace disponible
+	modal.set_anchors_and_offsets_preset(Control.PRESET_CENTER) # Centre proprement la modale au milieu de l'écran
+	
 	btn_fermer.pressed.connect(func(): modal.hide())
-	btn_desequiper.pressed.connect(_on_desequiper_presse)
 	afficher_equipement()
 
 func afficher_equipement() -> void:
@@ -86,14 +92,21 @@ func _ouvrir_modal_pour_slot(slot_nom: String) -> void:
 	slot_en_cours_edition = slot_nom
 	titre_modal.text = "Équiper : " + slot_nom.capitalize()
 	
-	btn_desequiper.disabled = (GameState.equipement.get(slot_nom, "") == "")
+	var item_actuellement_equipe = GameState.equipement.get(slot_nom, "")
 	
 	var cat_recherche = get_categorie_recherche(slot_nom)
 	
 	for enfant in grille_modal.get_children():
 		enfant.queue_free()
 		
-	for item_id in GameState.inventaire.keys():
+	# --- NOUVEAU : Fusionner l'inventaire avec l'objet déjà équipé ---
+	# On ajoute un .duplicate() ici pour modifier le tableau en toute sécurité
+	var items_a_afficher = GameState.inventaire.keys().duplicate()
+	
+	if item_actuellement_equipe != "" and not items_a_afficher.has(item_actuellement_equipe):
+		items_a_afficher.append(item_actuellement_equipe)
+		
+	for item_id in items_a_afficher:
 		var item: ItemResource = GameState.item_database.get(item_id)
 		if item:
 			# Tolérance d'erreur : On accepte l'objet s'il valide la catégorie OU son type global
@@ -106,14 +119,47 @@ func _ouvrir_modal_pour_slot(slot_nom: String) -> void:
 			if est_compatible:
 				var btn_item = Button.new()
 				btn_item.custom_minimum_size = Vector2(60, 60)
+				btn_item.clip_contents = true # Indispensable pour que la bordure ne bave pas
 				
 				if item.icone_texture != null:
-					btn_item.icon = item.icone_texture
-					btn_item.expand_icon = true
+					# Création d'un TextureRect pour garder l'icône propre sous la bordure
+					var tex_rect = TextureRect.new()
+					tex_rect.texture = item.icone_texture
+					tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+					tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+					tex_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+					btn_item.add_child(tex_rect)
 				else:
 					btn_item.text = item.nom.substr(0, 3) 
 					
-				btn_item.pressed.connect(_on_selection_modal_item.bind(item_id))
+				# Affichage de la quantité pour les consommables
+				if item.type_item == ItemResource.TypeItem.CONSOMMABLE:
+					var quantite = GameState.inventaire.get(item_id, 0)
+					var lbl_qty = Label.new()
+					lbl_qty.text = str(quantite)
+					lbl_qty.add_theme_font_size_override("font_size", 12)
+					lbl_qty.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+					lbl_qty.position += Vector2(-4, -2)
+					btn_item.add_child(lbl_qty)
+					
+				# --- NOUVEAU : Encadrer visuellement l'objet actuellement équipé ---
+				if item_id == item_actuellement_equipe:
+					var stylebox = StyleBoxFlat.new()
+					stylebox.bg_color = Color(0, 0, 0, 0) # Fond transparent
+					stylebox.border_color = Color(0.2, 0.8, 0.3, 1.0) # Bordure verte fluo
+					stylebox.border_width_bottom = 4
+					stylebox.border_width_top = 4
+					stylebox.border_width_left = 4
+					stylebox.border_width_right = 4
+					
+					btn_item.add_theme_stylebox_override("normal", stylebox)
+					btn_item.add_theme_stylebox_override("hover", stylebox)
+					
+					# NOUVEAU : Si on clique sur l'objet déjà équipé, ça agit comme le bouton "Retirer"
+					btn_item.pressed.connect(_on_desequiper_presse)
+				else:
+					btn_item.pressed.connect(_on_selection_modal_item.bind(item_id))
+					
 				grille_modal.add_child(btn_item)
 				
 	modal.show()

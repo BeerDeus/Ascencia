@@ -27,10 +27,6 @@ extends Control
 var carte_monstre_scene = preload("res://Scènes/CarteMonstre.tscn")
 @onready var liste_zones_conteneur: VBoxContainer = $VBoxContainer/ScrollZones/ListeZonesConteneur
 
-var toutes_les_zones: Array = [
-	preload("res://Donnees/Zones/ZoneFacile1.tres")
-]
-
 # --- VARIABLES DU COMBAT ---
 var monstre_actif: MonstreResource = null
 var pv_actuels_monstre: int = 0
@@ -247,52 +243,87 @@ func victoire_combat() -> void:
 		afficher_zones()
 		
 func afficher_zones() -> void:
-	# Nettoyage de la liste avant de générer pour éviter les doublons
 	for enfant in liste_zones_conteneur.get_children():
 		enfant.queue_free()
 
-	for zone in toutes_les_zones:
-		if zone == null: continue
-		
-		# --- TITRE DE LA ZONE ---
-		var titre = Label.new()
-		titre.text = zone.nom_zone + " [" + zone.difficulte.to_upper() + "]"
-		titre.add_theme_font_size_override("font_size", 18)
-		titre.add_theme_color_override("font_color", Color(0.6, 0.2, 0.8)) 
-		liste_zones_conteneur.add_child(titre)
+	var prochaines_zones = []
+	for z_id in GameState.zones_debloquees:
+		var z: ZoneResource = GameState.zone_database.get(z_id)
+		if z and z.zone_suivante_id != "":
+			prochaines_zones.append(z.zone_suivante_id)
 
-		# --- GRILLE DES MONSTRES ---
+	# Création d'une file d'attente pour forcer les zones verrouillées en bas de l'UI
+	var zones_verrouillees_ui = []
+
+	for zone_id in GameState.zone_database.keys():
+		var zone: ZoneResource = GameState.zone_database[zone_id]
+		if zone == null: continue
+
+		var est_debloquee = GameState.zones_debloquees.has(zone_id)
+		var est_prochaine = prochaines_zones.has(zone_id)
+
+		if not est_debloquee and not est_prochaine:
+			continue 
+
+		# Placement des zones grisées dans la file d'attente
+		if est_prochaine and not est_debloquee:
+			zones_verrouillees_ui.append(zone)
+			continue
+
+		# Génération exclusive des zones actives
+		var btn_header = Button.new()
+		btn_header.custom_minimum_size = Vector2(0, 50)
+		btn_header.text = zone.nom_zone + " [" + zone.difficulte.to_upper() + "] ▼"
+		btn_header.add_theme_font_size_override("font_size", 18)
+		btn_header.add_theme_color_override("font_color", Color(0.6, 0.2, 0.8))
+		liste_zones_conteneur.add_child(btn_header)
+
+		var conteneur_zone = VBoxContainer.new()
+		conteneur_zone.visible = false
+		liste_zones_conteneur.add_child(conteneur_zone)
+
+		btn_header.pressed.connect(func():
+			conteneur_zone.visible = !conteneur_zone.visible
+			btn_header.text = zone.nom_zone + " [" + zone.difficulte.to_upper() + "] " + ("▲" if conteneur_zone.visible else "▼")
+		)
+
 		var grille = GridContainer.new()
 		grille.columns = 2
 		grille.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grille.add_theme_constant_override("h_separation", 10)
 		grille.add_theme_constant_override("v_separation", 10)
-		liste_zones_conteneur.add_child(grille)
+		conteneur_zone.add_child(grille)
 
-		# --- GÉNÉRATION DES CARTES ---
 		var monstres_requis_pour_boss = true
-		
+
 		for monstre in zone.liste_monstres:
 			if monstre == null: continue
-			
 			var carte = carte_monstre_scene.instantiate()
+			carte.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			grille.add_child(carte)
 			carte.initialiser(monstre)
-			
-			# Connexion des signaux de la carte vers notre gestionnaire de combat
+
 			carte.lancer_combat_manuel.connect(func(m): lancer_combat(m, false))
 			carte.lancer_combat_auto.connect(func(m): lancer_combat(m, true))
-			
+
 			if GameState.monstres_kills.get(monstre.id, 0) < 10:
 				monstres_requis_pour_boss = false
 
-		# --- GÉNÉRATION DU BOUTON BOSS ---
 		if zone.monstre_boss != null:
 			var boss_bouton = Button.new()
 			boss_bouton.custom_minimum_size = Vector2(0, 50)
 			
-			# Vérification des conditions pour déverrouiller le boss de la zone
-			if monstres_requis_pour_boss:
+			# Activation du retour à la ligne intelligent pour éviter les débordements horizontaux
+			boss_bouton.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			
+			var boss_kills = GameState.monstres_kills.get(zone.monstre_boss.id, 0)
+
+			if boss_kills > 0:
+				boss_bouton.text = "✅ " + zone.monstre_boss.nom + " [VAINCU]"
+				boss_bouton.disabled = false 
+				boss_bouton.add_theme_color_override("font_color", Color(0.2, 0.8, 0.2))
+				boss_bouton.pressed.connect(func(): lancer_combat(zone.monstre_boss, false))
+			elif monstres_requis_pour_boss:
 				boss_bouton.text = "👑 " + zone.monstre_boss.nom + " [BOSS D'ACTE]"
 				boss_bouton.disabled = false
 				boss_bouton.add_theme_color_override("font_color", Color(1, 0.8, 0))
@@ -301,8 +332,17 @@ func afficher_zones() -> void:
 				boss_bouton.text = "🔒 " + zone.monstre_boss.nom + " [REQUIS : 10 VICTOIRES/MONSTRE]"
 				boss_bouton.disabled = true
 				
-			liste_zones_conteneur.add_child(boss_bouton)
-		
+			conteneur_zone.add_child(boss_bouton)
+
+	# Instanciation finale des zones verrouillées pour garantir leur position en bas de liste
+	for zone_verrouillee in zones_verrouillees_ui:
+		var btn_verrou = Button.new()
+		btn_verrou.custom_minimum_size = Vector2(0, 50)
+		btn_verrou.text = "🔒 " + zone_verrouillee.nom_zone + " [À DÉBLOQUER]"
+		btn_verrou.disabled = true
+		liste_zones_conteneur.add_child(btn_verrou)
+
+
 # Clic sur le bouton de sort
 func _on_button_pressed() -> void:
 	executer_sort_equipe()

@@ -2,6 +2,8 @@ extends Node
 
 # Dictionnaire centralisant toutes les ressources d'objets préchargées
 var item_database: Dictionary = {}
+var recipe_database: Dictionary = {}
+var zone_database: Dictionary = {}
 
 # --- STATS DU JOUEUR ---
 var joueur_nom: String = "Aventurier"
@@ -46,6 +48,9 @@ var equipement: Dictionary = {
 	"acc_3": ""
 }
 
+# --- PROGRESSION DES ZONES ---
+var zones_debloquees: Array[String] = ["facile_1"]
+
 # --- PROGRESSION ET AUTO-BATTLE (Cahier des charges V2.1) ---
 var monstres_kills: Dictionary = {
 	"slime_seve": 0,
@@ -62,7 +67,10 @@ func _ready() -> void:
 	print("--- ASCENCIA ---")
 	# Scan automatique et performant de tous les sous-dossiers d'items
 	_charger_items_dossier_rec("res://Donnees/Items")
-	print("Base de données d'items initialisée : ", item_database.size(), " objets chargés.")
+	_charger_recettes_dossier_rec("res://Donnees/Recettes") # NOUVEAU
+	_charger_zones_dossier_rec("res://Donnees/Zones") # NOUVEAU
+	
+	print("Base de données initialisée : ", item_database.size(), " objets | ", recipe_database.size(), " recettes.")
 	
 	print("GameState initialisé avec succès. Prêt pour l'aventure.")
 	
@@ -133,13 +141,13 @@ func recevoir_soins(montant: int) -> void:
 
 
 # --- TES FONCTIONS DE BASE INCHANGÉES ---
-# Fichier: res://Scripts/GameState.gd
 func enregistrer_mort_monstre(monstre: MonstreResource, est_un_boss: bool) -> void:
 	print("Bravo ! Vous avez vaincu : ", monstre.nom)
 	
 	combat_xp += monstre.xp_donnee
 	print("XP de Combat actuelle : ", combat_xp)
 	
+	# --- GESTION DU LOOT ---
 	for loot_entry in monstre.table_loot:
 		if loot_entry == null or loot_entry.item == null:
 			continue
@@ -148,27 +156,25 @@ func enregistrer_mort_monstre(monstre: MonstreResource, est_un_boss: bool) -> vo
 			var quantite_gagnee = randi_range(1, loot_entry.quantite_max)
 			var item_id = loot_entry.item.id
 			
-			# Utilisation du helper pour un inventaire propre et compact
 			modifier_quantite_item(item_id, quantite_gagnee)
-			
-			# Utilise une valeur de secours si l'inventaire vient d'être nettoyé ou n'a pas la clé
 			var total_actuel = inventaire.get(item_id, 0)
 			print("Loot obtenu ! ", loot_entry.item.nom, " x", quantite_gagnee, " (Total : ", total_actuel, ")")
 	
+	# --- MISE À JOUR DE LA PERSISTANCE (Valable pour Monstres ET Boss) ---
+	# Permet à l'UI de l'EcranCombat d'afficher correctement l'état "✅ [VAINCU]" pour le boss
+	monstres_kills[monstre.id] = monstres_kills.get(monstre.id, 0) + 1
+	print("Nombre de kills pour ", monstre.nom, " : ", monstres_kills[monstre.id])
+	
+	# --- LOGIQUE DE PROGRESSION SPÉCIFIQUE ---
 	if not est_un_boss:
-		if monstres_kills.has(monstre.id):
-			monstres_kills[monstre.id] += 1
-		else:
-			monstres_kills[monstre.id] = 1
-			
-		print("Nombre de kills pour ", monstre.nom, " : ", monstres_kills[monstre.id])
-		
+		# Vérification du palier d'Auto-Battle pour les monstres standards
 		if monstres_kills[monstre.id] == 10:
 			print("🔥 AUTO-BATTLE DÉBLOQUÉ pour le monstre : ", monstre.nom, " !")
 	else:
+		# Vérification de la transition d'acte pour les Boss
 		print("👑 Boss vaincu ! Zone complétée.")
-
-# Fichier: res://Scripts/GameState.gd
+		verifier_deblocage_zone(monstre.id)
+		
 # Gère l'équipement d'un objet et renvoie l'ancien équipement dans l'inventaire
 # Équipe un objet dans un emplacement précis et gère le remplacement
 func equiper_item(item_id: String, slot_cible: String) -> void:
@@ -213,3 +219,85 @@ func vendre_item(item_id: String, quantite: int) -> void:
 		or_actuel += item.valeur_or * quantite_a_vendre
 		modifier_quantite_item(item_id, -quantite_a_vendre)
 		print("🪙 Transaction effectuée : Vente de ", quantite_a_vendre, "x ", item.nom)
+
+# --- NOUVEAU : GESTION DES RECETTES ET DU CRAFT ---
+
+# Fonction miroir de celle des items, dédiée aux recettes
+func _charger_recettes_dossier_rec(chemin: String) -> void:
+	var dir = DirAccess.open(chemin)
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if dir.current_is_dir():
+				if not file_name.begins_with("."):
+					_charger_recettes_dossier_rec(chemin + "/" + file_name)
+			else:
+				if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
+					var clean_name = file_name.replace(".tres.remap", "").replace(".tres", "")
+					var res = load(chemin + "/" + clean_name + ".tres")
+					if res is RecipeResource and res.id_recette != "":
+						recipe_database[res.id_recette] = res
+			file_name = dir.get_next()
+		dir.list_dir_end()
+
+# Vérifie si le joueur possède les fonds et les composants requis
+func peut_crafter(recette_id: String) -> bool:
+	if not recipe_database.has(recette_id): return false
+	var recette: RecipeResource = recipe_database[recette_id]
+	
+	if or_actuel < recette.cout_or: return false
+	
+	for ing in recette.ingredients:
+		if inventaire.get(ing.item_requis.id, 0) < ing.quantite:
+			return false
+	return true
+
+# Exécute la transaction de fabrication
+func crafter_recette(recette_id: String) -> bool:
+	if not peut_crafter(recette_id): return false
+	var recette: RecipeResource = recipe_database[recette_id]
+	
+	# Déduction des coûts
+	or_actuel -= recette.cout_or
+	for ing in recette.ingredients:
+		modifier_quantite_item(ing.item_requis.id, -ing.quantite)
+		
+	# Ajout du produit final
+	modifier_quantite_item(recette.item_produit.id, recette.quantite_produite)
+	print("🔨 Objet fabriqué : ", recette.item_produit.nom, " x", recette.quantite_produite)
+	return true
+	
+# --- NOUVEAU : SCAN DES ZONES ---
+func _charger_zones_dossier_rec(chemin: String) -> void:
+	var dir = DirAccess.open(chemin)
+	if dir:
+		var fichiers = []
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if dir.current_is_dir():
+				if not file_name.begins_with("."):
+					_charger_zones_dossier_rec(chemin + "/" + file_name)
+			else:
+				if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
+					fichiers.append(file_name)
+			file_name = dir.get_next()
+		dir.list_dir_end()
+		
+		# On trie les fichiers par ordre alphabétique pour garantir l'ordre des zones
+		fichiers.sort()
+		for fichier in fichiers:
+			var clean_name = fichier.replace(".tres.remap", "").replace(".tres", "")
+			var res = load(chemin + "/" + clean_name + ".tres")
+			if res is ZoneResource and res.id != "":
+				zone_database[res.id] = res
+
+# Scanne si le monstre tué est un Boss. Si oui, débloque la zone suivante !
+func verifier_deblocage_zone(monstre_id: String) -> void:
+	for zone_id in zone_database.keys():
+		var zone: ZoneResource = zone_database[zone_id]
+		if zone.monstre_boss and zone.monstre_boss.id == monstre_id:
+			if zone.zone_suivante_id != "" and not zones_debloquees.has(zone.zone_suivante_id):
+				zones_debloquees.append(zone.zone_suivante_id)
+				print("🌟 NOUVELLE ZONE DÉBLOQUÉE : ", zone.zone_suivante_id)

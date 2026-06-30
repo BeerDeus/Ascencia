@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://g3u6kmn6al8l"]
 
-[ext_resource type="Script" uid="uid://bmxbm20xgjmnh" path="res://Scènes/EcranEquipement.gd" id="1_chhia"]
+[ext_resource type="Script" uid="uid://bmxbm20xgjmnh" path="res://Scripts/EcranEquipement.gd" id="1_chhia"]
 
 [node name="EcranEquipement" type="Control" unique_id=413768316]
 layout_mode = 3
@@ -39,17 +39,16 @@ text = "Choisissez un objet"
 
 [node name="ScrollModal" type="ScrollContainer" parent="ModalSelection/VBoxModal" unique_id=466504310]
 layout_mode = 2
+size_flags_vertical = 3
 
 [node name="GrilleModal" type="GridContainer" parent="ModalSelection/VBoxModal/ScrollModal" unique_id=141458272]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 columns = 4
 
 [node name="HBoxActions" type="HBoxContainer" parent="ModalSelection/VBoxModal" unique_id=702139099]
 layout_mode = 2
-
-[node name="BtnDesequiper" type="Button" parent="ModalSelection/VBoxModal/HBoxActions" unique_id=291435106]
-layout_mode = 2
-text = "Retirer l'objet actuel"
 
 [node name="BtnFermer" type="Button" parent="ModalSelection/VBoxModal/HBoxActions" unique_id=121622279]
 layout_mode = 2

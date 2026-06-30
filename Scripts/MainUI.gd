@@ -10,6 +10,8 @@ var scene_combat = preload("res://Scènes/EcranCombat.tscn")
 var scene_minage = preload("res://Scènes/EcranMinage.tscn")
 var scene_inventaire = preload("res://Scènes/EcranInventaire.tscn")
 var scene_equipement = preload("res://Scènes/EcranEquipement.tscn")
+var scene_forge = preload("res://Scènes/EcranForge.tscn")
+var scene_cuisine = preload("res://Scènes/EcranCuisine.tscn")
 
 func _ready() -> void:
 	nav_bar.menu_change.connect(_on_menu_change)
@@ -20,11 +22,9 @@ func _ready() -> void:
 	changer_ecran("combat")
 
 func changer_ecran(nom_ecran: String) -> void:
-	# Nettoie l'écran précédent
 	if ecran_actuel != null:
 		ecran_actuel.queue_free()
 		
-	# Instancie le nouvel écran en fonction du choix
 	match nom_ecran:
 		"combat":
 			ecran_actuel = scene_combat.instantiate()
@@ -34,6 +34,10 @@ func changer_ecran(nom_ecran: String) -> void:
 			ecran_actuel = scene_inventaire.instantiate()
 		"equipement":
 			ecran_actuel = scene_equipement.instantiate()
+		"forge":
+			ecran_actuel = scene_forge.instantiate()
+		"cuisine":
+			ecran_actuel = scene_cuisine.instantiate()
 			
 	if ecran_actuel != null:
 		zone_contenu.add_child(ecran_actuel)

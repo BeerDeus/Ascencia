@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://455pc1frepjl"]
+
+[ext_resource type="Texture2D" uid="uid://ofnnsqkrgvi8" path="res://Assets/Sprites/Monstres/arraignee.png" id="1_l77ke"]
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Scripts/MonstreResource.gd" id="1_wfd76"]
+[ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://Scripts/LootItem.gd" id="2_l77ke"]
+
+[resource]
+script = ExtResource("1_wfd76")
+icone_texture = ExtResource("1_l77ke")
+id = "arraignee"
+nom = "Arraignée"
+pv_max = 50
+points_attaque = 3
+tempo_attaque = 1.5
+xp_donnee = 30
+metadata/_custom_type_script = "uid://dnhaqfsmyb3na"

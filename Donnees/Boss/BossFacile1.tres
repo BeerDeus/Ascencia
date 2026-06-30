@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://b77wrnjmbryva"]
+
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Scripts/MonstreResource.gd" id="1_7wc0q"]
+[ext_resource type="Texture2D" uid="uid://c5bfjdj063nof" path="res://Assets/Sprites/Monstres/slime_vert_enerve.png" id="1_tsred"]
+[ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://Scripts/LootItem.gd" id="2_degj8"]
+[ext_resource type="Resource" uid="uid://dbmxo0othi084" path="res://Donnees/Items/Composants/PeauSlime.tres" id="4_uix53"]
+
+[sub_resource type="Resource" id="Resource_tsred"]
+script = ExtResource("2_degj8")
+item = ExtResource("4_uix53")
+chance_pourcentage = 95.0
+quantite_max = 5
+metadata/_custom_type_script = "uid://dat65m2wjs47m"
+
+[resource]
+script = ExtResource("1_7wc0q")
+icone_texture = ExtResource("1_tsred")
+id = "BossFacile1"
+nom = "Roi Slime"
+pv_max = 150
+points_attaque = 10
+xp_donnee = 100
+table_loot = Array[ExtResource("2_degj8")]([SubResource("Resource_tsred"), null])
+metadata/_custom_type_script = "uid://dnhaqfsmyb3na"

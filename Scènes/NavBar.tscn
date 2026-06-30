@@ -39,4 +39,5 @@ size_flags_horizontal = 3
 text = "Social"
 
 [connection signal="pressed" from="MenuPrincipal/BoutonProfil" to="." method="_on_bouton_profil_pressed"]
+[connection signal="pressed" from="MenuPrincipal/BoutonVillage" to="." method="_on_bouton_village_pressed"]
 [connection signal="pressed" from="MenuPrincipal/BoutonAventure" to="." method="_on_bouton_aventure_pressed"]
