@@ -1,5 +1,8 @@
 extends Node
 
+# Dictionnaire centralisant toutes les ressources d'objets préchargées
+var item_database: Dictionary = {}
+
 # --- STATS DU JOUEUR ---
 var joueur_nom: String = "Aventurier"
 var joueur_pv_max: int = 100
@@ -34,8 +37,13 @@ var monstres_kills: Dictionary = {
 var endurance_max: int = 100
 var endurance_actuelle: int = 100
 
+# Fichier: res://Scripts/GameState.gd
 func _ready() -> void:
 	print("--- ASCENCIA ---")
+	# Scan automatique et performant de tous les sous-dossiers d'items
+	_charger_items_dossier_rec("res://Donnees/Items")
+	print("Base de données d'items initialisée : ", item_database.size(), " objets chargés.")
+	
 	print("GameState initialisé avec succès. Prêt pour l'aventure.")
 	
 	var mon_slime = load("res://Donnees/Monstres/SlimeSeve.tres")
@@ -43,8 +51,45 @@ func _ready() -> void:
 	print("\n--- SIMULATION DE COMBAT ---")
 	for i in range(10):
 		print("\n--- Combat numéro ", i + 1, " ---")
+		# Simulation de mort
 		enregistrer_mort_monstre(mon_slime, false)
 
+# Fonction récursive optimisée pour scanner les dossiers, compatible export mobile (.remap)
+func _charger_items_dossier_rec(chemin: String) -> void:
+	var dir = DirAccess.open(chemin)
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if dir.current_is_dir():
+				# Ignore les dossiers système cachés et remonte dans les sous-dossiers
+				if not file_name.begins_with("."):
+					_charger_items_dossier_rec(chemin + "/" + file_name)
+			else:
+				# Piège de l'export mobile : les .tres deviennent souvent des .tres.remap
+				if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
+					# On extrait l'ID pur en retirant les extensions
+					var item_id = file_name.replace(".tres.remap", "").replace(".tres", "")
+					var chemin_complet = chemin + "/" + item_id + ".tres"
+					
+					var res = load(chemin_complet)
+					if res is ItemResource:
+						item_database[item_id] = res
+			file_name = dir.get_next()
+		dir.list_dir_end()
+		
+		
+# Gère l'ajout/retrait d'items et nettoie immédiatement les entrées à 0
+func modifier_quantite_item(item_id: String, montant: int) -> void:
+	if not inventaire.has(item_id):
+		inventaire[item_id] = 0
+		
+	inventaire[item_id] += montant
+	
+	# Règle d'optimisation mobile : si quantité <= 0, on libère la mémoire
+	if inventaire[item_id] <= 0:
+		inventaire.erase(item_id)
+		
 # --- NOUVELLE FONCTION _PROCESS POUR LA RÉGÉNÉRATION PASSIVE ---
 func _process(delta: float) -> void:
 	# La régénération s'active seulement si le joueur est blessé et vivant
@@ -69,6 +114,7 @@ func recevoir_soins(montant: int) -> void:
 
 
 # --- TES FONCTIONS DE BASE INCHANGÉES ---
+# Fichier: res://Scripts/GameState.gd
 func enregistrer_mort_monstre(monstre: MonstreResource, est_un_boss: bool) -> void:
 	print("Bravo ! Vous avez vaincu : ", monstre.nom)
 	
@@ -83,11 +129,12 @@ func enregistrer_mort_monstre(monstre: MonstreResource, est_un_boss: bool) -> vo
 			var quantite_gagnee = randi_range(1, loot_entry.quantite_max)
 			var item_id = loot_entry.item.id
 			
-			if not inventaire.has(item_id):
-				inventaire[item_id] = 0
-			inventaire[item_id] += quantite_gagnee
+			# Utilisation du helper pour un inventaire propre et compact
+			modifier_quantite_item(item_id, quantite_gagnee)
 			
-			print("Loot obtenu ! ", loot_entry.item.nom, " x", quantite_gagnee, " (Total : ", inventaire[item_id], ")")
+			# Utilise une valeur de secours si l'inventaire vient d'être nettoyé ou n'a pas la clé
+			var total_actuel = inventaire.get(item_id, 0)
+			print("Loot obtenu ! ", loot_entry.item.nom, " x", quantite_gagnee, " (Total : ", total_actuel, ")")
 	
 	if not est_un_boss:
 		if monstres_kills.has(monstre.id):

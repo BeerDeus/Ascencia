@@ -1,11 +1,96 @@
 [gd_scene format=3 uid="uid://g6ri3clf4378"]
 
+[ext_resource type="Script" uid="uid://b8sin0cabrx64" path="res://Scènes/EcranInventaire.gd" id="1_qtkay"]
+
 [node name="EcranInventaire" type="Control" unique_id=351650001]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qtkay")
 
-[node name="Label" type="Label" parent="." unique_id=1245422365]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-text = "Mon Sac à dos - Objets obtenus"
+[node name="MainVBox" type="VBoxContainer" parent="." unique_id=885526577]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="StatsPanel" type="PanelContainer" parent="MainVBox" unique_id=1552147163]
+layout_mode = 2
+
+[node name="StatsHBox" type="HBoxContainer" parent="MainVBox/StatsPanel" unique_id=1203762687]
+layout_mode = 2
+
+[node name="PVMax" type="Label" parent="MainVBox/StatsPanel/StatsHBox" unique_id=807362973]
+layout_mode = 2
+text = "PV Max"
+
+[node name="Dégâts" type="Label" parent="MainVBox/StatsPanel/StatsHBox" unique_id=878326287]
+layout_mode = 2
+text = "Dégâts"
+
+[node name="Tempo" type="Label" parent="MainVBox/StatsPanel/StatsHBox" unique_id=1746475889]
+layout_mode = 2
+text = "Tempo"
+
+[node name="Or" type="Label" parent="MainVBox/StatsPanel/StatsHBox" unique_id=2015192572]
+layout_mode = 2
+text = "Or
+"
+
+[node name="EquipementPanel" type="PanelContainer" parent="MainVBox" unique_id=477340898]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EquipementGrid" type="GridContainer" parent="MainVBox/EquipementPanel" unique_id=2010604536]
+layout_mode = 2
+columns = 3
+
+[node name="InventairePanel" type="PanelContainer" parent="MainVBox" unique_id=956418617]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxInventaire" type="VBoxContainer" parent="MainVBox/InventairePanel" unique_id=1455106223]
+layout_mode = 2
+
+[node name="TitreLabel" type="Label" parent="MainVBox/InventairePanel/VBoxInventaire" unique_id=1924760581]
+layout_mode = 2
+text = "Sacs & Sacoches"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainVBox/InventairePanel/VBoxInventaire" unique_id=1505457221]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GridContainer" type="GridContainer" parent="MainVBox/InventairePanel/VBoxInventaire/ScrollContainer" unique_id=745430061]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 5
+
+[node name="DetailsPanel" type="PanelContainer" parent="MainVBox" unique_id=725658962]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+
+[node name="VBoxDetails" type="VBoxContainer" parent="MainVBox/DetailsPanel" unique_id=1291856185]
+layout_mode = 2
+
+[node name="NomItemLabel" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=1336209651]
+layout_mode = 2
+
+[node name="DescItemLabel" type="Label" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=969579932]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainVBox/DetailsPanel/VBoxDetails" unique_id=398291766]
+layout_mode = 2
+
+[node name="Équiper" type="Button" parent="MainVBox/DetailsPanel/VBoxDetails/HBoxContainer" unique_id=260624551]
+layout_mode = 2
+text = "Équiper"
+
+[node name="Vendre" type="Button" parent="MainVBox/DetailsPanel/VBoxDetails/HBoxContainer" unique_id=1134235281]
+layout_mode = 2
+text = "Vendre"
