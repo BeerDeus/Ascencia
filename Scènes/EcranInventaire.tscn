@@ -38,7 +38,7 @@ text = "Dégâts"
 layout_mode = 2
 text = "Tempo"
 
-[node name="Or" type="Label" parent="MainVBox/StatsPanel/StatsHBox" unique_id=2015192572]
+[node name="OrLabel" type="Label" parent="MainVBox/StatsPanel/StatsHBox" unique_id=2015192572]
 layout_mode = 2
 text = "Or
 "
@@ -62,11 +62,11 @@ layout_mode = 2
 layout_mode = 2
 text = "Sacs & Sacoches"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MainVBox/InventairePanel/VBoxInventaire" unique_id=1505457221]
+[node name="ScrollGrid" type="ScrollContainer" parent="MainVBox/InventairePanel/VBoxInventaire" unique_id=1505457221]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="GridContainer" type="GridContainer" parent="MainVBox/InventairePanel/VBoxInventaire/ScrollContainer" unique_id=745430061]
+[node name="InventaireGrid" type="GridContainer" parent="MainVBox/InventairePanel/VBoxInventaire/ScrollGrid" unique_id=745430061]
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 5

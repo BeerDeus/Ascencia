@@ -9,8 +9,13 @@ extends Control
 @onready var desc_item_label: Label = $MainVBox/DetailsPanel/VBoxDetails/DescItemLabel
 
 func _ready() -> void:
-	# Règle UI : Masquage initial du panneau de détails pour libérer l'espace visuel mobile
+	# Règle UI : Masquage initial du panneau de détails
 	details_panel.visible = false
+	
+	# FIX UI : Empêcher le texte de casser la mise en page (Responsive mobile)
+	desc_item_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_item_label.custom_minimum_size = Vector2(100, 10) # Contraint la largeur, force le retour à la ligne
+	
 	mettre_a_jour_stats()
 	afficher_inventaire()
 

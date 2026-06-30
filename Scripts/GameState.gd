@@ -55,6 +55,8 @@ func _ready() -> void:
 		enregistrer_mort_monstre(mon_slime, false)
 
 # Fonction récursive optimisée pour scanner les dossiers, compatible export mobile (.remap)
+# Fichier: res://Scripts/GameState.gd
+# Fonction récursive optimisée pour scanner les dossiers, compatible export mobile (.remap)
 func _charger_items_dossier_rec(chemin: String) -> void:
 	var dir = DirAccess.open(chemin)
 	if dir:
@@ -62,22 +64,20 @@ func _charger_items_dossier_rec(chemin: String) -> void:
 		var file_name = dir.get_next()
 		while file_name != "":
 			if dir.current_is_dir():
-				# Ignore les dossiers système cachés et remonte dans les sous-dossiers
 				if not file_name.begins_with("."):
 					_charger_items_dossier_rec(chemin + "/" + file_name)
 			else:
-				# Piège de l'export mobile : les .tres deviennent souvent des .tres.remap
 				if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
-					# On extrait l'ID pur en retirant les extensions
-					var item_id = file_name.replace(".tres.remap", "").replace(".tres", "")
-					var chemin_complet = chemin + "/" + item_id + ".tres"
+					# On nettoie le nom du fichier pour le chargement
+					var clean_name = file_name.replace(".tres.remap", "").replace(".tres", "")
+					var chemin_complet = chemin + "/" + clean_name + ".tres"
 					
 					var res = load(chemin_complet)
-					if res is ItemResource:
-						item_database[item_id] = res
+					# OPTIMISATION ARCHITECTURE : On utilise l'ID interne de l'objet comme clé
+					if res is ItemResource and res.id != "":
+						item_database[res.id] = res
 			file_name = dir.get_next()
 		dir.list_dir_end()
-		
 		
 # Gère l'ajout/retrait d'items et nettoie immédiatement les entrées à 0
 func modifier_quantite_item(item_id: String, montant: int) -> void:
