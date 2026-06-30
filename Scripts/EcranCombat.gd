@@ -1,19 +1,34 @@
 extends Control
 
 # --- RÉFÉRENCES VERS L'UI ---
-@onready var nom_monstre_text: Label = $VBoxContainer/EncadréMonstre/VBoxContainer/NomMonstreText
-@onready var barre_vie_monstre: ProgressBar = $VBoxContainer/EncadréMonstre/VBoxContainer/BarreVieMonstre
-@onready var barre_tempo_monstre: ProgressBar = $VBoxContainer/EncadréMonstre/VBoxContainer/BarreTempoMonstre
+@onready var zone_combat_actif: VBoxContainer = $VBoxContainer/ZoneCombatActif
+@onready var scroll_zones: ScrollContainer = $VBoxContainer/ScrollZones
+
+# Monstre
+@onready var nom_monstre_text: Label = $VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer/NomMonstreText
+@onready var barre_vie_monstre: ProgressBar = $VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer/BarreVieMonstre
+@onready var barre_tempo_monstre: ProgressBar = $VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer/BarreTempoMonstre
 @onready var sprite_monstre: TextureRect = %SpriteMonstre
 
-# Références Tempo Joueur & Mesure
-@onready var barre_vie_joueur: ProgressBar = $VBoxContainer/EncadréMonstre/VBoxContainer/BarreVieJoueur
-@onready var barre_tempo_joueur: ProgressBar = $VBoxContainer/EncadréMonstre/VBoxContainer/BarreTempoJoueur
+# Joueur
+@onready var nom_joueur_text: Label = $VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/NomJoueurText
+@onready var barre_vie_joueur: ProgressBar = $VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/BarreVieJoueur
+@onready var barre_tempo_joueur: ProgressBar = $VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/BarreTempoJoueur
+@onready var bouton_quitter_auto: Button = $VBoxContainer/ZoneCombatActif/BoutonQuitterAuto
+
+# La Mesure (les 4 labels de notes)
 @onready var labels_mesure: Array = [
-	$VBoxContainer/ConteneurMesure/Note1,
-	$VBoxContainer/ConteneurMesure/Note2,
-	$VBoxContainer/ConteneurMesure/Note3,
-	$VBoxContainer/ConteneurMesure/Note4
+	$VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure/Note1,
+	$VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure/Note2,
+	$VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure/Note3,
+	$VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure/Note4
+]
+
+var carte_monstre_scene = preload("res://Scènes/CarteMonstre.tscn")
+@onready var liste_zones_conteneur: VBoxContainer = $VBoxContainer/ScrollZones/ListeZonesConteneur
+
+var toutes_les_zones: Array = [
+	preload("res://Donnees/Zones/ZoneFacile1.tres")
 ]
 
 # --- VARIABLES DU COMBAT ---
@@ -33,6 +48,8 @@ var joueur_note_arme: String = "DO"
 var la_mesure: Array = []
 const TAILLE_MAX_MESURE: int = 4
 
+var auto_battle_actif: bool = false
+
 # Liste des sorts connus (On charge notre premier sort)
 var sort_equipe: SortResource = preload("res:///Donnees/Sorts/HarmonieBrulante.tres")
 
@@ -42,6 +59,14 @@ func _ready() -> void:
 	barre_tempo_joueur.value = 0
 	mettre_a_jour_ui_mesure()
 	mettre_a_jour_ui_joueur()
+	
+	# Masque tout le bloc de combat et affiche les zones
+	zone_combat_actif.visible = false
+	scroll_zones.visible = true
+	
+	nom_joueur_text.text = GameState.joueur_nom # Affiche "Harmoniste" ou le nom du joueur
+	
+	afficher_zones()
 
 func _process(delta: float) -> void:
 	if not combat_en_cours or monstre_actif == null:
@@ -66,8 +91,9 @@ func _process(delta: float) -> void:
 
 # --- MÉCANIQUES DE COMBAT ---
 
-func lancer_combat(monstre: MonstreResource) -> void:
+func lancer_combat(monstre: MonstreResource, est_auto: bool = false) -> void:
 	monstre_actif = monstre
+	auto_battle_actif = est_auto
 	pv_actuels_monstre = monstre.pv_max
 	temps_ecoule_monstre = 0.0
 	temps_ecoule_joueur = 0.0 
@@ -86,8 +112,15 @@ func lancer_combat(monstre: MonstreResource) -> void:
 	if monstre.icone_texture != null:
 		sprite_monstre.texture = monstre.icone_texture
 	
-	print("⚔️ Le combat commence contre : ", monstre.nom)
-
+	# On affiche la zone de combat globale
+	zone_combat_actif.visible = true
+	scroll_zones.visible = false
+	
+	bouton_quitter_auto.visible = auto_battle_actif
+	
+	var mode_texte = "en Auto-Battle" if auto_battle_actif else "en Manuel"
+	print("⚔️ Le combat commence contre : ", monstre.nom, " ", mode_texte)
+	
 func mettre_a_jour_ui_joueur() -> void:
 	barre_vie_joueur.max_value = GameState.joueur_pv_max
 	barre_vie_joueur.value = GameState.joueur_pv_actuels
@@ -111,7 +144,12 @@ func defaite_combat() -> void:
 	barre_tempo_joueur.value = 0
 	nom_monstre_text.text = "Vous avez perdu... Soignez-vous avant de revenir !"
 	monstre_actif = null
-
+	
+	await get_tree().create_timer(2.0).timeout
+	zone_combat_actif.visible = false
+	scroll_zones.visible = true
+	afficher_zones()
+	
 func joueur_attaque_automatique() -> void:
 	temps_ecoule_joueur = 0.0 
 	
@@ -187,13 +225,90 @@ func victoire_combat() -> void:
 	barre_tempo_monstre.value = 0
 	barre_tempo_joueur.value = 0
 	nom_monstre_text.text = "Victoire ! Sélectionnez un adversaire."
+	
 	GameState.enregistrer_mort_monstre(monstre_actif, false)
-	monstre_actif = null
+	
+	# Relance le combat uniquement si l'auto-battle n'a pas été désactivé entre-temps
+	if auto_battle_actif and GameState.endurance_actuelle >= 1:
+		GameState.endurance_actuelle -= 1
+		print("⚡ Auto-Battle actif ! Endurance restante : ", GameState.endurance_actuelle)
+		
+		await get_tree().create_timer(1.0).timeout
+		lancer_combat(monstre_actif, true)
+	else:
+		if auto_battle_actif:
+			print("❌ Plus d'endurance ou mode auto désactivé.")
+			auto_battle_actif = false
+		monstre_actif = null
+		
+		# Retour propre à la sélection des zones
+		zone_combat_actif.visible = false
+		scroll_zones.visible = true
+		afficher_zones()
+		
+func afficher_zones() -> void:
+	# Nettoyage de la liste avant de générer pour éviter les doublons
+	for enfant in liste_zones_conteneur.get_children():
+		enfant.queue_free()
 
-func _on_bouton_slime_pressed() -> void:
-	var slime = load("res://Donnees/Monstres/SlimeSeve.tres")
-	lancer_combat(slime)
+	for zone in toutes_les_zones:
+		if zone == null: continue
+		
+		# --- TITRE DE LA ZONE ---
+		var titre = Label.new()
+		titre.text = zone.nom_zone + " [" + zone.difficulte.to_upper() + "]"
+		titre.add_theme_font_size_override("font_size", 18)
+		titre.add_theme_color_override("font_color", Color(0.6, 0.2, 0.8)) 
+		liste_zones_conteneur.add_child(titre)
 
+		# --- GRILLE DES MONSTRES ---
+		var grille = GridContainer.new()
+		grille.columns = 2
+		grille.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grille.add_theme_constant_override("h_separation", 10)
+		grille.add_theme_constant_override("v_separation", 10)
+		liste_zones_conteneur.add_child(grille)
+
+		# --- GÉNÉRATION DES CARTES ---
+		var monstres_requis_pour_boss = true
+		
+		for monstre in zone.liste_monstres:
+			if monstre == null: continue
+			
+			var carte = carte_monstre_scene.instantiate()
+			grille.add_child(carte)
+			carte.initialiser(monstre)
+			
+			# Connexion des signaux de la carte vers notre gestionnaire de combat
+			carte.lancer_combat_manuel.connect(func(m): lancer_combat(m, false))
+			carte.lancer_combat_auto.connect(func(m): lancer_combat(m, true))
+			
+			if GameState.monstres_kills.get(monstre.id, 0) < 10:
+				monstres_requis_pour_boss = false
+
+		# --- GÉNÉRATION DU BOUTON BOSS ---
+		if zone.monstre_boss != null:
+			var boss_bouton = Button.new()
+			boss_bouton.custom_minimum_size = Vector2(0, 50)
+			
+			# Vérification des conditions pour déverrouiller le boss de la zone
+			if monstres_requis_pour_boss:
+				boss_bouton.text = "👑 " + zone.monstre_boss.nom + " [BOSS D'ACTE]"
+				boss_bouton.disabled = false
+				boss_bouton.add_theme_color_override("font_color", Color(1, 0.8, 0))
+				boss_bouton.pressed.connect(func(): lancer_combat(zone.monstre_boss, false))
+			else:
+				boss_bouton.text = "🔒 " + zone.monstre_boss.nom + " [REQUIS : 10 VICTOIRES/MONSTRE]"
+				boss_bouton.disabled = true
+				
+			liste_zones_conteneur.add_child(boss_bouton)
+		
 # Clic sur le bouton de sort
 func _on_button_pressed() -> void:
 	executer_sort_equipe()
+
+
+func _on_bouton_quitter_auto_pressed() -> void:
+	auto_battle_actif = false
+	bouton_quitter_auto.visible = false
+	print("🛑 Arrêt de l'Auto-Battle demandé. Fin du cycle après le monstre actuel.")

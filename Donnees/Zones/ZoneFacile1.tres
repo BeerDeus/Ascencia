@@ -3,10 +3,11 @@
 [ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Donnees/MonstreResource.gd" id="1_6v7s8"]
 [ext_resource type="Script" uid="uid://ddj7egiysw43" path="res://Donnees/ZoneResource.gd" id="2_ge2hs"]
 [ext_resource type="Resource" uid="uid://b1t4fqxwgyj8q" path="res://Donnees/Monstres/SlimeSeve.tres" id="2_r7rh1"]
+[ext_resource type="Resource" uid="uid://c3b371h2s3syu" path="res://Donnees/Monstres/SlimeBleu.tres" id="3_rrne4"]
 
 [resource]
 script = ExtResource("2_ge2hs")
 id = "start_forest"
 nom_zone = "Forêt de Départ"
-liste_monstres = Array[ExtResource("1_6v7s8")]([ExtResource("2_r7rh1")])
+liste_monstres = Array[ExtResource("1_6v7s8")]([ExtResource("2_r7rh1"), ExtResource("3_rrne4")])
 metadata/_custom_type_script = "uid://ddj7egiysw43"

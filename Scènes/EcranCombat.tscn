@@ -8,11 +8,23 @@ bg_color = Color(0.14509805, 0.14509805, 0.14509805, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hob4h"]
 bg_color = Color(0.8627451, 0, 0.2, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jxv4o"]
+bg_color = Color(0.14509805, 0.14509805, 0.14509805, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w5uqh"]
+bg_color = Color(0.6509804, 0.6117647, 0.03529412, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oll0h"]
 bg_color = Color(0.14348021, 0.14348021, 0.14348021, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b60e2"]
-bg_color = Color(0.8635783, 0, 0.19942722, 1)
+bg_color = Color(6.256998e-07, 0.562718, 0.058943734, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gjmh5"]
+bg_color = Color(0.14509805, 0.14509805, 0.14509805, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5tjr8"]
+bg_color = Color(0.6520346, 0.6127283, 0.035332207, 1)
 
 [node name="EcranCombat" type="Control" unique_id=1977724682]
 layout_mode = 3
@@ -28,45 +40,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="LabelZone" type="Label" parent="VBoxContainer" unique_id=1638273494]
+[node name="ZoneCombatActif" type="VBoxContainer" parent="VBoxContainer" unique_id=832112654]
 layout_mode = 2
-text = "Zone : Les Périphéries d'Aubier"
+size_flags_vertical = 3
 
-[node name="ConteneurMesure" type="HBoxContainer" parent="VBoxContainer" unique_id=431291081]
-layout_mode = 2
-
-[node name="Note1" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=1123519760]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "-"
-horizontal_alignment = 1
-
-[node name="Note2" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=817362109]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "-"
-horizontal_alignment = 1
-
-[node name="Note3" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=911197079]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "-"
-horizontal_alignment = 1
-
-[node name="Note4" type="Label" parent="VBoxContainer/ConteneurMesure" unique_id=568703840]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "-"
-horizontal_alignment = 1
-
-[node name="EncadréMonstre" type="PanelContainer" parent="VBoxContainer" unique_id=956388425]
+[node name="ZoneMonstre" type="PanelContainer" parent="VBoxContainer/ZoneCombatActif" unique_id=956388425]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/EncadréMonstre" unique_id=487087256]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ZoneCombatActif/ZoneMonstre" unique_id=487087256]
 layout_mode = 2
 
-[node name="SpriteMonstre" type="TextureRect" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=387962640]
+[node name="SpriteMonstre" type="TextureRect" parent="VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer" unique_id=387962640]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
@@ -74,37 +59,90 @@ size_flags_vertical = 3
 expand_mode = 1
 stretch_mode = 3
 
-[node name="NomMonstreText" type="Label" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1187999127]
+[node name="NomMonstreText" type="Label" parent="VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer" unique_id=1187999127]
 layout_mode = 2
 text = "\"Sélectionnez un adversaire\""
 
-[node name="BarreVieMonstre" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=145127548]
+[node name="BarreVieMonstre" type="ProgressBar" parent="VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer" unique_id=145127548]
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_dxq3g")
 theme_override_styles/fill = SubResource("StyleBoxFlat_hob4h")
 
-[node name="BarreTempoMonstre" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1752153404]
+[node name="BarreTempoMonstre" type="ProgressBar" parent="VBoxContainer/ZoneCombatActif/ZoneMonstre/VBoxContainer" unique_id=1752153404]
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_jxv4o")
+theme_override_styles/fill = SubResource("StyleBoxFlat_w5uqh")
+
+[node name="Label" type="Label" parent="VBoxContainer/ZoneCombatActif" unique_id=1695183433]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4465418, 0.08971997, 0.57004255, 1)
+theme_override_font_sizes/font_size = 13
+text = "VS
+"
+horizontal_alignment = 1
+
+[node name="ZoneJoueur" type="PanelContainer" parent="VBoxContainer/ZoneCombatActif" unique_id=92919837]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1892216098]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur" unique_id=54053173]
 layout_mode = 2
-text = "LANCER SORT (DO + DO)"
 
-[node name="BarreVieJoueur" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=177022497]
+[node name="NomJoueurText" type="Label" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer" unique_id=1559275249]
+layout_mode = 2
+
+[node name="BarreVieJoueur" type="ProgressBar" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer" unique_id=177022497]
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_oll0h")
 theme_override_styles/fill = SubResource("StyleBoxFlat_b60e2")
 
-[node name="BarreTempoJoueur" type="ProgressBar" parent="VBoxContainer/EncadréMonstre/VBoxContainer" unique_id=1155819907]
+[node name="BarreTempoJoueur" type="ProgressBar" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer" unique_id=1155819907]
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_gjmh5")
+theme_override_styles/fill = SubResource("StyleBoxFlat_5tjr8")
+
+[node name="ConteneurMesure" type="HBoxContainer" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer" unique_id=431291081]
 layout_mode = 2
 
-[node name="GrilleBoutonsMonstres" type="GridContainer" parent="VBoxContainer" unique_id=1146553205]
+[node name="Note1" type="Label" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure" unique_id=1123519760]
 layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
 
-[node name="BoutonSlime" type="Button" parent="VBoxContainer/GrilleBoutonsMonstres" unique_id=1515365004]
+[node name="Note2" type="Label" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure" unique_id=817362109]
 layout_mode = 2
-text = "1. Slime de Sève (0/10 Kills)
-"
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
 
-[connection signal="pressed" from="VBoxContainer/EncadréMonstre/VBoxContainer/Button" to="." method="_on_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/GrilleBoutonsMonstres/BoutonSlime" to="." method="_on_bouton_slime_pressed"]
+[node name="Note3" type="Label" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure" unique_id=911197079]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Note4" type="Label" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/ConteneurMesure" unique_id=568703840]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "-"
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer" unique_id=1892216098]
+layout_mode = 2
+text = "LANCER SORT (DO + DO)"
+
+[node name="BoutonQuitterAuto" type="Button" parent="VBoxContainer/ZoneCombatActif" unique_id=595607816]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8047187, 0.2223315, 0.25884727, 1)
+text = "Quitter l'Auto-Battle"
+
+[node name="ScrollZones" type="ScrollContainer" parent="VBoxContainer" unique_id=573534245]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ListeZonesConteneur" type="VBoxContainer" parent="VBoxContainer/ScrollZones" unique_id=144352822]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[connection signal="pressed" from="VBoxContainer/ZoneCombatActif/ZoneJoueur/VBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ZoneCombatActif/BoutonQuitterAuto" to="." method="_on_bouton_quitter_auto_pressed"]

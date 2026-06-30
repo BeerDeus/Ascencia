@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="MonstreResource" format=3 uid="uid://c3b371h2s3syu"]
+
+[ext_resource type="Texture2D" uid="uid://hssqqf02vl0l" path="res://Assets/Sprites/Monstres/slime_bleu.png" id="1_70xkp"]
+[ext_resource type="Script" uid="uid://dnhaqfsmyb3na" path="res://Donnees/MonstreResource.gd" id="2_i8pap"]
+[ext_resource type="Script" uid="uid://dat65m2wjs47m" path="res://Scripts/LootItem.gd" id="3_c4dvu"]
+
+[resource]
+script = ExtResource("2_i8pap")
+icone_texture = ExtResource("1_70xkp")
+id = "slime_bleu"
+nom = "Slime Bleu"
+pv_max = 30
+points_attaque = 3
+xp_donnee = 15
+metadata/_custom_type_script = "uid://dnhaqfsmyb3na"
