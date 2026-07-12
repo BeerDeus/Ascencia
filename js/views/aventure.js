@@ -58,7 +58,14 @@ function renderZone(view) {
     const done = w >= WIN_REQ;
     const bar = el('div.mini-gauge', {}, [el('div.fill', { style: `width:${Math.min(100, w / WIN_REQ * 100)}%` })]);
     const actions = [ el('button.btn-fight', { text: 'Affronter', onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id }) }) ];
-    if (done) actions.push(el('button.btn-auto', { text: '▶ Auto', onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id, auto: true }) }));
+    if (done) {
+      const noEnd = state.endurance.cur <= 0;
+      actions.push(el('button.btn-auto', {
+        text: noEnd ? '⚡ Épuisé' : '▶ Auto',
+        disabled: noEnd ? 'true' : null,
+        onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id, auto: true }),
+      }));
+    }
     grid.append(el('div.monster-card' + (done ? '.cleared' : ''), {}, [
       el('div.mc-sprite', {}, [spriteImg(m.sprite)]),
       el('div.mc-name', { text: m.name }),
@@ -113,7 +120,12 @@ function renderCombat(view) {
   } else {
     controls.append(el('button.btn-quit', { text: 'Quitter', onclick: () => stop() }));
     if (unlocked && !rt.isBoss) {
-      controls.append(el('button.btn-auto', { text: "▶ Activer l'auto-battle", onclick: () => { toggleAuto(); rerender(); } }));
+      const noEnd = state.endurance.cur <= 0;
+      controls.append(el('button.btn-auto', {
+        text: noEnd ? '⚡ Endurance épuisée' : "▶ Activer l'auto-battle",
+        disabled: noEnd ? 'true' : null,
+        onclick: () => { toggleAuto(); rerender(); },
+      }));
     }
   }
   view.append(controls);

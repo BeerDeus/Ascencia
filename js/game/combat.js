@@ -8,6 +8,7 @@ import { derive, addXp } from './player.js';
 import { ITEMS } from './items.js';
 import { rollLoot, makeMonster } from './monsters.js';
 import { NOTES, noteById, noteByLabel, pushNote, matchAccord, MESURE_SIZE } from './symphony.js';
+import { hasEndurance, spend as spendEndurance } from './endurance.js';
 
 const TEMPO_RATE  = 42;    // points de Tempo / seconde à vitesse 1 (jauge = 100)
 const RELAUNCH_MS = 1200;  // délai avant relance en auto-battle
@@ -26,8 +27,12 @@ export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}
   const p = derive(state.player);
   const pHp = rt && rt.active && rt.pHp > 0 ? Math.min(rt.pHp, p.maxHp) : p.maxHp;
   state.mesure.length = 0; // Mesure fraîche à chaque combat
+  // Chaque lancement d'auto-battle (initial ou relance) consomme 1 pt d'Endurance ;
+  // à sec, le combat démarre en mode manuel (le mode s'arrête faute d'Endurance).
+  const wantsAuto = auto && !isBoss;
+  const autoGranted = wantsAuto && spendEndurance(1);
   rt = {
-    active: true, auto: auto && !isBoss, isBoss, zoneId,
+    active: true, auto: autoGranted, isBoss, zoneId,
     enemy: { ...monster }, enemyId: monster.id,
     eMax: monster.hp, eHp: monster.hp,
     pMax: p.maxHp, pHp,
@@ -44,6 +49,7 @@ export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}
     weaponNote: weaponNoteId(),
   };
   pushLog(`⚔️ ${monster.name} apparaît !`);
+  if (wantsAuto && !autoGranted) pushLog('⚡ Endurance épuisée — combat lancé en mode manuel.');
   paint();
   loop();
 }
@@ -254,6 +260,7 @@ export function consume() {
 
 export function toggleAuto() {
   if (!rt || rt.isBoss) return;
+  if (!rt.auto && !hasEndurance(1)) { pushLog('⚡ Endurance insuffisante pour activer l’auto-battle.'); paint(); return; }
   rt.auto = !rt.auto;
   if (!rt.auto && rt.phase === 'relaunching') { stop(); return; }
   paint();

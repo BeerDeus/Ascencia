@@ -4,7 +4,7 @@ import { state } from '../state.js';
 
 export function renderHeader(root) {
   clear(root);
-  const p = state.player, r = state.resources;
+  const p = state.player, r = state.resources, en = state.endurance;
 
   root.append(
     el('button.hdr-btn', { text: '☰', 'aria-label': 'Menu' }),
@@ -17,6 +17,11 @@ export function renderHeader(root) {
     el('div.hp-pill', {}, [
       el('span.icon', { text: '❤️' }),
       el('span', { text: `${p.hp.cur}/${p.hp.max}` }),
+    ]),
+
+    el('div.end-pill', {}, [
+      el('span.icon', { text: '⚡' }),
+      el('span', { text: `${en.cur}/${en.max}` }),
     ]),
 
     el('div.hdr-res', {}, [

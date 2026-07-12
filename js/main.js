@@ -6,6 +6,7 @@ import { renderFab } from './components/fab.js';
 import { initRouter, navigate, rerender } from './router.js';
 import { playerApi } from './game/player.js';
 import { recomputeBonuses, itemsApi } from './game/items.js';
+import { tick as enduranceTick, enduranceApi } from './game/endurance.js';
 
 function boot() {
   const app = document.getElementById('app');
@@ -18,6 +19,7 @@ function boot() {
   const drawFab = () => renderFab(app, state, navigate);
 
   recomputeBonuses(state.player); // resync des bonus d'équipement au démarrage
+  enduranceTick(Date.now());      // rattrapage de la régénération hors-ligne (Phase 4)
   renderHeader(header);
   drawMainNav(state.ui.view);
   initRouter({ viewRoot, subnav, onViewChange: drawMainNav });
@@ -26,10 +28,14 @@ function boot() {
   // Toute mutation d'etat rafraichit le header + la vue courante + le FAB.
   subscribe(() => { renderHeader(header); rerender(); drawFab(); });
 
-  // API console pour tester le state joueur (ex: Ascencia.addXp(250)).
-  window.Ascencia = Object.assign({}, playerApi, itemsApi, { state, resetSave });
+  // Régénération d'Endurance en continu pendant la session (setState ne déclenche
+  // le rerender que si un point est effectivement gagné — voir game/endurance.js).
+  setInterval(() => enduranceTick(Date.now()), 30 * 1000);
 
-  console.log('[Ascencia] Phase 1 prete. Test console : Ascencia.addXp(250), Ascencia.addAttribute("force",10), Ascencia.addResource("premium",1000), Ascencia.resetSave()');
+  // API console pour tester le state joueur (ex: Ascencia.addXp(250)).
+  window.Ascencia = Object.assign({}, playerApi, itemsApi, enduranceApi, { state, resetSave });
+
+  console.log('[Ascencia] Phases 1-4 prêtes. Test console : Ascencia.addXp(250), Ascencia.addAttribute("force",10), Ascencia.addResource("premium",1000), Ascencia.spend(5), Ascencia.resetSave()');
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

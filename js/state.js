@@ -30,7 +30,7 @@ function defaultState() {
       bois: 300, metal: 300, tissu: 300, // matériaux de craft de base
       fragments: 0,    // monnaie premium / enchantement
     },
-    endurance: { cur: SETTINGS.enduranceMax, max: SETTINGS.enduranceMax },
+    endurance: { cur: SETTINGS.enduranceMax, max: SETTINGS.enduranceMax, regenAt: null }, // regenAt = ts prochain point (Phase 4)
     mesure: [],            // FIFO notes (Phase 3)
     accords: [],           // sorts équipés (Phase 3)
     monsterWins: {},       // { monsterId: count } — nettoyage + déblocage auto-battle

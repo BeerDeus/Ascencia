@@ -56,6 +56,17 @@
 }
 .hp-pill .icon { color: var(--hp); }
 
+.end-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  flex-shrink: 0;
+}
+.end-pill .icon { color: var(--tempo); }
+
 .hdr-res {
   display: grid;
   grid-template-columns: auto auto;
