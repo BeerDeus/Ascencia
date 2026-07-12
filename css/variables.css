@@ -1,0 +1,72 @@
+/* ===== Ascencia — Design Tokens ===== */
+:root {
+  /* Fonds (anthracite, thème sombre) */
+  --bg-app: #17171b;
+  --bg-section: #1f1f25;
+  --bg-card: #26262d;
+  --bg-card-hover: #2d2d36;
+  --bg-inset: #1b1b21;
+
+  /* Bordures */
+  --border: #33333c;
+  --border-soft: #2a2a32;
+  --border-gold: rgba(217, 164, 65, 0.35);
+
+  /* Or / accents */
+  --gold: #d9a441;
+  --gold-bright: #f0c25e;
+  --gold-dim: #a67d34;
+  --gold-glow: rgba(240, 194, 94, 0.25);
+
+  /* Texte */
+  --text: #e9e7e1;
+  --text-muted: #8b8b94;
+  --text-faint: #5f5f68;
+
+  /* Sémantique */
+  --positive: #6bbf59;
+  --negative: #d9455f;
+  --hp: #e0405a;
+  --tempo: #4aa8d9;
+  --dissonance: #b45ad9; /* Larry / chaos */
+
+  /* Ressources */
+  --res-crystal: #4ac0d9;
+  --res-crystal-alt: #4a7fd9;
+  --res-coin: #d9a441;
+  --res-coin-alt: #cfa53a;
+  --res-echo: #e0405a;
+
+  /* Typographie */
+  --font-title: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Espacements */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Rayons */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Ombres */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-nav: 0 -2px 12px rgba(0, 0, 0, 0.45);
+
+  /* Layout */
+  --header-h: 56px;
+  --subnav-h: 50px;
+  --mainnav-h: 62px;
+  --center-rise: 30px; /* hauteur de montée du bouton Aventure = gap subnav */
+  --max-w: 460px;
+
+  /* Transitions */
+  --t-fast: 120ms ease;
+  --t: 200ms ease;
+}

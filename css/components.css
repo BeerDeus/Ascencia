@@ -1,0 +1,323 @@
+/* ===== Header ===== */
+.game-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  padding-top: env(safe-area-inset-top);
+  background: var(--bg-section);
+  border-bottom: 1px solid var(--border);
+}
+.hdr-btn {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.hdr-btn:active { background: var(--bg-card-hover); }
+
+.hdr-avatar {
+  position: relative;
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-gold);
+  background: var(--bg-inset) center/cover;
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  font-size: 20px;
+}
+.hdr-avatar .lvl {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-title);
+  font-size: 9px; font-weight: 600;
+  color: var(--gold-bright);
+  background: var(--bg-app);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-pill);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.hp-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  flex-shrink: 0;
+}
+.hp-pill .icon { color: var(--hp); }
+
+.hdr-res {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px var(--sp-2);
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text);
+}
+.hdr-res .res { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.hdr-res .res .icon { font-size: 11px; }
+
+.hdr-premium {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, rgba(240,194,94,0.10), rgba(217,164,65,0.04));
+  color: var(--gold-bright);
+  font-weight: 600; font-size: 13px;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px var(--gold-glow);
+}
+
+/* ===== Cartes ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  box-shadow: var(--shadow-card);
+}
+
+/* Groupe/panneau de quartier */
+.panel {
+  background: var(--bg-section);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-2) var(--sp-2) var(--sp-3);
+}
+.panel-head .section-title { margin: 0; }
+.panel-toggle { color: var(--gold); font-size: 14px; }
+
+/* Grille de cartes de menu */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+.card-grid .menu-card.full { grid-column: 1 / -1; }
+
+/* Carte de menu (Forge, Alchimiste...) cliquable */
+.menu-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: var(--sp-4) var(--sp-3);
+  text-align: center;
+  transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  min-height: 96px;
+  justify-content: flex-start;
+}
+.menu-card:hover { background: var(--bg-card-hover); border-color: var(--border-gold); }
+.menu-card:active { transform: scale(0.97); box-shadow: 0 0 14px var(--gold-glow); }
+.menu-card.locked { opacity: 0.5; pointer-events: none; }
+
+.menu-card .mc-title {
+  font-family: var(--font-title);
+  font-weight: 600; font-size: 15px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gold);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.menu-card .mc-sep { height: 1px; background: var(--border); margin: 2px 0; }
+.menu-card .mc-status { font-size: 13px; font-weight: 600; color: var(--text); }
+.menu-card .mc-desc { font-size: 12px; color: var(--text-muted); }
+
+/* ===== Jauge de progression ===== */
+.gauge {
+  width: 100%;
+  height: 10px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  position: relative;
+}
+.gauge .fill {
+  height: 100%;
+  width: 0%;
+  border-radius: var(--radius-pill);
+  transition: width 120ms linear;
+  background: var(--gold);
+}
+.gauge.hp .fill { background: linear-gradient(90deg, #b5304a, var(--hp)); }
+.gauge.tempo .fill { background: linear-gradient(90deg, #2f7fa8, var(--tempo)); }
+.gauge.xp .fill { background: linear-gradient(90deg, var(--gold-dim), var(--gold-bright)); }
+.gauge-label {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted); margin-bottom: 4px;
+}
+
+/* Ligne d'attribut / stat (vue profil) */
+.stat-row {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-1);
+  font-size: 14px;
+}
+.stat-row .icon { width: 20px; text-align: center; }
+.stat-row .label { color: var(--text); }
+.stat-row .value { margin-left: auto; color: var(--gold); font-weight: 600; }
+.stat-row .attr-right { margin-left: auto; display: flex; align-items: center; gap: var(--sp-2); }
+.stat-row .attr-right .value { margin-left: 0; }
+.attr-plus {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--gold); border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, rgba(240,194,94,0.14), rgba(217,164,65,0.05));
+  color: var(--gold-bright); font-weight: 700; font-size: 15px; line-height: 1;
+  box-shadow: 0 0 6px var(--gold-glow);
+}
+.attr-plus:active { transform: scale(0.9); }
+.attr-points {
+  font-family: var(--font-title);
+  font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--gold-bright); padding: 2px var(--sp-1) var(--sp-2);
+}
+
+/* Bouton flottant d'attribution de points */
+.attr-fab {
+  position: absolute;
+  right: 16px;
+  bottom: calc(var(--mainnav-h) + var(--subnav-h) + 18px);
+  z-index: 30;
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 13px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(160deg, var(--bg-card-hover), var(--bg-inset));
+  border: 1.5px solid var(--gold);
+  color: var(--gold-bright);
+  box-shadow: 0 0 16px var(--gold-glow), 0 6px 14px rgba(0,0,0,0.5);
+  font-family: var(--font-title);
+  font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+  animation: fab-pulse 1.8s ease-in-out infinite;
+}
+@keyframes fab-pulse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.attr-fab .fab-plus { font-size: 16px; font-weight: 700; line-height: 1; }
+.attr-fab .fab-badge {
+  min-width: 18px; height: 18px; padding: 0 5px;
+  display: grid; place-items: center;
+  background: var(--gold); color: #1a1a1a;
+  border-radius: var(--radius-pill); font-size: 11px; font-weight: 700;
+}
+.detail-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px var(--sp-1); }
+.detail-row .k { color: var(--text-muted); }
+.detail-row .v { color: var(--positive); font-weight: 600; }
+
+/* Onglets internes (Combat / Global / Traits) */
+.tabs { display: flex; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-3); }
+.tab {
+  flex: 1; padding: var(--sp-2);
+  font-size: 13px; font-weight: 600; text-align: center;
+  color: var(--text-muted);
+  background: var(--bg-inset);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+}
+.tab.active { color: var(--gold-bright); border-color: var(--border-gold); background: var(--bg-card); }
+
+/* ===== Navigation basse ===== */
+.subnav {
+  display: flex;
+  align-items: flex-end;     /* onglets rabaissés vers la barre principale */
+  overflow-x: hidden;
+  gap: var(--sp-1);
+  height: var(--subnav-h);
+  padding: 0 var(--sp-2) 6px; /* padding-bottom : légère descente harmonieuse */
+  background: var(--bg-app);
+  border-top: 1px solid var(--border-soft);
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.subnav::-webkit-scrollbar { display: none; }
+/* Encoche centrale : réserve la place du bouton Aventure surélevé (icon-wrap 62px) */
+.subnav-notch {
+  flex: 0 0 82px;
+  align-self: stretch;
+  pointer-events: none;
+}
+/* Groupes gauche/droite : chacun 50% → notch parfaitement centré */
+.subnav-group {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-1);
+}
+.subnav-item {
+  flex: 1 1 0;               /* les onglets se partagent toute la largeur dispo */
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
+  min-width: 0; padding: 0 var(--sp-2);
+  font-family: var(--font-title);
+  font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.subnav-item .icon { font-size: 16px; }
+.subnav-item.active { color: var(--gold-bright); border-bottom-color: var(--gold); }
+
+.mainnav {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: var(--mainnav-h);
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-section);
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow-nav);
+  flex-shrink: 0;
+}
+.mainnav-item {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-family: var(--font-title);
+  font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.mainnav-item .icon { font-size: 18px; }
+.mainnav-item.active { color: var(--gold-bright); }
+.mainnav-item.active .icon { filter: drop-shadow(0 0 6px var(--gold-glow)); }
+
+/* Bouton central surélevé (Aventure) — tuile qui monte dans le gap de la subnav */
+.mainnav-item.center {
+  position: relative;
+  flex: 0 0 82px;
+  justify-content: flex-end;
+  padding-bottom: 6px;
+}
+.mainnav-item.center .icon-wrap {
+  position: absolute;
+  left: 50%; top: calc(-1 * var(--center-rise));
+  transform: translateX(-50%);
+  width: 62px; height: 62px;
+  display: grid; place-items: center;
+  font-size: 27px;
+  color: var(--gold-bright);
+  background: linear-gradient(160deg, var(--bg-card-hover), var(--bg-inset));
+  border: 1.5px solid var(--gold);
+  border-radius: 18px;
+  box-shadow: 0 0 18px var(--gold-glow), 0 8px 16px rgba(0,0,0,0.55);
+  transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
+  z-index: 5;
+}
+.mainnav-item.center .label { margin-top: 36px; } /* sous la tuile */
+.mainnav-item.center:active .icon-wrap { transform: translateX(-50%) scale(0.94); }
+.mainnav-item.center.active .icon-wrap {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 26px var(--gold-glow), 0 8px 16px rgba(0,0,0,0.55);
+  color: #fff;
+}

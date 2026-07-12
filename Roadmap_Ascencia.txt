@@ -1,0 +1,48 @@
+================================================================================
+ROADMAP DÉTAILLÉE - PROJET "ASCENCIA"
+================================================================================
+
+PHASE 1 : FONDATIONS & INTÉGRATION DE L'UI
+--------------------------------------------------------------------------------
+- Tâche 1.1 : Analyse des maquettes ("image_933999.png", "image_9339f5.png") et mise en place de l'architecture CSS/Variables (mode sombre, couleurs dorées, typographies).
+- Tâche 1.2 : Développement du layout principal Mobile-First (Header des ressources, conteneur principal dynamique, barre de navigation inférieure fixe).
+- Tâche 1.3 : Création des composants réutilisables (Cartes de menu avec effet de survol/clic, jauges de progression).
+- Tâche 1.4 : Implémentation du routeur interne / gestion des vues (Profil, Village, Aventure) sans rechargement de page.
+
+PHASE 2 : MOTEUR DE COMBAT ET JAUGES DE TEMPO
+--------------------------------------------------------------------------------
+- Tâche 2.1 : Mise en place de la boucle de jeu principale (`requestAnimationFrame` ou `setInterval` optimisé).
+- Tâche 2.2 : Création de la logique des jauges de Tempo (calcul de la vitesse de remplissage basée sur l'attribut Agilité/Vitesse).
+- Tâche 2.3 : Implémentation du module de calcul des dégâts (prise en compte de l'attaque, défense, esquive, critique).
+- Tâche 2.4 : Création du panneau de Logs textuels (historique d'actions épuré et auto-défilant).
+- Tâche 2.5 : Intégration des Sprites ennemis dans l'UI de combat.
+- Tâche 2.6 : Structure de Zones (config ZONES : 3-6 monstres + boss par zone, difficulté croissante).
+- Tâche 2.7 : Interface de Zone (liste monstres, progression 10 victoires, bouton Affronter) <-> Interface de Combat (bascule).
+- Tâche 2.8 : Progression : nettoyage 10x/monstre + Boss -> déblocage zone suivante ; auto-battle relançable par monstre (10 victoires) avec bouton "Arrêter l'auto-battle".
+
+PHASE 3 : SYSTÈME SYMPHONIE & ACCORDS
+--------------------------------------------------------------------------------
+- Tâche 3.1 : Création du système d'apparition des Bulles (Notes de musique) déclenché par les frappes du Tempo.
+- Tâche 3.2 : Implémentation du Tweening CSS ou JS (ex: GSAP ou Web Animations API) pour le flottement des bulles. Intégration d'un Object Pooling pour éviter les fuites mémoire lors de longues sessions.
+- Tâche 3.3 : Création du tableau de données "La Mesure" (Logique FIFO, max 4 emplacements).
+- Tâche 3.4 : Implémentation de l'algorithme de pattern matching vérifiant La Mesure par rapport aux "Accords" équipés (ex: DO-DO-DO pour Soin).
+
+PHASE 4 : SYSTÈME D'IDLE, AUTO-BATTLE ET ENDURANCE
+--------------------------------------------------------------------------------
+- Tâche 4.1 : Création du tracker de victoires historiques par monstre.
+- Tâche 4.2 : Implémentation du Toggle "Auto-Battle" (débloqué à 10 victoires) avec boucle de relance et délai de spawn (1-2 sec).
+- Tâche 4.3 : Implémentation de la jauge d'Endurance. Déduction à chaque lancement de combat Auto.
+- Tâche 4.4 : Création du module de temps (Timestamp) gérant la régénération de l'Endurance en temps réel ET lors du retour hors-ligne.
+
+PHASE 5 : MÉTHODES DE FARMING & L'INSTABILITÉ DE LARRY
+--------------------------------------------------------------------------------
+- Tâche 5.1 : Création du système d'Inventaire et du dictionnaire de Butins (Loot tables).
+- Tâche 5.2 : Implémentation des fonctionnalités du Village (Boutique Marchand, logique de Forge, recettes d'Alchimie pour restaurer l'Endurance).
+- Tâche 5.3 : Intégration de "l'Instabilité de Larry" (10% de chances de spawn d'une variante de monstre). Création du générateur d'affixes procéduraux (Stats boostées, couleurs Dissonantes).
+
+PHASE 6 : SAUVEGARDE, ASCENSION ET DÉPLOIEMENT
+--------------------------------------------------------------------------------
+- Tâche 6.1 : Mise en place complète du système de sauvegarde via `LocalStorage` ou `IndexedDB` (sauvegarde de l'état, de l'inventaire, de l'historique des monstres).
+- Tâche 6.2 : Implémentation du Hard Reset lié à "L'Ascension" (Prestige). Création de l'arbre de Constellations (améliorations permanentes).
+- Tâche 6.3 : Wrapping du projet Web (HTML/JS/CSS) dans Capacitor.
+- Tâche 6.4 : Tests de performances sur build mobile (framerate des animations de bulles, consommation batterie, confort de la barre de navigation sur petits écrans).

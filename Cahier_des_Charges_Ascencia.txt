@@ -1,0 +1,69 @@
+================================================================================
+CAHIER DES CHARGES DÉTAILLÉ - PROJET "ASCENCIA"
+================================================================================
+
+1. VISION GLOBALE ET DIRECTIVES POUR L'IA (COWORKER)
+--------------------------------------------------------------------------------
+- Rôle de l'IA (Claude) : Tu agis en tant que Développeur Senior sur ce projet.
+- Ressources Graphiques : Le logo "Ascencia.jpg" et les maquettes d'interface ("Capture d'écran 2026-07-12 200023.png", "Capture d'écran 2026-07-12 200101.png") sont présents dans l'espace de travail. 
+- Consigne UI stricte : Tu DOIS t'inspirer de ces captures d'écran pour structurer le HTML/CSS (mode sombre, teintes anthracite/or, typographie élégante, disposition en "cartes" aux bords arrondis, et barre de navigation inférieure fixe).
+
+2. PRÉSENTATION DU JEU
+--------------------------------------------------------------------------------
+- Titre : Ascencia
+- Genre : RPG Textuel / Semi-Idle / Incremental (Farming)
+- Stack Technique : HTML5, CSS3 (inspiré des maquettes), JavaScript (Vanilla ou framework léger type Vue.js). Portage ciblé via Capacitor à anticiper.
+- Thème : La dualité entre l'Harmonie cosmique (musique, constellations) et la Dissonance (chaos, cristaux, silence).
+
+3. INTERFACE UTILISATEUR (UI)
+--------------------------------------------------------------------------------
+- Structure Globale : Mobile-first. 
+- En-tête : Affichage du joueur (Niveau, Avatar), Jauge de Vie, et Ressources principales.
+- Zone Centrale : Contenu dynamique géré par onglets.
+- Navigation Basse : Barre de menu fixe.
+- Quartiers du Village : Blocs "cartes" pour Forge, Alchimiste, Cuisinier, Marchand, Primes (défis quotidiens).
+- Menu Profil : Sous-onglets (Combat, Global, Traits) affichant les attributs (Force, Agilité, etc.) et les stats détaillées (Régénération, Critique, Pénétration d'armure).
+- Départ & Progression : Le joueur commence NIVEAU 1 avec 10 PV et 1 dans chaque attribut. Chaque montée de niveau octroie 3 points d'attribut à répartir manuellement (bouton flottant hors onglet Personnage, boutons "+" dans le panneau Attributs). Aucune régénération de PV en combat (soins via consommables craftés à la Cuisine).
+- Effets des attributs :
+  * ❤️ Vie : PV max (+3 PV / point).
+  * 💪 Force : dégâts de compétences (Guerrier) ; pour toutes classes → Régén PV hors combat + Pénétration d'armure. (Base Attaque d'auto-attaque.)
+  * 🤸 Agilité : dégâts de compétences (Archer) ; pour toutes classes → Dégâts Critiques + Chance d'Esquive (+ Vitesse d'attaque).
+  * 🍀 Chance : succès des événements, qualité du butin, Chance de Coup Critique.
+  * 🧠 Intelligence : dégâts de sorts + Mana (Mage) ; pour toutes classes → Gain d'XP, Chance de Toucher, Résistance aux dégâts.
+  * 🛡️ Défense : réduction PLATE des dégâts (−1 dégât / point). Non attribuable manuellement : uniquement via équipement ou +1 tous les 10 niveaux.
+
+4. MOTEUR DE COMBAT (SEMI-IDLE & TEMPO)
+--------------------------------------------------------------------------------
+- Visuel : Affichage des sprites ennemis au-dessus d'une zone de logs textuels de combat (historique épuré).
+- Les Jauges : Deux barres de "Tempo" (Vitesse d'attaque) se remplissent continuellement. Une pour le joueur, une pour l'ennemi. Barres de PV respectives bien visibles.
+- Déclenchement : Lorsqu'une jauge de Tempo est pleine, l'entité attaque, les dégâts sont calculés, inscrits dans le log, et la jauge retombe à zéro.
+- Structure de Progression (Zones) : Le contenu est découpé en Zones de difficulté croissante (Facile -> Difficile). Chaque Zone contient 3 à 6 monstres distincts + 1 Boss.
+  * Farming : On tue les monstres pour récupérer leur butin et crafter les premiers équipements (Phase 5).
+  * Déblocage Auto-Battle : 10 victoires sur un monstre donné débloquent l'auto-battle pour CE monstre.
+  * Passage de Zone : Il faut avoir tué 10 fois CHAQUE monstre de la zone, puis vaincre le Boss (plus puissant) pour débloquer la zone suivante.
+- Flux UI Aventure : L'onglet Aventure affiche l'interface de Zone (liste des monstres). Cliquer sur un monstre / bouton "Affronter" ouvre l'interface de Combat. À la fin du combat, retour à l'interface de Zone — SAUF en auto-battle où le combat se relance automatiquement (un bouton "Arrêter l'auto-battle" reste affiché).
+
+5. SYSTÈME "SYMPHONIE" (LA MESURE ET LES ACCORDS)
+--------------------------------------------------------------------------------
+- Les Bulles Flottantes : Chaque attaque (ou événement de combat) a une chance de générer une bulle de note de musique (DO, RÉ, MI...) qui flotte sur l'écran (animation fluide via Tweening).
+- La Mesure : Une file de type FIFO (First In, First Out) de 4 emplacements affichée sur l'UI.
+- Interaction : Le joueur clique sur les bulles pour les insérer dans La Mesure. La nouvelle note pousse les plus anciennes vers la sortie.
+- Les Accords : Le joueur peut équiper jusqu'à 3 "Sorts / Accords" passifs. Dès que le contenu de La Mesure correspond au pattern de l'Accord, le sort se déclenche (Soin, Buff, Attaque critique).
+
+6. AUTO-BATTLE ET ENDURANCE (ÉNERGIE)
+--------------------------------------------------------------------------------
+- Déblocage : Un monstre spécifique devient éligible à l'Auto-Battle après 10 victoires historiques contre ce dernier.
+- Fonctionnement : L'Auto-Battle relance le combat en boucle (délai de 1 à 2 secondes entre la mort du monstre et le suivant). Les bulles continuent d'apparaître, le joueur peut interagir.
+- L'Endurance : Lancer un Auto-Battle consomme 1 point d'Endurance. Le mode s'arrête si l'Endurance tombe à 0.
+- Régénération : 1 point récupéré toutes les X minutes. Le calcul utilise le Timestamp de déconnexion pour calculer la régénération hors-ligne.
+- Consommables : Plats de Cuisine ou Potions permettant de recharger l'Endurance.
+
+7. L'INSTABILITÉ DE LARRY (AFFIXES)
+--------------------------------------------------------------------------------
+- Aléatoire : 10% de chances qu'un ennemi apparaisse sous l'influence de Larry (Dissonant, Zébré, Instable).
+- Conséquences : Statistiques altérées, résistance accrue, butin de Fragments d'Écho augmenté, mécanique de Tempo perturbée.
+
+8. SYSTÈME DE PRESTIGE (ASCENSION)
+--------------------------------------------------------------------------------
+- Scénario : Intégré au Lore (Acte III) suite à une défaite scénarisée contre Larry.
+- Mécanique : Remise à zéro des niveaux et de l'équipement basique en échange d'une monnaie permanente (Constellations) augmentant drastiquement les multiplicateurs de statistiques pour les runs suivants.

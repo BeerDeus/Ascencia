@@ -1,0 +1,61 @@
+/* ===== Reset & base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-app);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden; /* aucune scrollbar au niveau fenêtre */
+}
+
+button { font-family: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+ul { list-style: none; }
+
+/* Conteneur app centré, mobile-first, avec safe-areas */
+#app {
+  position: relative;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  height: 100vh;
+  height: 100dvh;      /* hauteur fixe = nav toujours en bas */
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+  overflow: hidden;
+}
+
+/* Seule zone défilante : le contenu entre header et nav basses */
+.view-root {
+  flex: 1 1 auto;
+  min-height: 0;       /* indispensable pour que le scroll flex fonctionne */
+  overflow-y: auto;
+  overflow-x: hidden;  /* jamais de scrollbar horizontale */
+  padding: var(--sp-4);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Titres serif dorés en capitales (style maquette) */
+.section-title {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: var(--sp-5) var(--sp-1) var(--sp-3);
+}
+.section-title:first-child { margin-top: var(--sp-2); }
+
+.text-muted { color: var(--text-muted); }
+.text-positive { color: var(--positive); }
+.text-negative { color: var(--negative); }
+
+/* Scrollbar discrète */
+.view-root::-webkit-scrollbar { width: 6px; }
+.view-root::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
