@@ -3,10 +3,12 @@ import { el } from '../utils/dom.js';
 import { VILLAGE, SUBNAV } from '../config.js';
 import { menuCard, panel } from '../components/card.js';
 import { navigateSub } from '../router.js';
-import { ITEMS, RECIPES, craft, canCraft, invCount } from '../game/items.js';
+import { ITEMS, RECIPES, RESOURCE_KEYS, craft, canCraft, invCount } from '../game/items.js';
 import { state } from '../state.js';
 
 const VILLAGE_SUBS = new Set(SUBNAV.village.map((s) => s.id));
+const RES_ICON = { or: '🪙', bois: '🪵', metal: '⛏️', tissu: '🧵', fragments: '🔩' };
+const STAT_ABR = { vie: 'Vie', force: 'For', agilite: 'Agi', chance: 'Cha', intelligence: 'Int', defense: 'Déf' };
 
 export function renderVillage(root, sub = 'hub') {
   const view = el('div.view');
@@ -25,22 +27,23 @@ export function renderVillage(root, sub = 'hub') {
 // ---------- Atelier de craft (Forge / Cuisine) ----------
 function renderCraft(view, station, title, verb) {
   view.append(el('h2.section-title', { text: title }));
-  view.append(el('div.craft-gold', { text: `🪙 ${state.resources.coinA} or` }));
+  const r = state.resources;
+  view.append(el('div.craft-gold', { text: `🪙 ${r.or}  ·  🪵 ${r.bois}  ⛏️ ${r.metal}  🧵 ${r.tissu}  🔩 ${r.fragments}` }));
 
   for (const recipe of RECIPES[station]) {
     const out = ITEMS[recipe.out];
     const ok = canCraft(recipe);
 
     const costRow = el('div.craft-cost', {}, Object.entries(recipe.cost).map(([k, v]) => {
-      if (k === 'coinA') return costChip('🪙', v, state.resources.coinA);
+      if (RESOURCE_KEYS.includes(k)) return costChip(RES_ICON[k] || '•', v, state.resources[k] || 0);
       const it = ITEMS[k];
-      return costChip(it.icon, v, invCount(k));
+      return costChip(it ? it.icon : '•', v, invCount(k));
     }));
 
     const stats = out.weapon
-      ? `Dégâts ${out.stats.attaque} · Tempo ${out.weapon.tempo}s · Note ${out.weapon.note}`
+      ? `${Object.entries(out.stats).map(([k, v]) => `+${v} ${STAT_ABR[k] || k}`).join(' · ')} · Tempo ${out.weapon.tempo}s · Note ${out.weapon.note}`
       : out.heal ? `+${out.heal} PV`
-      : out.stats ? Object.entries(out.stats).map(([k, v]) => `+${v} ${k}`).join(' · ')
+      : out.stats ? Object.entries(out.stats).map(([k, v]) => `+${v} ${STAT_ABR[k] || k}`).join(' · ')
       : '';
 
     view.append(el('div.craft-card' + (ok ? '' : '.disabled'), {}, [

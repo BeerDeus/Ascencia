@@ -13,51 +13,60 @@ export const ATTR_POINTS_PER_LEVEL = 3;
 const DEF_PER_10_LVL = 1; // Défense +1 tous les 10 niveaux (seule voie hors équipement)
 export const ALLOCATABLE = ['vie', 'force', 'agilite', 'chance', 'intelligence']; // pas 'defense'
 
-// ---- Stats de base (formules brutes, source = attributs) ----
-// Effets d'attributs (cf. Cahier) :
-//  ❤️ Vie  → PV max (+3/pt)   💪 Force → Attaque, Pénétration (plate), Régén hors combat
-//  🤸 Agilité → Dégâts Crit, Esquive, Vitesse   🍀 Chance → Crit, Qualité butin, Or
-//  🧠 Intelligence → Gain XP, Toucher, Résistance   🛡️ Défense → réduction plate (−1/pt)
-function baseStats(a) {
+// ---- Attributs de base + attributs d'équipement (couche attributs) ----
+// L'équipement donne des ATTRIBUTS (Vie, Force…) via bonuses.flat ; les stats
+// détaillées en découlent. Clés attributs : vie, force, agilite, chance, intelligence, defense.
+export const ATTR_KEYS = ['vie', 'force', 'agilite', 'chance', 'intelligence', 'defense'];
+export function effectiveAttributes(player = state.player) {
+  const a = { ...player.attributes };
+  const flat = (player.bonuses && player.bonuses.flat) || {};
+  for (const k of ATTR_KEYS) a[k] = (a[k] || 0) + (flat[k] || 0);
+  return a;
+}
+
+// ---- Stats de base (formules portées du legacy 0.9.0) ----
+//  Vie → PV=10+Vie*3 | Force → Attaque(+niv/1.32), Pénétration=0.5√F, Régén=F/10
+//  Agilité → CritDmg=175+0.5√A, Esquive=0.15√A | Chance → Crit=3.75√C, Butin=100√(C/300)
+//  Intelligence → Résist=0.3√I, XP=5√I | Défense → réduction PLATE
+const sq = Math.sqrt;
+function baseStats(a, level = 1) {
+  const lootPct = 100 * sq(Math.min(a.chance, 300) / 300);
   return {
-    maxHp:         7 + a.vie * 3,                    // 10 PV au niveau 1 (vie=1)
-    attaque:       1 + a.force * 1,                  // dégâts d'auto-attaque
-    defense:       a.defense,                        // réduction PLATE des dégâts (−1/pt)
-    penetration:   a.force * 0.15,                   // ignore X points d'armure (plat)
-    regenHors:     a.force * 0.1,                    // PV/s HORS combat (consommables/attente)
-    vitesse:       1 + a.agilite * 0.03,             // remplissage Tempo
-    critDmg:       150 + a.agilite * 2,              // %
-    esquive:       a.agilite * 0.5,                  // %
-    crit:          5 + a.chance * 1,                 // %
-    rarete:        a.chance * 1,                     // % qualité du butin
-    bonusOr:       a.chance * 0.8,                   // %
-    precision:     90 + a.intelligence * 0.5,        // % chance de toucher
-    resistance:    a.intelligence * 0.3,             // % réduction supplémentaire
-    bonusXp:       a.intelligence * 1,               // %
-    // Traits (thème Harmonie / Dissonance)
+    maxHp:         10 + a.vie * 3,
+    attaque:       a.force + level / 1.32,           // stat principale = Force (classes plus tard)
+    defense:       a.defense,                         // réduction PLATE
+    penetration:   0.5 * sq(a.force),                 // % d'armure ignorée (armor_shred)
+    regenHors:     a.force / 10,                       // PV/s hors combat
+    vitesse:       1 + a.agilite * 0.03,              // remplissage Tempo (notre système)
+    critDmg:       175 + 0.5 * sq(a.agilite),         // %
+    esquive:       0.15 * sq(a.agilite),              // %
+    crit:          3.75 * sq(a.chance),               // %
+    rarete:        lootPct,                            // % (LootBonus)
+    bonusOr:       lootPct * 0.5,                      // % (trouvaille d'or)
+    precision:     90 + a.agilite * 0.1,              // % chance de toucher
+    resistance:    0.3 * sq(a.intelligence),          // %
+    bonusXp:       5 * sq(a.intelligence),            // %
+    // Symphonie / thème
     harmonie:      a.intelligence * 0.5 + a.chance * 0.3,
-    chanceNote:    25 + a.chance * 0.6,              // % apparition de bulles (Phase 3)
-    resDissonance: a.defense * 0.2 + a.intelligence * 0.2, // % résist. Larry
+    chanceNote:    25 + a.chance * 0.6,               // % apparition de bulles
+    resDissonance: a.defense * 0.2 + a.intelligence * 0.2,
   };
 }
 
 // Poids pour le Score de Puissance (agrégat global).
 const POWER_W = {
-  attaque: 3, defense: 2, penetration: 2, maxHp: 0.5, crit: 2, critDmg: 0.4,
+  attaque: 3, defense: 2, penetration: 1.5, maxHp: 0.5, crit: 2, critDmg: 0.4,
   precision: 0.3, esquive: 2, resistance: 2, harmonie: 1, resDissonance: 1,
 };
 
-// ---- Stats dérivées = base(attributs) + bonus (flat puis pct) ----
+// ---- Stats dérivées = baseStats(attributs effectifs incl. équipement) ----
 export function derive(player = state.player) {
-  const b = baseStats(player.attributes);
-  const bon = player.bonuses || { flat: {}, pct: {} };
-  const out = {};
-  for (const k of Object.keys(b)) {
-    const flat = (bon.flat && bon.flat[k]) || 0;
-    const pct  = (bon.pct  && bon.pct[k])  || 0;
-    out[k] = (b[k] + flat) * (1 + pct / 100);
-  }
+  const a = effectiveAttributes(player);
+  const out = baseStats(a, player.level || 1);
+  const pct = (player.bonuses && player.bonuses.pct) || {};
+  for (const k of Object.keys(out)) if (pct[k]) out[k] *= (1 + pct[k] / 100); // bonus % éventuels (futur)
   out.maxHp = Math.round(out.maxHp);
+  out.attaque = Math.round(out.attaque);
   out.puissance = Math.round(
     Object.entries(POWER_W).reduce((s, [k, w]) => s + (out[k] || 0) * w, 0)
   );

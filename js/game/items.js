@@ -1,101 +1,66 @@
-// ===== Objets : catalogue, inventaire, équipement, loot, craft (Phase 5) =====
-// Les stats d'un item utilisent les mêmes clés que derive() (attaque, defense,
-// maxHp, crit, esquive, precision, resistance, penetration, vitesse, critDmg…).
-// Elles alimentent player.bonuses.flat via recomputeBonuses().
+// ===== Objets : catalogue (généré + manuel), inventaire, équipement, craft =====
+// Les items d'équipement donnent des ATTRIBUTS (vie, force…) → appliqués via
+// player.bonuses.flat (couche attributs), puis derive() calcule les stats.
 import { state, setState } from '../state.js';
+import { ITEMS_GEN, MATERIALS_GEN } from '../data/items.gen.js';
 
-// ---- Catalogue ----
-export const ITEMS = {
-  // Matériaux (kind: 'materiau')
-  eclat_pierre:  { name: 'Éclat de Pierre',  icon: '🪨', kind: 'materiau', sell: 2 },
-  fil_echo:      { name: "Fil d'Écho",       icon: '🧵', kind: 'materiau', sell: 4 },
-  herbe_calme:   { name: 'Herbe Apaisante',  icon: '🌿', kind: 'materiau', sell: 2 },
-  essence_note:  { name: 'Essence de Note',  icon: '🎶', kind: 'materiau', sell: 8 },
+// Ressources "vrac" (en-tête) vs matériaux (inventaire, stackés).
+export const RESOURCE_KEYS = ['or', 'bois', 'metal', 'tissu', 'fragments'];
 
-  // Armes
-  lame_pierre:   { name: 'Lame de Pierre', icon: '🗡️', kind: 'arme', rarity: 'common', stats: { attaque: 12 }, weapon: { tempo: 2.5, note: 'RÉ' }, sell: 30, desc: 'Grossièrement taillée, mais suffisamment lourde pour écraser des crânes.' },
-
-  // Armures / accessoires
-  casque_cuir:    { name: 'Casque de Cuir',    icon: '🪖', kind: 'casque',    stats: { defense: 2 },            sell: 12, desc: 'Un capuchon renforcé de lamelles.' },
-  plastron_cuir:  { name: 'Plastron de Cuir',  icon: '🦺', kind: 'plastron',  stats: { defense: 3, maxHp: 5 },  sell: 20, desc: "Protège l'essentiel." },
-  jambieres_cuir: { name: 'Jambières de Cuir', icon: '👖', kind: 'jambieres', stats: { defense: 2 },            sell: 14, desc: 'Souples et discrètes.' },
-  bottes_cuir:    { name: 'Bottes de Cuir',    icon: '🥾', kind: 'bottes',    stats: { esquive: 2 },            sell: 12, desc: 'Légères, pour esquiver.' },
-  bouclier_bois:  { name: 'Bouclier de Bois',  icon: '🛡️', kind: 'bouclier',  stats: { defense: 3, resistance: 2 }, sell: 18, desc: 'Un rondache éraflé.' },
-  anneau_chance:  { name: 'Anneau de Chance',  icon: '💍', kind: 'anneau',    stats: { crit: 3 },               sell: 22, desc: 'Le métal murmure la fortune.' },
-  amulette_echo:  { name: "Amulette d'Écho",   icon: '📿', kind: 'amulette',  stats: { precision: 3, maxHp: 3 },sell: 24, desc: 'Vibre au rythme des combats.' },
-  talisman_vif:   { name: 'Talisman Vif',      icon: '🔆', kind: 'accessoire',stats: { critDmg: 6, vitesse: 0.05 }, sell: 20, desc: 'Accélère le geste.' },
-
-  // Consommables (kind: 'conso') — heal en combat
-  pain:   { name: 'Pain',        icon: '🍞', kind: 'conso', heal: 8,  sell: 3, desc: 'Restaure 8 PV. Remet le Tempo à 0.' },
-  ragout: { name: 'Ragoût Chaud',icon: '🍲', kind: 'conso', heal: 20, sell: 6, desc: 'Restaure 20 PV. Remet le Tempo à 0.' },
+// Consommables (soin en combat).
+const CONSUMABLES = {
+  pain:        { id: 'pain',        name: 'Pain',            icon: '🍞', kind: 'conso', heal: 15, sell: 3,  desc: 'Restaure 15 PV. Remet le Tempo à 0.' },
+  ragout:      { id: 'ragout',      name: 'Ragoût Chaud',    icon: '🍲', kind: 'conso', heal: 45, sell: 6,  desc: 'Restaure 45 PV. Remet le Tempo à 0.' },
+  potion_soin: { id: 'potion_soin', name: 'Potion de Soin',  icon: '🧪', kind: 'conso', heal: 90, sell: 12, desc: 'Restaure 90 PV. Remet le Tempo à 0.' },
 };
+
+// Matériaux spécifiques aux monstres (drops de famille).
+const MONSTER_MATS = {
+  peau_de_gobelin:    { id: 'peau_de_gobelin',    name: 'Peau de Gobelin',     icon: '🟩', kind: 'materiau', sell: 4 },
+  queue_de_rat:       { id: 'queue_de_rat',       name: 'Queue de Rat',        icon: '🐀', kind: 'materiau', sell: 3 },
+  soie_araignee:      { id: 'soie_araignee',      name: "Soie d'Araignée",     icon: '🕸️', kind: 'materiau', sell: 4 },
+  croc_de_loup:       { id: 'croc_de_loup',       name: 'Croc de Loup',        icon: '🦷', kind: 'materiau', sell: 4 },
+  defense_sanglier:   { id: 'defense_sanglier',   name: 'Défense de Sanglier', icon: '🐗', kind: 'materiau', sell: 5 },
+  gelee_de_slime:     { id: 'gelee_de_slime',     name: 'Gelée de Slime',      icon: '🫧', kind: 'materiau', sell: 3 },
+  herbes_medicinales: { id: 'herbes_medicinales', name: 'Herbes Médicinales',  icon: '🌿', kind: 'materiau', sell: 3 },
+};
+
+export const ITEMS = { ...ITEMS_GEN, ...MATERIALS_GEN, ...MONSTER_MATS, ...CONSUMABLES };
 export const getItem = (tid) => ITEMS[tid];
 
-// ---- Emplacements d'équipement (paperdoll ; ordre = maquette) ----
+// ---- Emplacements (taxo legacy) ----
 export const SLOTS = [
-  { id: 'casque',      ab: 'CAS', label: 'Casque',      kind: 'casque' },
-  { id: 'conso',       ab: 'CON', label: 'Consommable', kind: 'conso' },
-  { id: 'arme',        ab: 'ARM', label: 'Arme',        kind: 'arme' },
-  { id: 'plastron',    ab: 'PLA', label: 'Plastron',    kind: 'plastron' },
-  { id: 'bouclier',    ab: 'BOU', label: 'Bouclier',    kind: 'bouclier' },
-  { id: 'anneau1',     ab: 'ANN', label: 'Anneau',      kind: 'anneau' },
-  { id: 'jambieres',   ab: 'JAM', label: 'Jambières',   kind: 'jambieres' },
-  { id: 'anneau2',     ab: 'ANN', label: 'Anneau',      kind: 'anneau' },
-  { id: 'bottes',      ab: 'BOT', label: 'Bottes',      kind: 'bottes' },
-  { id: 'amulette',    ab: 'AMU', label: 'Amulette',    kind: 'amulette' },
-  { id: 'accessoire1', ab: 'ACC', label: 'Accessoire',  kind: 'accessoire' },
-  { id: 'accessoire2', ab: 'ACC', label: 'Accessoire',  kind: 'accessoire' },
-  { id: 'accessoire3', ab: 'ACC', label: 'Accessoire',  kind: 'accessoire' },
+  { id: 'tete',       ab: 'TÊT', label: 'Tête',        kind: 'tete' },
+  { id: 'conso',      ab: 'CON', label: 'Consommable', kind: 'conso' },
+  { id: 'arme',       ab: 'ARM', label: 'Arme',        kind: 'arme' },
+  { id: 'torse',      ab: 'TOR', label: 'Torse',       kind: 'torse' },
+  { id: 'mains',      ab: 'MAI', label: 'Mains',       kind: 'mains' },
+  { id: 'jambes',     ab: 'JAM', label: 'Jambes',      kind: 'jambes' },
+  { id: 'pieds',      ab: 'PIE', label: 'Pieds',       kind: 'pieds' },
+  { id: 'accessoire', ab: 'ACC', label: 'Accessoire',  kind: 'accessoire' },
+  { id: 'artefact',   ab: 'ART', label: 'Artefact',    kind: 'artefact' },
 ];
-// Disposition en lignes (comme la maquette).
 export const SLOT_ROWS = [
-  ['casque', 'conso'],
-  ['arme', 'plastron', 'bouclier'],
-  ['anneau1', 'jambieres', 'anneau2'],
-  ['bottes', 'amulette'],
-  ['accessoire1', 'accessoire2', 'accessoire3'],
+  ['tete', 'conso'],
+  ['arme', 'torse', 'mains'],
+  ['jambes', 'pieds'],
+  ['accessoire', 'artefact'],
 ];
 export const emptyEquipment = () => Object.fromEntries(SLOTS.map((s) => [s.id, null]));
 const slotsForKind = (kind) => SLOTS.filter((s) => s.kind === kind).map((s) => s.id);
 
-// ---- Loot par monstre ----
-export const LOOT = {
-  z1_lutin: [{ tid: 'eclat_pierre', chance: 0.6, min: 1, max: 2 }, { tid: 'herbe_calme', chance: 0.35, min: 1, max: 1 }],
-  z1_echo:  [{ tid: 'herbe_calme', chance: 0.5, min: 1, max: 2 }, { tid: 'fil_echo', chance: 0.22, min: 1, max: 1 }],
-  z1_note:  [{ tid: 'eclat_pierre', chance: 0.5, min: 1, max: 1 }, { tid: 'essence_note', chance: 0.1, min: 1, max: 1 }],
-  z1_boss:  [{ tid: 'casque_cuir', chance: 1, min: 1, max: 1 }, { tid: 'eclat_pierre', chance: 1, min: 3, max: 5 }],
-  z2_zebre:  [{ tid: 'fil_echo', chance: 0.5, min: 1, max: 2 }, { tid: 'eclat_pierre', chance: 0.4, min: 1, max: 2 }],
-  z2_spectre:[{ tid: 'fil_echo', chance: 0.45, min: 1, max: 1 }, { tid: 'essence_note', chance: 0.2, min: 1, max: 1 }],
-  z2_golem:  [{ tid: 'eclat_pierre', chance: 0.7, min: 2, max: 3 }, { tid: 'bouclier_bois', chance: 0.08, min: 1, max: 1 }],
-  z2_faille: [{ tid: 'essence_note', chance: 0.3, min: 1, max: 2 }, { tid: 'fil_echo', chance: 0.4, min: 1, max: 1 }],
-  z2_boss:   [{ tid: 'plastron_cuir', chance: 1, min: 1, max: 1 }, { tid: 'essence_note', chance: 1, min: 2, max: 3 }],
-  z3_ombre:  [{ tid: 'essence_note', chance: 0.5, min: 1, max: 2 }, { tid: 'fil_echo', chance: 0.5, min: 1, max: 2 }],
-  z3_disso:  [{ tid: 'essence_note', chance: 0.5, min: 1, max: 2 }, { tid: 'anneau_chance', chance: 0.06, min: 1, max: 1 }],
-  z3_veuve:  [{ tid: 'essence_note', chance: 0.6, min: 2, max: 3 }, { tid: 'talisman_vif', chance: 0.06, min: 1, max: 1 }],
-  z3_boss:   [{ tid: 'lame_pierre', chance: 1, min: 1, max: 1 }, { tid: 'essence_note', chance: 1, min: 4, max: 6 }],
-};
-
 // ---- Recettes (Forge / Cuisine) ----
-// cost : { coinA:<or>, <tid matériau>:<n> }
+const forgeIds = ['epee_rouillee', 'casque_en_cuir_use', 'tunique_dechiree', 'protege_tibias_en_cuir', 'bottes_usagees', 'heaume_de_bois', 'anneau_simple', 'baton_noueux', 'dague_ebrechee'];
 export const RECIPES = {
-  forge: [
-    { out: 'lame_pierre',    cost: { coinA: 15, eclat_pierre: 3 } },
-    { out: 'casque_cuir',    cost: { coinA: 10, eclat_pierre: 2 } },
-    { out: 'plastron_cuir',  cost: { coinA: 20, eclat_pierre: 4 } },
-    { out: 'jambieres_cuir', cost: { coinA: 14, eclat_pierre: 2, fil_echo: 1 } },
-    { out: 'bottes_cuir',    cost: { coinA: 12, fil_echo: 2 } },
-    { out: 'bouclier_bois',  cost: { coinA: 16, eclat_pierre: 3 } },
-    { out: 'anneau_chance',  cost: { coinA: 25, fil_echo: 2, essence_note: 1 } },
-    { out: 'amulette_echo',  cost: { coinA: 28, fil_echo: 2, essence_note: 1 } },
-    { out: 'talisman_vif',   cost: { coinA: 30, essence_note: 2, fil_echo: 1 } },
-  ],
+  forge: forgeIds.filter((id) => ITEMS[id]).map((id) => ({ out: id, cost: ITEMS[id].cost || {} })),
   cuisine: [
-    { out: 'pain',   cost: { coinA: 5,  herbe_calme: 2 } },
-    { out: 'ragout', cost: { coinA: 15, herbe_calme: 3, eclat_pierre: 1 } },
+    { out: 'pain',        cost: { herbes_medicinales: 2 } },
+    { out: 'ragout',      cost: { herbes_medicinales: 3, tissu: 20 } },
+    { out: 'potion_soin', cost: { herbes_medicinales: 5, fragments: 1 } },
   ],
 };
 
-// ---- Inventaire (stacks {tid,count}) ----
+// ---- Inventaire ----
 export const invCount = (tid) => { const s = state.inventory.find((x) => x.tid === tid); return s ? s.count : 0; };
 function _add(inv, tid, n) { const s = inv.find((x) => x.tid === tid); if (s) s.count += n; else inv.push({ tid, count: n }); }
 function _remove(inv, tid, n) { const i = inv.findIndex((x) => x.tid === tid); if (i < 0) return false; if (inv[i].count < n) return false; inv[i].count -= n; if (inv[i].count <= 0) inv.splice(i, 1); return true; }
@@ -104,11 +69,11 @@ export function addItem(tid, n = 1) { setState((s) => _add(s.inventory, tid, n))
 export function sellItem(tid, n = 1) {
   const it = ITEMS[tid]; if (!it) return false;
   if (invCount(tid) < n) return false;
-  setState((s) => { _remove(s.inventory, tid, n); s.resources.coinA += (it.sell || 0) * n; });
+  setState((s) => { _remove(s.inventory, tid, n); s.resources.or = (s.resources.or || 0) + (it.sell || 0) * n; });
   return true;
 }
 
-// ---- Équipement ----
+// ---- Bonus d'équipement (couche ATTRIBUTS) ----
 export function recomputeBonuses(p = state.player) {
   const flat = {};
   for (const s of SLOTS) {
@@ -123,7 +88,7 @@ export function recomputeBonuses(p = state.player) {
   if (!p.bonuses.pct) p.bonuses.pct = {};
 }
 
-// Équipe un item. slotId optionnel (sinon 1er emplacement compatible / libre).
+// ---- Équipement ----
 export function equip(tid, slotId = null) {
   const it = ITEMS[tid]; if (!it) return false;
   if (invCount(tid) < 1) return false;
@@ -131,7 +96,7 @@ export function equip(tid, slotId = null) {
   if (it.kind === 'conso') { // consommable : on équipe TOUT le stack
     setState((s) => {
       const cur = s.player.equipment.conso;
-      if (cur) _add(s.inventory, cur.tid, cur.count); // renvoie l'ancien stack
+      if (cur) _add(s.inventory, cur.tid, cur.count);
       const st = s.inventory.find((x) => x.tid === tid);
       const count = st ? st.count : 0;
       _remove(s.inventory, tid, count);
@@ -140,16 +105,13 @@ export function equip(tid, slotId = null) {
     return true;
   }
 
-  // Équipement : on équipe 1 unité
   const candidates = slotsForKind(it.kind);
   if (!candidates.length) return false;
-  const target = slotId && candidates.includes(slotId)
-    ? slotId
-    : (candidates.find((id) => !state.player.equipment[id]) || candidates[0]);
+  const target = slotId && candidates.includes(slotId) ? slotId : (candidates.find((id) => !state.player.equipment[id]) || candidates[0]);
   setState((s) => {
     const prev = s.player.equipment[target];
     _remove(s.inventory, tid, 1);
-    if (prev) _add(s.inventory, prev.tid, 1); // l'ancien retourne au sac
+    if (prev) _add(s.inventory, prev.tid, 1);
     s.player.equipment[target] = { tid };
     recomputeBonuses(s.player);
   });
@@ -161,31 +123,17 @@ export function unequip(slotId) {
   setState((s) => {
     const cur = s.player.equipment[slotId];
     if (!cur) return;
-    _add(s.inventory, cur.tid, cur.count || 1); // conso: rend le stack
+    _add(s.inventory, cur.tid, cur.count || 1);
     s.player.equipment[slotId] = null;
     recomputeBonuses(s.player);
   });
   return true;
 }
 
-// ---- Loot à la victoire ----
-export function rollLoot(monsterId) {
-  const table = LOOT[monsterId]; if (!table) return [];
-  const drops = [];
-  for (const d of table) {
-    if (Math.random() <= d.chance) {
-      const n = d.min + Math.floor(Math.random() * (d.max - d.min + 1));
-      if (n > 0) drops.push({ tid: d.tid, n });
-    }
-  }
-  if (drops.length) setState((s) => { for (const d of drops) _add(s.inventory, d.tid, d.n); });
-  return drops;
-}
-
 // ---- Craft ----
 export function canCraft(recipe) {
   for (const [k, v] of Object.entries(recipe.cost)) {
-    if (k === 'coinA') { if ((state.resources.coinA || 0) < v) return false; }
+    if (RESOURCE_KEYS.includes(k)) { if ((state.resources[k] || 0) < v) return false; }
     else if (invCount(k) < v) return false;
   }
   return true;
@@ -194,7 +142,7 @@ export function craft(recipe) {
   if (!canCraft(recipe)) return false;
   setState((s) => {
     for (const [k, v] of Object.entries(recipe.cost)) {
-      if (k === 'coinA') s.resources.coinA -= v;
+      if (RESOURCE_KEYS.includes(k)) s.resources[k] -= v;
       else _remove(s.inventory, k, v);
     }
     _add(s.inventory, recipe.out, 1);
@@ -202,4 +150,4 @@ export function craft(recipe) {
   return true;
 }
 
-export const itemsApi = { ITEMS, SLOTS, LOOT, RECIPES, addItem, sellItem, equip, unequip, craft, rollLoot, invCount, recomputeBonuses };
+export const itemsApi = { ITEMS, SLOTS, RECIPES, RESOURCE_KEYS, addItem, sellItem, equip, unequip, craft, canCraft, invCount, recomputeBonuses };

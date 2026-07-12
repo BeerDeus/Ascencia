@@ -12,7 +12,10 @@ import { ITEMS, SLOTS, SLOT_ROWS, equip, unequip, sellItem, invCount } from '../
 let selectedTid = null;
 let openSlot = null;
 const PCT_KEYS = ['crit', 'critDmg', 'esquive', 'precision', 'resistance'];
-const STAT_LBL = { attaque: 'Attaque', defense: 'Défense', maxHp: 'PV', crit: 'Crit', critDmg: 'Dég.Crit', esquive: 'Esquive', precision: 'Toucher', resistance: 'Résist.', penetration: 'Pénét.', vitesse: 'Vitesse' };
+const STAT_LBL = {
+  vie: 'Vie', force: 'Force', agilite: 'Agilité', chance: 'Chance', intelligence: 'Intelligence', defense: 'Défense',
+  attaque: 'Attaque', maxHp: 'PV', crit: 'Crit', critDmg: 'Dég.Crit', esquive: 'Esquive', precision: 'Toucher', resistance: 'Résist.', penetration: 'Pénét.', vitesse: 'Vitesse',
+};
 
 export function renderProfil(root, sub = 'personnage') {
   const view = el('div.view');
@@ -113,7 +116,7 @@ function renderEquipement(view) {
   const cells = Math.max(16, Math.ceil((stacks.length + 1) / 8) * 8);
   for (let i = 0; i < cells; i++) {
     const st = stacks[i];
-    if (st) {
+    if (st && ITEMS[st.tid]) {
       const it = ITEMS[st.tid];
       grid.append(el('button.bag-cell.filled' + (selectedTid === st.tid ? '.sel' : ''), {
         onclick: () => { selectedTid = st.tid; openSlot = null; rerender(); },
@@ -125,15 +128,17 @@ function renderEquipement(view) {
   }
   view.append(grid);
 
-  if (selectedTid && invCount(selectedTid) > 0) view.append(itemDetail(selectedTid));
+  if (selectedTid && ITEMS[selectedTid] && invCount(selectedTid) > 0) view.append(itemDetail(selectedTid));
   if (openSlot) view.append(slotModal(openSlot));
 }
 
+function statChips(stats) {
+  return Object.entries(stats || {}).map(([k, v]) => chip('', (v > 0 ? '+' : '') + v + (PCT_KEYS.includes(k) ? '%' : '') + ' ' + (STAT_LBL[k] || k)));
+}
 function itemChips(it) {
-  const chips = [];
-  if (it.weapon) return [chip('⚔️', 'Dégâts: ' + it.stats.attaque), chip('⏱️', 'Tempo: ' + it.weapon.tempo + 's'), chip('🎵', 'Note: ' + it.weapon.note)];
+  if (it.weapon) return [...statChips(it.stats), chip('⏱️', 'Tempo ' + it.weapon.tempo + 's'), chip('🎵', 'Note ' + it.weapon.note)];
   if (it.kind === 'conso') return [chip('💚', '+' + it.heal + ' PV')];
-  if (it.stats) for (const [k, v] of Object.entries(it.stats)) chips.push(chip('', '+' + v + (PCT_KEYS.includes(k) ? '%' : '') + ' ' + (STAT_LBL[k] || k)));
+  const chips = statChips(it.stats);
   if (!chips.length) chips.push(chip('📦', 'Matériau'));
   return chips;
 }
@@ -190,7 +195,7 @@ function slotModal(slotId) {
     el('span.mi-name', { text: 'Déséquiper — ' + ITEMS[cur.tid].name }),
   ]));
 
-  const compat = state.inventory.filter((st) => ITEMS[st.tid].kind === slot.kind);
+  const compat = state.inventory.filter((st) => ITEMS[st.tid] && ITEMS[st.tid].kind === slot.kind);
   if (!compat.length && !cur) box.append(el('div.placeholder-note', { text: 'Aucun objet compatible dans le sac.' }));
   for (const st of compat) {
     const it = ITEMS[st.tid];

@@ -19,17 +19,16 @@ function defaultState() {
       // Bonus additifs (flat) et multiplicatifs (pct, en %) par clé de stat.
       // flat est recalculé depuis l'équipement (game/items.js) ; pct réservé (Constellations).
       bonuses: { flat: {}, pct: {} },
-      // Emplacements d'équipement (paperdoll). null = vide. conso = { tid, count }.
+      // Emplacements d'équipement (taxo legacy). null = vide. conso = { tid, count }.
       equipment: {
-        casque: null, conso: null, arme: null, plastron: null, bouclier: null,
-        anneau1: null, jambieres: null, anneau2: null, bottes: null, amulette: null,
-        accessoire1: null, accessoire2: null, accessoire3: null,
+        tete: null, conso: null, arme: null, torse: null, mains: null,
+        jambes: null, pieds: null, accessoire: null, artefact: null,
       },
     },
     resources: {
-      crystalA: 20015, crystalB: 15440,
-      coinA: 40460, coinB: 50741,
-      premium: 49900, // Fragments d'Écho / monnaie premium
+      or: 50,          // monnaie principale
+      bois: 300, metal: 300, tissu: 300, // matériaux de craft de base
+      fragments: 0,    // monnaie premium / enchantement
     },
     endurance: { cur: SETTINGS.enduranceMax, max: SETTINGS.enduranceMax },
     mesure: [],            // FIFO notes (Phase 3)
@@ -40,10 +39,9 @@ function defaultState() {
       selected: 1,         // zone actuellement consultée
       bossDefeated: {},    // { zoneId: true }
     },
-    inventory: [           // stacks { tid, count } — matériaux de départ pour crafter
-      { tid: 'eclat_pierre', count: 5 },
-      { tid: 'herbe_calme',  count: 4 },
-      { tid: 'pain',         count: 1 },
+    inventory: [           // stacks { tid, count } — de départ
+      { tid: 'herbes_medicinales', count: 6 },
+      { tid: 'pain',               count: 2 },
     ],
     constellations: 0,     // prestige (Phase 6)
     ui: { view: 'village', sub: 'hub' },

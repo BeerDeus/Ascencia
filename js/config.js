@@ -54,7 +54,7 @@ export const STATS = [
   // ---- Combat ----
   { key: 'attaque',       label: 'Attaque',              group: 'combat', fmt: 'int',    icon: '⚔️' },
   { key: 'defense',       label: 'Défense',              group: 'combat', fmt: 'int',    icon: '🛡️' },
-  { key: 'penetration',   label: "Pénétration d'armure", group: 'combat', fmt: 'int',    icon: '🗡️' },
+  { key: 'penetration',   label: "Pénétration d'armure", group: 'combat', fmt: 'pct',    icon: '🗡️' },
   { key: 'vitesse',       label: "Vitesse d'attaque",    group: 'combat', fmt: 'speed',  icon: '⏱️' },
   { key: 'crit',          label: 'Chance de Critique',   group: 'combat', fmt: 'pct',    icon: '🎯' },
   { key: 'critDmg',       label: 'Dégâts Critiques',     group: 'combat', fmt: 'pct',    icon: '💥' },
@@ -76,35 +76,15 @@ export const STATS = [
 // Une zone = 3 à 6 monstres + 1 boss. Nettoyer 10x chaque monstre puis vaincre
 // le boss débloque la zone suivante. 10 victoires sur un monstre → auto-battle.
 // Stats monstre : hp, attaque, defense, tempo (vitesse d'attaque), crit/esquive %, récompenses xp/gold.
+// Zones à thème (monstres = ids du catalogue généré ; boss = id BOSSES ou monstre).
+// scale = facteur d'équilibrage appliqué aux stats/récompenses (les mobs legacy sont
+// calibrés pour un joueur avec points de départ ; on rééquilibre pour notre niveau 1).
 export const ZONES = [
-  {
-    id: 1, name: 'Clairière Résonante', difficulty: 'Facile',
-    monsters: [
-      { id: 'z1_lutin', name: 'Lutin Sourd',   sprite: '👺', hp: 12, attaque: 2, defense: 0, tempo: 0.9, crit: 2, esquive: 2, xp: 12, gold: 6 },
-      { id: 'z1_echo',  name: 'Écho Vagabond', sprite: '👻', hp: 16, attaque: 2, defense: 0, tempo: 1.1, crit: 1, esquive: 6, xp: 14, gold: 6 },
-      { id: 'z1_note',  name: 'Note Perdue',   sprite: '🎐', hp: 10, attaque: 3, defense: 1, tempo: 1.0, crit: 4, esquive: 2, xp: 13, gold: 5 },
-    ],
-    boss: { id: 'z1_boss', name: 'Silence Naissant', sprite: '🌑', hp: 45, attaque: 4, defense: 2, tempo: 1.0, crit: 5, esquive: 4, xp: 60, gold: 40 },
-  },
-  {
-    id: 2, name: 'Ravin Dissonant', difficulty: 'Modéré',
-    monsters: [
-      { id: 'z2_zebre',  name: 'Cristal Zébré',   sprite: '🔷', hp: 45, attaque: 6, defense: 3, tempo: 1.0,  crit: 4, esquive: 3, xp: 30, gold: 18 },
-      { id: 'z2_spectre',name: 'Spectre Fêlé',    sprite: '💀', hp: 40, attaque: 7, defense: 2, tempo: 1.15, crit: 6, esquive: 9, xp: 32, gold: 20 },
-      { id: 'z2_golem',  name: 'Golem Muet',      sprite: '🗿', hp: 70, attaque: 5, defense: 6, tempo: 0.75, crit: 2, esquive: 1, xp: 34, gold: 22 },
-      { id: 'z2_faille', name: 'Faille Vibrante', sprite: '🌀', hp: 52, attaque: 6, defense: 3, tempo: 1.05, crit: 5, esquive: 5, xp: 33, gold: 21 },
-    ],
-    boss: { id: 'z2_boss', name: 'Chœur Brisé', sprite: '🟣', hp: 210, attaque: 12, defense: 8, tempo: 1.05, crit: 8, esquive: 6, xp: 180, gold: 130 },
-  },
-  {
-    id: 3, name: 'Abîme du Silence', difficulty: 'Difficile',
-    monsters: [
-      { id: 'z3_ombre',  name: 'Ombre Atone',          sprite: '🕷️', hp: 120, attaque: 14, defense: 8,  tempo: 1.1, crit: 7,  esquive: 7,  xp: 70, gold: 45 },
-      { id: 'z3_disso',  name: 'Aberration Dissonante', sprite: '👹', hp: 150, attaque: 16, defense: 10, tempo: 1.0, crit: 9,  esquive: 5,  xp: 75, gold: 50 },
-      { id: 'z3_veuve',  name: 'Veuve du Néant',        sprite: '🦂', hp: 110, attaque: 18, defense: 6,  tempo: 1.2, crit: 11, esquive: 11, xp: 78, gold: 52 },
-    ],
-    boss: { id: 'z3_boss', name: 'Larry, Cœur du Chaos', sprite: '☄️', hp: 650, attaque: 28, defense: 14, tempo: 1.1, crit: 11, esquive: 8, xp: 600, gold: 400 },
-  },
+  { id: 1, name: 'Cave aux Rats',     difficulty: 'Facile',    scale: 0.25, monsters: ['rat_geant', 'araignee_de_cave', 'reine_des_rats'],          boss: 'boss_0' },
+  { id: 2, name: 'Camp de Gobelins',  difficulty: 'Facile',    scale: 0.40, monsters: ['gobelin_frondeur', 'chef_gobelin', 'sanglier_furieux'],       boss: 'boss_0' },
+  { id: 3, name: 'Bois Sauvages',     difficulty: 'Modéré',    scale: 0.60, monsters: ['loup_affame', 'loup_dissonant', 'araignee_geante'],           boss: 'boss_1' },
+  { id: 4, name: 'Route des Bandits', difficulty: 'Modéré',    scale: 0.80, monsters: ['bandit', 'squelette_guerrier', 'chef_bandit'],                boss: 'boss_1' },
+  { id: 5, name: 'Mines de Pierre',   difficulty: 'Difficile', scale: 1.00, monsters: ['insecte_mineur', 'scorpion_des_sables', 'mini_golem_pierre'], boss: 'boss_2' },
 ];
 
 // Quartiers du village (structure maquette).

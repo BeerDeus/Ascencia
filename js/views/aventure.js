@@ -5,7 +5,17 @@ import { ZONES } from '../config.js';
 import { rerender } from '../router.js';
 import { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ } from '../game/combat.js';
 import { ITEMS } from '../game/items.js';
+import { makeMonster, makeBoss } from '../game/monsters.js';
 import { ACCORDS, noteById, MAX_ACCORDS } from '../game/symphony.js';
+
+// Sprite : image (placeholder / chemin) ou emoji.
+export function spriteImg(sprite) {
+  if (sprite && (sprite === 'placeholder' || sprite.includes('/') || sprite.endsWith('.png'))) {
+    const src = sprite === 'placeholder' ? 'assets/sprites/placeholder.png' : sprite;
+    return el('img.sprite-img', { src, alt: '' });
+  }
+  return el('span', { text: sprite || '❓' });
+}
 
 export function renderAventure(root, sub = 'combat') {
   const view = el('div.view');
@@ -22,7 +32,7 @@ function renderZone(view) {
   const prog = state.progress;
   const zone = ZONES.find((z) => z.id === prog.selected) || ZONES[0];
   const wins = state.monsterWins;
-  const cleared = zone.monsters.filter((m) => (wins[m.id] || 0) >= WIN_REQ).length;
+  const cleared = zone.monsters.filter((id) => (wins[id] || 0) >= WIN_REQ).length;
   const allCleared = cleared === zone.monsters.length;
   const bossDone = !!prog.bossDefeated[zone.id];
 
@@ -41,15 +51,18 @@ function renderZone(view) {
 
   // Cartes monstres
   const grid = el('div.monster-grid');
-  for (const m of zone.monsters) {
-    const w = wins[m.id] || 0;
+  for (const id of zone.monsters) {
+    const m = makeMonster(id, zone.scale);
+    if (!m) continue;
+    const w = wins[id] || 0;
     const done = w >= WIN_REQ;
     const bar = el('div.mini-gauge', {}, [el('div.fill', { style: `width:${Math.min(100, w / WIN_REQ * 100)}%` })]);
-    const actions = [ el('button.btn-fight', { text: 'Affronter', onclick: () => launch(m, { zoneId: zone.id }) }) ];
-    if (done) actions.push(el('button.btn-auto', { text: '▶ Auto', onclick: () => launch(m, { zoneId: zone.id, auto: true }) }));
+    const actions = [ el('button.btn-fight', { text: 'Affronter', onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id }) }) ];
+    if (done) actions.push(el('button.btn-auto', { text: '▶ Auto', onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id, auto: true }) }));
     grid.append(el('div.monster-card' + (done ? '.cleared' : ''), {}, [
-      el('div.mc-sprite', { text: m.sprite }),
+      el('div.mc-sprite', {}, [spriteImg(m.sprite)]),
       el('div.mc-name', { text: m.name }),
+      el('div.mc-stats', { text: `PV ${m.hp} · Atq ${m.attaque} · Déf ${m.defense}` }),
       el('div.mc-wins', { text: `${done ? '✓ ' : ''}${w} / ${WIN_REQ} victoires` }),
       bar,
       el('div.mc-actions', {}, actions),
@@ -58,16 +71,19 @@ function renderZone(view) {
   view.append(grid);
 
   // Boss
-  const b = zone.boss;
-  const bossCard = el('div.boss-card' + (bossDone ? '.done' : allCleared ? '' : '.locked'), {}, [
-    el('div.mc-sprite', { text: b.sprite }),
-    el('div.mc-name', { text: `Boss · ${b.name}` }),
-    el('div.mc-wins', { text: bossDone ? '✓ Vaincu' : allCleared ? 'Prêt au combat' : `Nettoie les ${zone.monsters.length} monstres (10x)` }),
-    allCleared || bossDone
-      ? el('button.btn-boss', { text: bossDone ? 'Réaffronter le boss' : 'Affronter le boss', onclick: () => launch(b, { zoneId: zone.id, isBoss: true }) })
-      : el('div.placeholder-note', { text: 'Boss verrouillé.' }),
-  ]);
-  view.append(bossCard);
+  const boss = makeBoss(zone.boss, zone.scale) || makeMonster(zone.boss, zone.scale);
+  if (boss) {
+    const bossCard = el('div.boss-card' + (bossDone ? '.done' : allCleared ? '' : '.locked'), {}, [
+      el('div.mc-sprite', {}, [spriteImg(boss.sprite)]),
+      el('div.mc-name', { text: `Boss · ${boss.name}` }),
+      el('div.mc-stats', { text: `PV ${boss.hp} · Atq ${boss.attaque} · Déf ${boss.defense}` }),
+      el('div.mc-wins', { text: bossDone ? '✓ Vaincu' : allCleared ? 'Prêt au combat' : `Nettoie les ${zone.monsters.length} monstres (10x)` }),
+      allCleared || bossDone
+        ? el('button.btn-boss', { text: bossDone ? 'Réaffronter le boss' : 'Affronter le boss', onclick: () => launch(makeBoss(zone.boss, zone.scale) || makeMonster(zone.boss, zone.scale), { zoneId: zone.id, isBoss: true }) })
+        : el('div.placeholder-note', { text: 'Boss verrouillé.' }),
+    ]);
+    view.append(bossCard);
+  }
 
   if (bossDone && zone.id + 1 <= prog.unlocked) {
     view.append(el('div.zone-unlock', { text: `⭐ Zone ${zone.id + 1} débloquée !` }));
@@ -83,7 +99,7 @@ function renderCombat(view) {
 
   // Consommable équipé : utilisable en combat (soigne + Tempo joueur à 0)
   const conso = state.player.equipment.conso;
-  if (rt.phase === 'fighting' && conso && conso.count > 0) {
+  if (rt.phase === 'fighting' && conso && conso.count > 0 && ITEMS[conso.tid]) {
     const it = ITEMS[conso.tid];
     view.append(el('div.combat-consume', {}, [
       el('button.btn-consume', { text: `${it.icon} ${it.name} (${conso.count})`, onclick: () => consume() }),

@@ -20,15 +20,15 @@ export function renderHeader(root) {
     ]),
 
     el('div.hdr-res', {}, [
-      el('div.res', {}, [el('span.icon', { text: '💎' }), el('span', { text: fmt(r.crystalA) })]),
-      el('div.res', {}, [el('span.icon', { text: '🪨' }), el('span', { text: fmt(r.coinA) })]),
-      el('div.res', {}, [el('span.icon', { text: '🔷' }), el('span', { text: fmt(r.crystalB) })]),
-      el('div.res', {}, [el('span.icon', { text: '🟡' }), el('span', { text: fmt(r.coinB) })]),
+      el('div.res', {}, [el('span.icon', { text: '🪵' }), el('span', { text: fmt(r.bois) })]),
+      el('div.res', {}, [el('span.icon', { text: '⛏️' }), el('span', { text: fmt(r.metal) })]),
+      el('div.res', {}, [el('span.icon', { text: '🧵' }), el('span', { text: fmt(r.tissu) })]),
+      el('div.res', {}, [el('span.icon', { text: '🔩' }), el('span', { text: fmt(r.fragments) })]),
     ]),
 
     el('div.hdr-premium', {}, [
-      el('span.icon', { text: '🔻' }),
-      el('span', { text: fmt(r.premium) }),
+      el('span.icon', { text: '🪙' }),
+      el('span', { text: fmt(r.or) }),
     ]),
   );
 }

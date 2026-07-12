@@ -4,8 +4,9 @@
 import { el, clear, clamp } from '../utils/dom.js';
 import { state, setState } from '../state.js';
 import { SETTINGS, ZONES } from '../config.js';
-import { derive, addXp, addResource } from './player.js';
-import { rollLoot, ITEMS } from './items.js';
+import { derive, addXp } from './player.js';
+import { ITEMS } from './items.js';
+import { rollLoot, makeMonster } from './monsters.js';
 import { NOTES, noteById, noteByLabel, pushNote, matchAccord, MESURE_SIZE } from './symphony.js';
 
 const TEMPO_RATE  = 42;    // points de Tempo / seconde à vitesse 1 (jauge = 100)
@@ -50,7 +51,7 @@ export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}
 function relaunch() {
   if (!rt) return;
   const z = ZONES.find((z) => z.id === rt.zoneId);
-  const m = z && z.monsters.find((m) => m.id === rt.enemyId);
+  const m = z && z.monsters.includes(rt.enemyId) ? makeMonster(rt.enemyId, z.scale) : null;
   if (!m) { toZones(); return; }
   start(m, { auto: true, isBoss: false, zoneId: rt.zoneId });
 }
@@ -75,12 +76,13 @@ function loop() {
 
 // ---- Calcul de frappe ----
 function strike(atk, def) {
-  const hit = clamp((atk.precision ?? 90) - (def.dodge || 0), 5, 100);
+  const hit = clamp((atk.precision ?? 90) - (def.dodge || 0), 25, 95); // toucher borné (legacy)
   if (rand100() > hit) return { miss: true };
-  const effDef = Math.max(0, (def.def || 0) - (atk.pen || 0)); // défense PLATE, réduite par la pénétration
+  const effDef = Math.max(0, (def.def || 0) * (1 - Math.min(90, atk.pen || 0) / 100)); // pénétration = % d'armure ignorée
   let dmg = Math.max(1, atk.atk - effDef);
+  dmg *= (0.9 + Math.random() * 0.2);                 // variance ±10 % (legacy)
   const crit = rand100() <= (atk.crit || 0);
-  if (crit) dmg *= (atk.critDmg || 150) / 100;
+  if (crit) dmg *= (atk.critDmg || 175) / 100;
   dmg *= (1 - (def.resist || 0) / 100);
   return { dmg: Math.max(1, Math.round(dmg)), crit };
 }
@@ -197,7 +199,6 @@ function onWin() {
 
   if (!willAuto) rt.active = false; // retour aux zones au prochain rerender
 
-  addResource('coinA', e.gold); // butin provisoire (loot tables complètes : Phase 5)
   setState((s) => {
     if (!isBoss) s.monsterWins[e.id] = (s.monsterWins[e.id] || 0) + 1;
     if (isBoss) {
@@ -205,8 +206,10 @@ function onWin() {
       if (ZONES.some((z) => z.id === zoneId + 1)) s.progress.unlocked = Math.max(s.progress.unlocked, zoneId + 1);
     }
   });
-  const drops = rollLoot(e.id); // loot table (game/items.js)
-  if (drops.length) pushLog('🎁 Butin : ' + drops.map((d) => `${ITEMS[d.tid].icon} ${ITEMS[d.tid].name} ×${d.n}`).join(', '));
+  const { drops, res } = rollLoot(e); // ressources + items + or (game/monsters.js)
+  const resTxt = Object.entries(res).map(([k, v]) => `${k} ×${v}`).join(', ');
+  if (resTxt || e.gold) pushLog(`💰 +${e.gold} or${resTxt ? ', ' + resTxt : ''}`);
+  if (drops.length) pushLog('🎁 Butin : ' + drops.map((d) => `${ITEMS[d.tid] ? ITEMS[d.tid].icon + ' ' + ITEMS[d.tid].name : d.tid} ×${d.n}`).join(', '));
   addXp(e.xp); // gère le level-up (rerender)
 
   if (willAuto) {
@@ -240,6 +243,7 @@ export function consume() {
   const c = state.player.equipment.conso;
   if (!c || c.count <= 0) return;
   const it = ITEMS[c.tid];
+  if (!it) return;
   const heal = it.heal || 0;
   rt.pHp = Math.min(rt.pMax, rt.pHp + heal);
   rt.pTempo = 0;
@@ -284,7 +288,7 @@ export function renderInto(parent) {
 
   r.bubbleLayer = el('div.bubble-layer'); // couche des bulles (par-dessus la scène)
   const stage = el('div.combat-stage', {}, [
-    r.eSprite = el('div.enemy-sprite', { text: rt.enemy.sprite }),
+    r.eSprite = el('div.enemy-sprite'),
     r.eName   = el('div.enemy-name', { text: rt.enemy.name }),
     el('div.hpbar.enemy', {}, [ r.eHpFill = el('div.fill'), r.eHpTxt = el('span.hpbar-txt') ]),
     r.bubbleLayer,
@@ -334,8 +338,16 @@ function paint() {
   if (r.pTempoFill) r.pTempoFill.style.width = clamp(rt.pTempo, 0, 100) + '%';
   if (r.eTempoFill) r.eTempoFill.style.width = clamp(rt.eTempo, 0, 100) + '%';
   if (r.eName)   r.eName.textContent = rt.enemy.name;
-  if (r.eSprite) r.eSprite.textContent = rt.enemy.sprite;
+  if (r.eSprite && r._spriteVal !== rt.enemy.sprite) { setSprite(r.eSprite, rt.enemy.sprite); r._spriteVal = rt.enemy.sprite; }
 }
 const pct = (v, max) => Math.max(0, Math.min(100, (v / max) * 100));
+
+// Rend un sprite (image placeholder/chemin, sinon emoji) dans un noeud.
+function setSprite(node, sprite) {
+  node.textContent = '';
+  if (sprite && (sprite === 'placeholder' || sprite.includes('/') || sprite.endsWith('.png'))) {
+    node.append(el('img.sprite-img', { src: sprite === 'placeholder' ? 'assets/sprites/placeholder.png' : sprite, alt: '' }));
+  } else node.textContent = sprite || '❓';
+}
 
 export const combatApi = { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ };
