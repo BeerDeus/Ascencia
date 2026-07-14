@@ -79,6 +79,40 @@
 .boss-card.locked { border-color: var(--border-soft); opacity: 0.7; }
 .boss-card.done { border-color: var(--border-gold); }
 
+/* ===== Combat plein écran (RPG) — actif via #app.combat-mode, voir router.js/base.css ===== */
+#app.combat-mode .view {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  background:
+    linear-gradient(180deg, rgba(23,23,27,0.30) 0%, rgba(23,23,27,0.55) 50%, rgba(23,23,27,0.95) 100%),
+    url('../assets/background/dungeon_bg.png') center/cover no-repeat;
+  padding: calc(var(--sp-4) + env(safe-area-inset-top)) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+}
+.combat-screen { display: flex; flex-direction: column; gap: var(--sp-3); }
+.combat-screen .combat-stage { background: transparent; border: none; box-shadow: none; padding: var(--sp-3) 0 0; }
+.combat-screen .enemy-sprite { font-size: 100px; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.65)); }
+.combat-screen .enemy-sprite .sprite-img { width: 132px; height: 132px; }
+.combat-screen .enemy-name {
+  font-family: var(--font-title); font-size: 20px; letter-spacing: 1px;
+  color: var(--gold-bright); text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+}
+/* Instabilité de Larry (affixe aléatoire, voir game/monsters.js LARRY_AFFIXES) —
+   halo violet Dissonance, distinct du doré habituel, pour signaler la variante
+   corrompue dès l'apparition du monstre (combat.js paint()). */
+.enemy-name.larry-name { color: var(--dissonance) !important; text-shadow: 0 0 10px rgba(180, 90, 217, 0.7) !important; }
+.enemy-sprite.larry-sprite { filter: drop-shadow(0 0 14px var(--dissonance)); animation: larry-pulse 1.6s ease-in-out infinite; }
+@keyframes larry-pulse { 0%, 100% { filter: drop-shadow(0 0 10px var(--dissonance)); } 50% { filter: drop-shadow(0 0 20px var(--dissonance)); } }
+.combat-screen .hpbar { border-color: var(--border-gold); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.combat-screen .combat-log {
+  margin-top: 0;
+  background: rgba(27,27,33,0.75);
+  border-color: var(--border-gold);
+}
+.combat-screen .mesure-bar { margin-top: var(--sp-1); }
+.combat-consume, .combat-controls { flex-shrink: 0; }
+
 /* ===== Aventure — Interface de Combat ===== */
 .combat-stage {
   position: relative;
@@ -143,6 +177,7 @@
 .doll-slot.filled { border-color: var(--border-gold); background: var(--bg-card); }
 .doll-slot .ds-ab { font-family: var(--font-title); font-size: 12px; letter-spacing: 1px; }
 .doll-slot .ds-icon { font-size: 30px; }
+.doll-slot img.ds-icon { width: 30px; height: 30px; object-fit: contain; }
 .doll-slot:active { transform: scale(0.95); }
 .doll-slot .ds-count, .bag-cell .bc-count {
   position: absolute; right: -4px; bottom: -4px;
@@ -162,6 +197,19 @@
 .bag-cell.filled { border-color: var(--border); background: var(--bg-card); }
 .bag-cell.filled.sel { border-color: var(--gold); box-shadow: 0 0 8px var(--gold-glow); }
 .bag-cell .bc-icon { font-size: 22px; }
+.bag-cell img.bc-icon { width: 22px; height: 22px; object-fit: contain; }
+
+.bag-buy-row {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.bag-capacity { font-size: 11px; color: var(--text-muted); }
+.btn-buy-slot {
+  padding: 8px 12px; font-size: 12px; font-weight: 600;
+  border-radius: var(--radius-sm); border: 1px solid var(--gold);
+  background: linear-gradient(180deg, rgba(240,194,94,0.12), rgba(217,164,65,0.04)); color: var(--gold-bright);
+}
+.btn-buy-slot:disabled { border-color: var(--border); color: var(--text-faint); background: var(--bg-inset); }
 
 .item-detail {
   border: 1px solid var(--border-gold); border-radius: var(--radius);
@@ -170,6 +218,7 @@
 }
 .id-head { display: flex; align-items: center; gap: var(--sp-2); }
 .id-head .id-icon { font-size: 28px; }
+.id-head img.id-icon { width: 28px; height: 28px; object-fit: contain; }
 .id-head .id-name { font-family: var(--font-title); color: var(--gold-bright); font-size: 16px; }
 .id-chips, .mi-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .stat-chip {
@@ -213,6 +262,17 @@
   padding: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2);
 }
 .modal-title { font-family: var(--font-title); color: var(--gold); font-size: 16px; letter-spacing: 1px; text-transform: uppercase; text-align: center; }
+
+/* Modale d'info Attribut/Stat (components/infoModal.js) */
+.info-modal { align-items: stretch; }
+.info-modal-head { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.info-modal-icon { width: 34px; height: 34px; object-fit: contain; filter: drop-shadow(0 0 8px var(--gold-glow)); }
+.info-modal-value { text-align: center; font-size: 13px; color: var(--gold-bright); font-weight: 600; }
+.info-modal-desc { font-size: 13px; color: var(--text); line-height: 1.5; }
+.info-modal-sub {
+  font-family: var(--font-title); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gold-dim); border-top: 1px solid var(--border-soft); padding-top: var(--sp-2); margin-top: 2px;
+}
 .modal-item {
   display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
   padding: var(--sp-2) var(--sp-3);
@@ -221,12 +281,46 @@
 }
 .modal-item.current { border-color: var(--negative); }
 .modal-item .mi-icon { font-size: 22px; }
+.modal-item img.mi-icon { width: 22px; height: 22px; object-fit: contain; }
 .modal-item .mi-name { font-weight: 600; font-size: 13px; color: var(--text); }
 .modal-item .mi-chips { width: 100%; }
 .modal-close { margin-top: var(--sp-2); padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text-muted); }
 
 /* ===== Craft (Forge / Cuisine) ===== */
-.craft-gold { text-align: right; font-size: 13px; color: var(--gold-bright); margin-bottom: var(--sp-3); }
+.craft-gold { display: flex; justify-content: flex-end; align-items: center; gap: var(--sp-3); font-size: 13px; color: var(--gold-bright); margin-bottom: var(--sp-3); }
+.craft-gold-res { display: inline-flex; align-items: center; gap: 3px; }
+/* Filtres Type / Rareté / Stat dominante (dropdowns custom, voir village.js
+   dropdown()) — un <select> natif ne peut pas être stylé aux couleurs Ascencia
+   (le menu déroulant est le chrome du navigateur) ; ceci reste du bouton + panneau
+   flottant, dans le thème. flex-wrap : 3 filtres se replient proprement sur 2
+   lignes en dessous de ~360px de large plutôt que d'écraser le texte. */
+.craft-filters { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 0 0 var(--sp-3); }
+.dd { position: relative; flex: 1 1 130px; min-width: 0; }
+.dd-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 9px 11px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft); background: var(--bg-inset);
+  color: var(--text); font-size: 12px; font-weight: 600; font-family: var(--font-body);
+  text-align: left;
+}
+.dd-btn .dd-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-btn:active, .dd-btn.open { border-color: var(--border-gold); background: var(--bg-card); }
+.dd-chevron { color: var(--gold); font-size: 10px; flex-shrink: 0; transition: transform var(--t-fast); }
+.dd-btn.open .dd-chevron { transform: rotate(180deg); color: var(--gold-bright); }
+.dd-panel {
+  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 30;
+  max-height: 260px; overflow-y: auto;
+  background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0,0,0,0.2);
+  padding: 4px; display: flex; flex-direction: column; gap: 2px;
+}
+.dd-item {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.dd-item:active { background: var(--bg-card-hover); }
+.dd-item.sel { color: var(--gold-bright); background: var(--bg-inset); }
 .craft-card {
   border: 1px solid var(--border-soft); border-radius: var(--radius);
   background: var(--bg-card); padding: var(--sp-3); margin-bottom: var(--sp-3);
@@ -235,9 +329,34 @@
 .craft-card.disabled { opacity: 0.6; }
 .craft-head { display: flex; align-items: center; gap: var(--sp-3); }
 .craft-head .craft-icon { font-size: 32px; }
+img.craft-icon { width: 32px; height: 32px; object-fit: contain; }
 .craft-name { font-family: var(--font-title); color: var(--gold); font-size: 14px; }
+/* Couleur par rareté (catalogue généré, voir game/items.js GEAR_KINDS) — repère
+   visuel rapide une fois la liste longue, même filtrée. */
+.craft-name.rarity-common { color: var(--rarity-common); }
+.craft-name.rarity-uncommon { color: var(--rarity-uncommon); }
+.craft-name.rarity-rare { color: var(--rarity-rare); }
+.craft-name.rarity-epic { color: var(--rarity-epic); }
+.craft-name.rarity-legendary { color: var(--rarity-legendary); }
+.craft-name.rarity-mythic { color: var(--rarity-mythic); }
 .craft-stats { font-size: 12px; color: var(--text-muted); }
 .craft-cost { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Stepper de quantité (craft/achat multiple) */
+.qty-stepper { display: flex; align-items: center; gap: 6px; }
+.qty-btn {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--border-soft); border-radius: var(--radius-sm);
+  background: var(--bg-inset); color: var(--text); font-size: 15px; font-weight: 700;
+}
+.qty-btn:active { background: var(--bg-card-hover); }
+.qty-val { min-width: 28px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text); }
+.qty-max {
+  margin-left: auto; padding: 5px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-gold); background: var(--bg-inset);
+  color: var(--gold); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.qty-max:active { background: var(--bg-card-hover); }
 .cost-chip {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 3px 8px; border-radius: var(--radius-pill);
@@ -245,6 +364,31 @@
 }
 .cost-chip.miss { border-color: var(--negative); color: var(--negative); }
 .cost-chip .cost-have { color: var(--text-muted); font-size: 11px; }
+
+.mastery-track-icon { font-size: 22px; }
+img.mastery-track-icon { width: 28px; height: 28px; object-fit: contain; }
+
+/* ===== Récits (Codex > Fragments d'Écho) ===== */
+.recits-layout { display: flex; gap: var(--sp-3); align-items: flex-start; }
+.recits-sidebar { display: flex; flex-direction: column; gap: 6px; width: 118px; flex-shrink: 0; }
+.recit-entry {
+  text-align: left; padding: 8px 9px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg-card); cursor: pointer;
+}
+.recit-entry.locked { opacity: 0.5; cursor: default; }
+.recit-entry.active { border-color: var(--gold); background: var(--bg-card-hover); }
+.recit-entry-title { font-family: var(--font-title); font-size: 12px; color: var(--text); line-height: 1.25; }
+.recit-entry.locked .recit-entry-title { color: var(--text-muted); }
+.recit-entry-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.recits-content {
+  flex: 1; min-width: 0; padding: var(--sp-4); border-radius: var(--radius);
+  border: 1px solid var(--border-soft); background: var(--bg-card);
+}
+.recits-content.empty { display: grid; place-items: center; min-height: 160px; color: var(--text-muted); font-style: italic; text-align: center; font-size: 13px; }
+.recit-chapter { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-dim); }
+.recit-title { font-family: var(--font-title); color: var(--gold-bright); font-size: 17px; margin: 4px 0 10px; }
+.recit-text { font-size: 13px; line-height: 1.6; color: var(--text); font-style: italic; }
+.recit-reward { margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--border-soft); font-size: 12px; color: var(--positive); }
 .btn-craft {
   padding: 10px; font-size: 13px; font-weight: 600;
   border-radius: var(--radius-sm); border: 1px solid var(--gold);
@@ -252,6 +396,12 @@
 }
 .btn-craft:disabled { border-color: var(--border); color: var(--text-faint); background: var(--bg-inset); }
 .btn-craft:not(:disabled):active { transform: scale(0.98); }
+.btn-craft.active { border-color: var(--tempo); color: var(--tempo); }
+
+/* ===== Minage ===== */
+.mining-level { font-size: 13px; color: var(--gold-bright); margin-bottom: var(--sp-3); }
+.mining-card.locked { opacity: 0.55; }
+.mining-yield { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
 
 /* ===== Symphonie : bulles, Mesure, Accords ===== */
 .bubble-layer { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 6; }
@@ -283,6 +433,34 @@
   box-shadow: 0 0 8px var(--nc, var(--gold-glow));
 }
 
+/* Boutons de cast des Symphonies équipées (1 rangée, hauteur fixe et compacte). */
+.symphony-bar { display: flex; gap: 6px; margin-top: var(--sp-2); flex-shrink: 0; }
+.symphony-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 4px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft); background: var(--bg-inset);
+  opacity: 0.65;
+}
+.symphony-btn .sy-icon { font-size: 15px; line-height: 1; }
+.symphony-btn img.sy-icon { width: 20px; height: 20px; object-fit: contain; }
+.symphony-btn .sy-notes { display: flex; gap: 2px; }
+.symphony-btn .sy-note {
+  width: 15px; height: 15px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 7px; font-weight: 700; color: var(--text-faint);
+  background: var(--bg-app); border: 1px solid var(--border);
+}
+.symphony-btn .sy-note.lit {
+  background: color-mix(in srgb, var(--nc, var(--gold)) 40%, var(--bg-inset));
+  color: #fff; border-color: var(--nc, var(--gold));
+}
+.symphony-btn.ready {
+  opacity: 1; border-color: var(--gold); background: rgba(240,194,94,0.10);
+  box-shadow: 0 0 8px var(--gold-glow);
+}
+.symphony-btn:disabled { cursor: default; }
+.symphony-btn:not(:disabled):active { transform: scale(0.96); }
+
 .accord-info { font-size: 12px; color: var(--text-muted); margin-bottom: var(--sp-2); }
 .accord-count { font-size: 12px; color: var(--gold-bright); margin-bottom: var(--sp-3); }
 .accord-card {
@@ -294,6 +472,7 @@
 .accord-head { display: flex; align-items: center; gap: var(--sp-2); }
 .accord-head .accord-icon { font-size: 22px; }
 .accord-head .accord-name { font-family: var(--font-title); color: var(--gold); font-size: 14px; }
+.accord-head .accord-owned { margin-left: auto; font-size: 11px; color: var(--text-muted); }
 .accord-pattern { display: flex; gap: 6px; }
 .note-mini {
   min-width: 30px; padding: 3px 6px;
@@ -319,3 +498,55 @@
   color: var(--text-muted);
   font-size: 12px; text-align: center;
 }
+
+/* ===== Codex : Bestiaire ===== */
+.codex-progress { font-size: 12px; color: var(--text-muted); margin-bottom: var(--sp-3); }
+.codex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+.codex-card {
+  background: var(--bg-card); border: 1px solid var(--border-soft);
+  border-radius: var(--radius); padding: var(--sp-2);
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+}
+.codex-card.locked { opacity: 0.55; background: var(--bg-inset); }
+.codex-card .codex-emoji { font-size: 32px; }
+.codex-card .codex-card-icon { font-size: 24px; }
+.codex-card-name { font-family: var(--font-title); font-size: 11px; color: var(--text); font-weight: 600; }
+.codex-card-kills { font-size: 10px; color: var(--text-muted); }
+
+/* Modale de fiche Codex */
+.codex-modal { gap: var(--sp-3); }
+.codex-modal-head { display: flex; align-items: center; gap: var(--sp-3); }
+.codex-modal-head .codex-modal-sprite, .codex-modal-head .codex-emoji { width: 56px; height: 56px; font-size: 48px; object-fit: contain; }
+.codex-modal-name { font-family: var(--font-title); color: var(--gold-bright); font-size: 16px; }
+.codex-modal-kills { font-size: 12px; color: var(--text-muted); }
+.codex-section { border-top: 1px solid var(--border-soft); padding-top: var(--sp-2); }
+.codex-sec-title { font-family: var(--font-title); color: var(--gold); font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+.codex-sec-body { font-size: 13px; color: var(--text); }
+.codex-sec-bonus { font-size: 13px; color: var(--positive); font-weight: 600; }
+.codex-locked { font-size: 12px; color: var(--text-faint); font-style: italic; }
+
+/* ===== Maîtrise ===== */
+.mastery-bonus-box {
+  background: linear-gradient(180deg, rgba(240,194,94,0.10), transparent);
+  border: 1px solid var(--border-gold); border-radius: var(--radius);
+  padding: var(--sp-3); margin-bottom: var(--sp-4);
+}
+.mastery-bonus-title { font-family: var(--font-title); color: var(--gold-bright); font-size: 13px; margin-bottom: 6px; }
+.mastery-bonus-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mastery-track {
+  background: var(--bg-card); border: 1px solid var(--border-soft); border-radius: var(--radius);
+  padding: var(--sp-3); margin-bottom: var(--sp-3);
+}
+.mastery-track-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.mastery-track-icon { font-size: 26px; }
+.mastery-track-name { font-family: var(--font-title); color: var(--gold); font-size: 14px; }
+.mastery-track-desc { font-size: 11px; color: var(--text-muted); }
+.mastery-tier {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+  padding: 6px 0; border-top: 1px dashed var(--border-soft); font-size: 12px;
+}
+.mastery-tier .mt-label { color: var(--text-muted); flex: 1; }
+.mastery-tier .mt-req { color: var(--text-faint); font-size: 11px; }
+.mastery-tier .mt-reward { color: var(--text); font-weight: 600; text-align: right; }
+.mastery-tier.done .mt-label { color: var(--positive); }
+.mastery-tier.done .mt-reward { color: var(--gold-bright); }

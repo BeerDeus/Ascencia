@@ -1,0 +1,26 @@
+Règles Firestore — projet "ascenciaoff"
+========================================
+À coller manuellement dans la Console Firebase : Firestore Database > Règles > Publier.
+Ce fichier est tenu à jour par Claude à chaque changement de modèle de données ; il ne
+modifie jamais les règles publiées lui-même (pas d'accès à la Console Firebase).
+
+Dernière mise à jour : mise en place initiale (une seule collection "saves", un
+document par joueur, clé = uid Firebase Auth, isolation stricte par utilisateur).
+
+--------------------------------------------------------------------------------
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Une sauvegarde par joueur, document id = uid. Personne d'autre que le
+    // propriétaire (auth.uid == le nom du document) ne peut lire ou écrire.
+    match /saves/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Tout le reste est refusé par défaut (pas de règle = pas d'accès en mode
+    // "production" — vérifier que le projet n'est PAS en règles de test ouvertes).
+  }
+}

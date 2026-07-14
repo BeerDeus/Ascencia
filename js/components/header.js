@@ -1,39 +1,68 @@
 // ===== En-tête : avatar/niveau, PV, ressources, monnaie premium =====
-import { el, clear, fmt } from '../utils/dom.js';
+// Monté une seule fois puis patché (textContent) à chaque appel : évite le
+// clear()+rebuild qui provoquait un flash visible à chaque setState (régén, etc.).
+import { el, fmt, iconNode } from '../utils/dom.js';
 import { state } from '../state.js';
+import { signOutUser } from '../firebase/auth.js';
+import { flushNow } from '../firebase/sync.js';
+
+let R = null; // refs déjà montées sur `root`
+
+// Bouton menu (☰) : pas encore de vrai panneau — sert pour l'instant à se déconnecter
+// (seule action nécessaire depuis l'ajout des comptes Firebase). Un vrai menu (options,
+// crédits...) pourra remplacer ce raccourci plus tard.
+async function onMenuClick() {
+  if (!confirm('Se déconnecter ?')) return;
+  await flushNow(); // dernière écriture cloud avant de couper, pour ne rien perdre
+  await signOutUser();
+  location.reload();
+}
 
 export function renderHeader(root) {
-  clear(root);
-  const p = state.player, r = state.resources, en = state.endurance;
+  if (!R || R.root !== root) R = build(root);
 
-  root.append(
-    el('button.hdr-btn', { text: '☰', 'aria-label': 'Menu' }),
+  const p = state.player, r = state.resources, en = state.endurance;
+  R.lvl.textContent = 'Lvl. ' + p.level;
+  R.hp.textContent = `${p.hp.cur}/${p.hp.max}`;
+  R.end.textContent = `${en.cur}/${en.max}`;
+  R.bois.textContent = fmt(r.bois);
+  R.metal.textContent = fmt(r.metal);
+  R.tissu.textContent = fmt(r.tissu);
+  R.fragments.textContent = fmt(r.fragments);
+  R.or.textContent = fmt(r.or);
+}
+
+function build(root) {
+  const refs = { root };
+  root.replaceChildren(
+    el('button.hdr-btn', { 'aria-label': 'Menu', onclick: onMenuClick }, [el('span.hamburger-icon')]),
 
     el('div.hdr-avatar', {}, [
-      el('span', { text: '🜁' }),
-      el('span.lvl', { text: 'Lvl. ' + p.level }),
+      iconNode('assets/sprites/portraits/default_avatar.png', 'hdr-avatar-img'),
+      refs.lvl = el('span.lvl', { text: '' }),
     ]),
 
     el('div.hp-pill', {}, [
-      el('span.icon', { text: '❤️' }),
-      el('span', { text: `${p.hp.cur}/${p.hp.max}` }),
+      iconNode('assets/sprites/icons/vie.png', 'icon'),
+      refs.hp = el('span', { text: '' }),
     ]),
 
     el('div.end-pill', {}, [
-      el('span.icon', { text: '⚡' }),
-      el('span', { text: `${en.cur}/${en.max}` }),
+      iconNode('assets/sprites/icons/stamina.png', 'icon'),
+      refs.end = el('span', { text: '' }),
     ]),
 
     el('div.hdr-res', {}, [
-      el('div.res', {}, [el('span.icon', { text: '🪵' }), el('span', { text: fmt(r.bois) })]),
-      el('div.res', {}, [el('span.icon', { text: '⛏️' }), el('span', { text: fmt(r.metal) })]),
-      el('div.res', {}, [el('span.icon', { text: '🧵' }), el('span', { text: fmt(r.tissu) })]),
-      el('div.res', {}, [el('span.icon', { text: '🔩' }), el('span', { text: fmt(r.fragments) })]),
+      el('div.res', {}, [iconNode('assets/sprites/ressources/bois.png', 'icon'), refs.bois = el('span', { text: '' })]),
+      el('div.res', {}, [iconNode('assets/sprites/ressources/metal.png', 'icon'), refs.metal = el('span', { text: '' })]),
+      el('div.res', {}, [iconNode('assets/sprites/ressources/tissu.png', 'icon'), refs.tissu = el('span', { text: '' })]),
+      el('div.res', {}, [iconNode('assets/sprites/ressources/fragment.png', 'icon'), refs.fragments = el('span', { text: '' })]),
     ]),
 
     el('div.hdr-premium', {}, [
-      el('span.icon', { text: '🪙' }),
-      el('span', { text: fmt(r.or) }),
+      iconNode('assets/sprites/objets/piece_or.png', 'icon'),
+      refs.or = el('span', { text: '' }),
     ]),
   );
+  return refs;
 }

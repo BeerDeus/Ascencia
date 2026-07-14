@@ -1,0 +1,75 @@
+/* ===== Boot / Login / Rapport hors-ligne ===== */
+.boot-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-app);
+  padding: var(--sp-4);
+}
+.boot-overlay:empty { display: none; }
+
+.boot-screen, .login-screen {
+  width: 100%; max-width: 340px;
+  display: flex; flex-direction: column; align-items: stretch; gap: var(--sp-4);
+}
+.boot-logo {
+  font-family: var(--font-title); font-size: 26px; letter-spacing: 3px;
+  color: var(--gold-bright); text-align: center; text-shadow: 0 0 16px var(--gold-glow);
+  margin-bottom: var(--sp-2);
+}
+.boot-logo-img {
+  display: block; width: 128px; height: 128px; object-fit: contain;
+  margin: 0 auto var(--sp-2);
+  filter: drop-shadow(0 0 18px var(--gold-glow));
+}
+
+.boot-steps { display: flex; flex-direction: column; gap: var(--sp-3); }
+.boot-step {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft); background: var(--bg-card);
+  color: var(--text-muted); font-size: 13px;
+  transition: border-color var(--t), color var(--t);
+}
+.boot-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  background: var(--border); transition: background var(--t), box-shadow var(--t);
+}
+.boot-step.active { color: var(--text); border-color: var(--gold-dim); }
+.boot-step.active .boot-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold-glow); animation: boot-pulse 1s ease-in-out infinite; }
+.boot-step.done { color: var(--positive); border-color: var(--border-soft); }
+.boot-step.done .boot-dot { background: var(--positive); box-shadow: none; animation: none; }
+.boot-step.error { color: var(--negative); border-color: var(--negative); }
+.boot-step.error .boot-dot { background: var(--negative); animation: none; }
+@keyframes boot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.boot-error { display: flex; flex-direction: column; gap: var(--sp-2); align-items: center; text-align: center; }
+.boot-error-msg { font-size: 13px; color: var(--negative); }
+
+/* ---- Login ---- */
+.login-intro { text-align: center; color: var(--text-muted); font-size: 13px; }
+.login-google {
+  padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-gold);
+  background: var(--bg-card); color: var(--text); font-weight: 600; font-size: 13px;
+}
+.login-google:active { background: var(--bg-card-hover); }
+.login-sep { text-align: center; color: var(--text-faint); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.login-form { display: flex; flex-direction: column; gap: var(--sp-3); }
+.login-input {
+  padding: 11px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--bg-inset); color: var(--text); font-size: 14px; font-family: var(--font-body);
+}
+.login-input:focus { outline: none; border-color: var(--gold-dim); }
+.login-submit { width: 100%; }
+.login-forgot, .login-toggle {
+  text-align: center; font-size: 12px; color: var(--text-muted); text-decoration: none;
+}
+.login-forgot:active, .login-toggle:active { color: var(--gold); }
+.login-error { font-size: 12px; color: var(--negative); text-align: center; }
+
+/* ---- Rapport de reconnexion ---- */
+.report-modal { gap: var(--sp-2); }
+.report-elapsed { text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: var(--sp-2); }
+.report-line { font-size: 13px; color: var(--text); padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-inset); }
+.report-line.report-highlight { color: var(--gold-bright); border: 1px solid var(--border-gold); }
+
+.mining-stop { margin: 0 0 var(--sp-3); width: 100%; }

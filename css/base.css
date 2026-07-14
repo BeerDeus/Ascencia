@@ -40,6 +40,20 @@ ul { list-style: none; }
   -webkit-overflow-scrolling: touch;
 }
 
+/* ===== Combat plein écran ===== */
+/* #app.combat-mode : actif tant qu'on est sur Aventure/Combat avec un combat en
+   cours (voir router.js). Masque tout le chrome (header/subnav/mainnav) pour une
+   interface de combat immersive qui prend tout l'écran. !important nécessaire
+   car renderSubNav pose un style.display inline (voir components/navbar.js). */
+#app.combat-mode #game-header,
+#app.combat-mode #subnav,
+#app.combat-mode #mainnav {
+  display: none !important;
+}
+#app.combat-mode .view-root {
+  padding: 0;
+}
+
 /* Titres serif dorés en capitales (style maquette) */
 .section-title {
   font-family: var(--font-title);
@@ -51,6 +65,8 @@ ul { list-style: none; }
   margin: var(--sp-5) var(--sp-1) var(--sp-3);
 }
 .section-title:first-child { margin-top: var(--sp-2); }
+
+.view-intro { font-size: 12px; color: var(--text-muted); margin: 0 var(--sp-1) var(--sp-4); line-height: 1.5; }
 
 .text-muted { color: var(--text-muted); }
 .text-positive { color: var(--positive); }

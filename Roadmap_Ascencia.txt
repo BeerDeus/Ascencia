@@ -2,47 +2,76 @@
 ROADMAP DÉTAILLÉE - PROJET "ASCENCIA"
 ================================================================================
 
-PHASE 1 : FONDATIONS & INTÉGRATION DE L'UI
+PHASE 1 : FONDATIONS & INTÉGRATION DE L'UI — [FAIT]
 --------------------------------------------------------------------------------
-- Tâche 1.1 : Analyse des maquettes ("image_933999.png", "image_9339f5.png") et mise en place de l'architecture CSS/Variables (mode sombre, couleurs dorées, typographies).
-- Tâche 1.2 : Développement du layout principal Mobile-First (Header des ressources, conteneur principal dynamique, barre de navigation inférieure fixe).
-- Tâche 1.3 : Création des composants réutilisables (Cartes de menu avec effet de survol/clic, jauges de progression).
-- Tâche 1.4 : Implémentation du routeur interne / gestion des vues (Profil, Village, Aventure) sans rechargement de page.
+- Tâche 1.1 : [FAIT] Architecture CSS/Variables (mode sombre, couleurs dorées, typographies).
+- Tâche 1.2 : [FAIT] Layout principal Mobile-First (Header des ressources, conteneur principal dynamique, barre de navigation inférieure fixe).
+- Tâche 1.3 : [FAIT] Composants réutilisables (Cartes de menu, jauges de progression).
+- Tâche 1.4 : [FAIT] Routeur interne / gestion des vues (Profil, Village, Aventure, Codex, Capitale) sans rechargement de page.
 
-PHASE 2 : MOTEUR DE COMBAT ET JAUGES DE TEMPO
+PHASE 2 : MOTEUR DE COMBAT ET JAUGES DE TEMPO — [FAIT]
 --------------------------------------------------------------------------------
-- Tâche 2.1 : Mise en place de la boucle de jeu principale (`requestAnimationFrame` ou `setInterval` optimisé).
-- Tâche 2.2 : Création de la logique des jauges de Tempo (calcul de la vitesse de remplissage basée sur l'attribut Agilité/Vitesse).
-- Tâche 2.3 : Implémentation du module de calcul des dégâts (prise en compte de l'attaque, défense, esquive, critique).
-- Tâche 2.4 : Création du panneau de Logs textuels (historique d'actions épuré et auto-défilant).
-- Tâche 2.5 : Intégration des Sprites ennemis dans l'UI de combat.
-- Tâche 2.6 : Structure de Zones (config ZONES : 3-6 monstres + boss par zone, difficulté croissante).
-- Tâche 2.7 : Interface de Zone (liste monstres, progression 10 victoires, bouton Affronter) <-> Interface de Combat (bascule).
-- Tâche 2.8 : Progression : nettoyage 10x/monstre + Boss -> déblocage zone suivante ; auto-battle relançable par monstre (10 victoires) avec bouton "Arrêter l'auto-battle".
+- Tâche 2.1 : [FAIT] Boucle de jeu principale (`requestAnimationFrame`).
+- Tâche 2.2 : [FAIT] Jauges de Tempo (vitesse de remplissage basée sur l'attribut Agilité/Vitesse).
+- Tâche 2.3 : [FAIT] Module de calcul des dégâts (attaque, défense, esquive, critique).
+- Tâche 2.4 : [FAIT] Panneau de Logs textuels (auto-défilant).
+- Tâche 2.5 : [FAIT] Sprites ennemis dans l'UI de combat.
+- Tâche 2.6 : [FAIT] Structure de Zones (5 zones à ce jour, difficulté croissante).
+- Tâche 2.7 : [FAIT] Interface de Zone <-> Interface de Combat (bascule).
+- Tâche 2.8 : [FAIT] Progression 10x/monstre + Boss -> déblocage zone suivante ; auto-battle par monstre.
 
-PHASE 3 : SYSTÈME SYMPHONIE & ACCORDS
+PHASE 3 : SYSTÈME SYMPHONIE & ACCORDS — [FAIT] (cast manuel, pas auto-trigger)
 --------------------------------------------------------------------------------
-- Tâche 3.1 : Création du système d'apparition des Bulles (Notes de musique) déclenché par les frappes du Tempo.
-- Tâche 3.2 : Implémentation du Tweening CSS ou JS (ex: GSAP ou Web Animations API) pour le flottement des bulles. Intégration d'un Object Pooling pour éviter les fuites mémoire lors de longues sessions.
-- Tâche 3.3 : Création du tableau de données "La Mesure" (Logique FIFO, max 4 emplacements).
-- Tâche 3.4 : Implémentation de l'algorithme de pattern matching vérifiant La Mesure par rapport aux "Accords" équipés (ex: DO-DO-DO pour Soin).
+- Tâche 3.1 : [FAIT] Bulles (Notes de musique) déclenchées par les frappes du Tempo.
+- Tâche 3.2 : [FAIT] Tweening (Web Animations API) + Object Pooling (bubblePool, combat.js).
+- Tâche 3.3 : [FAIT] "La Mesure" (Logique FIFO, 4 emplacements).
+- Tâche 3.4 : [FAIT] Pattern matching La Mesure / Accords équipés.
+- Tâche 3.5 : [FAIT, non prévu initialement] Cast manuel des Accords (bouton dédié en combat, castAccord()) — remplace l'auto-trigger à la complétion prévu au cahier des charges d'origine.
+- Tâche 3.6 : [FAIT, non prévu initialement] Accords transformés en objets équipables (3 emplacements paperdoll, drop sur les 5 boss de zone) plutôt qu'un simple choix de 3 sorts.
 
-PHASE 4 : SYSTÈME D'IDLE, AUTO-BATTLE ET ENDURANCE
+PHASE 4 : SYSTÈME D'IDLE, AUTO-BATTLE ET ENDURANCE — [FAIT]
 --------------------------------------------------------------------------------
-- Tâche 4.1 : Création du tracker de victoires historiques par monstre.
-- Tâche 4.2 : Implémentation du Toggle "Auto-Battle" (débloqué à 10 victoires) avec boucle de relance et délai de spawn (1-2 sec).
-- Tâche 4.3 : Implémentation de la jauge d'Endurance. Déduction à chaque lancement de combat Auto.
-- Tâche 4.4 : Création du module de temps (Timestamp) gérant la régénération de l'Endurance en temps réel ET lors du retour hors-ligne.
+- Tâche 4.1 : [FAIT] Tracker de victoires historiques par monstre (state.monsterWins).
+- Tâche 4.2 : [FAIT] Toggle "Auto-Battle" avec boucle de relance et délai de spawn.
+- Tâche 4.3 : [FAIT] Jauge d'Endurance, déduction au lancement Auto.
+- Tâche 4.4 : [FAIT] Régénération d'Endurance en temps réel + rattrapage hors-ligne (Timestamp).
 
-PHASE 5 : MÉTHODES DE FARMING & L'INSTABILITÉ DE LARRY
+PHASE 5 : MÉTHODES DE FARMING & L'INSTABILITÉ DE LARRY — [PARTIEL]
 --------------------------------------------------------------------------------
-- Tâche 5.1 : Création du système d'Inventaire et du dictionnaire de Butins (Loot tables).
-- Tâche 5.2 : Implémentation des fonctionnalités du Village (Boutique Marchand, logique de Forge, recettes d'Alchimie pour restaurer l'Endurance).
-- Tâche 5.3 : Intégration de "l'Instabilité de Larry" (10% de chances de spawn d'une variante de monstre). Création du générateur d'affixes procéduraux (Stats boostées, couleurs Dissonantes).
+- Tâche 5.1 : [FAIT, périmètre revu] Inventaire + Loot : ressources (resourceLoot) + matériaux de famille OK. Décision produit : pas de loot table d'équipement (armes/armures) sur les monstres — toute acquisition d'équipement passe par le craft (Forge, voir Tâche 5.2/10.2, catalogue complet). Les items.gen.js `loot` restants (matériaux uniquement) suffisent pour la Forge.
+- Tâche 5.2 : [PARTIEL] Village : Forge (catalogue complet, filtres Type/Rareté/Stat) et Cuisine (craft) + Marchand (achat/vente, quantités multiples) + Minage (voir Phase 7) implémentés. Alchimiste dédié et Primes (défis quotidiens) : PAS FAIT.
+- Tâche 5.3 : [FAIT] L'Instabilité de Larry (10% de spawn variante sur les monstres réguliers, jamais les boss — voir game/monsters.js LARRY_AFFIXES/rollLarryAffix/applyLarryAffix). 3 affixes générés : Dissonant (stats+résistance+butin Dissonance), Zébré (Tempo erratique+esquive), Instable (gros dégâts/crit mais PV réduits). Stats/loot/nom mutés au lancement du combat (combat.js start()), halo violet Dissonance en combat (CSS .larry-name/.larry-sprite).
+- Tâche 5.4 : [FAIT, non prévu initialement] Capacité de sac achetable (inventorySlots croissants, achat via or).
 
-PHASE 6 : SAUVEGARDE, ASCENSION ET DÉPLOIEMENT
+PHASE 6 : SAUVEGARDE, ASCENSION ET DÉPLOIEMENT — [PARTIEL]
 --------------------------------------------------------------------------------
-- Tâche 6.1 : Mise en place complète du système de sauvegarde via `LocalStorage` ou `IndexedDB` (sauvegarde de l'état, de l'inventaire, de l'historique des monstres).
-- Tâche 6.2 : Implémentation du Hard Reset lié à "L'Ascension" (Prestige). Création de l'arbre de Constellations (améliorations permanentes).
-- Tâche 6.3 : Wrapping du projet Web (HTML/JS/CSS) dans Capacitor.
-- Tâche 6.4 : Tests de performances sur build mobile (framerate des animations de bulles, consommation batterie, confort de la barre de navigation sur petits écrans).
+- Tâche 6.1 : [FAIT] Sauvegarde `LocalStorage` (état complet, inventaire, historique des monstres). IndexedDB non nécessaire à ce stade.
+- Tâche 6.2 : [PAS FAIT] Hard Reset "Ascension" (Prestige) + arbre de Constellations : state.constellations existe en placeholder (0), aucune logique/UI.
+- Tâche 6.3 : [PAS FAIT] Wrapping Capacitor.
+- Tâche 6.4 : [PAS FAIT] Tests de performance build mobile.
+- Note : la prochaine itération prévoit une bascule vers une sauvegarde serveur (Firebase/Firestore, auth Google, gestion du temps hors-ligne) — à anticiper avant d'investir davantage dans le LocalStorage pur.
+
+PHASE 7 : CODEX — BESTIAIRE, MAÎTRISE, RÉCITS — [FAIT] (non prévu au cahier des charges d'origine)
+--------------------------------------------------------------------------------
+- Tâche 7.1 : [FAIT] Bestiaire : fiches monstres/boss avec paliers de déblocage par kills (50/100/500/1000), bonus dérivés à la volée.
+- Tâche 7.2 : [FAIT] Maîtrise : 4 Voies de progression (Chasseur, Vétéran, Naturaliste, Bestiaire), paliers cumulatifs, bonus permanents.
+- Tâche 7.3 : [FAIT] Récits (Fragments d'Écho) : lecteur de chapitres (liste + panneau), Acte I adapté du Lore complet (7 fragments), déblocage lié à la progression de jeu réelle, bonus permanents par fragment.
+- Tâche 7.4 : À FAIRE — étendre les Récits aux Actes suivants au fur et à mesure que le contenu de jeu (zones/boss/monstres) progresse.
+
+PHASE 8 : MINAGE (VILLAGE) — [FAIT] (non prévu au cahier des charges d'origine)
+--------------------------------------------------------------------------------
+- Tâche 8.1 : [FAIT] Filons à progression temporisée (3 filons, paliers de niveau), boost manuel au clic.
+- Tâche 8.2 : [FAIT] Compétence de Minage dédiée (niveau/XP, state.skills.mining), extensible pour Forge/Cuisine.
+- Tâche 8.3 : [FAIT] Récompenses versées dans les ressources du Village (métal, fragments).
+- Tâche 8.4 : À FAIRE — minage en arrière-plan / hors-ligne (dépend de la bascule Firebase, Phase 6).
+- Tâche 8.5 : À FAIRE — étendre Forge/Cuisine au même modèle de compétence (state.skills) si voulu.
+
+PHASE 9 : LA CAPITALE — [STRUCTURE POSÉE] (non prévu au cahier des charges d'origine)
+--------------------------------------------------------------------------------
+- Tâche 9.1 : [FAIT] Vue Capitale, déblocage à la Zone 5, structure extensible par quartiers.
+- Tâche 9.2 : [INTERFACE SEULE] Quartier Enchanteur : carte + description en place, aucune logique d'enchantement implémentée.
+
+PHASE 10 : ICONOGRAPHIE — SUPPRESSION DES EMOJI — [FAIT]
+--------------------------------------------------------------------------------
+- Tâche 10.1 : [FAIT] Remplacement de tous les emoji d'UI par des sprites dédiés (attributs, stats dérivées, ressources, matériaux, navigation, Codex, Minage) via le helper commun iconNode().
+- Tâche 10.2 : [À FAIRE] Icônes d'équipement (armes/armures du catalogue généré items.gen.js, 191 pièces désormais toutes craftables en Forge, voir Tâche 5.1/5.2) : toujours en emoji — chantier à part vu le volume (prompts par lot de 10-15 à prévoir).

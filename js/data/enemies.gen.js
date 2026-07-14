@@ -3,7 +3,7 @@ export const ENEMIES_GEN = {
  "rat_geant": {
   "id": "rat_geant",
   "name": "Rat Géant",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/rat.png",
   "attrs": {
    "vie": 25,
    "force": 6,
@@ -17,12 +17,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "tissu": 10
   },
-  "loot": []
+  "loot": [],
+  "desc": "Un rongeur difforme, gonflé par les miasmes des caves oubliées."
  },
  "reine_des_rats": {
   "id": "reine_des_rats",
   "name": "Reine des Rats",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/reine_rat.png",
   "attrs": {
    "vie": 40,
    "force": 8,
@@ -37,12 +38,13 @@ export const ENEMIES_GEN = {
    "tissu": 15,
    "fragments": 1
   },
-  "loot": []
+  "loot": [],
+  "desc": "Matriarche vorace régnant sur les nids grouillants des sous-sols."
  },
  "bandit": {
   "id": "bandit",
   "name": "Bandit",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/bandit.png",
   "attrs": {
    "vie": 60,
    "force": 12,
@@ -57,12 +59,13 @@ export const ENEMIES_GEN = {
    "metal": 25,
    "tissu": 15
   },
-  "loot": []
+  "loot": [],
+  "desc": "Un hors-la-loi opportuniste qui s'attaque aux voyageurs imprudents. N'est dangereux qu'en groupe."
  },
  "chef_bandit": {
   "id": "chef_bandit",
   "name": "Chef des Bandits",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/chef_bandit.png",
   "attrs": {
    "vie": 110,
    "force": 18,
@@ -78,12 +81,13 @@ export const ENEMIES_GEN = {
    "tissu": 30,
    "fragments": 1
   },
-  "loot": []
+  "loot": [],
+  "desc": "Meneur impitoyable, il ne recule jamais devant plus faible que lui."
  },
  "golem_pierre": {
   "id": "golem_pierre",
   "name": "Golem de Pierre",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/golem_pierre.png",
   "attrs": {
    "vie": 300,
    "force": 35,
@@ -102,7 +106,7 @@ export const ENEMIES_GEN = {
  "mini_golem_pierre": {
   "id": "mini_golem_pierre",
   "name": "Mini Golem de Pierre",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/mini_golem_pierre.png",
   "attrs": {
    "vie": 160,
    "force": 17,
@@ -116,12 +120,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "metal": 40
   },
-  "loot": []
+  "loot": [],
+  "desc": "Fragment animé d'une ancienne statue gardienne, lent mais increvable."
  },
  "gardien_de_pierre_eterne": {
   "id": "gardien_de_pierre_eterne",
   "name": "Gardien de Pierre Éternel",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/gardien_pierre_eternel.png",
   "attrs": {
    "vie": 350,
    "force": 45,
@@ -148,7 +153,7 @@ export const ENEMIES_GEN = {
  "elementaire_eau": {
   "id": "elementaire_eau",
   "name": "Élémentaire d'Eau",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/elementaire_eau.png",
   "attrs": {
    "vie": 150,
    "force": 25,
@@ -168,7 +173,7 @@ export const ENEMIES_GEN = {
  "insecte_mineur": {
   "id": "insecte_mineur",
   "name": "Insecte Mineur",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/insecte_mineur.png",
   "attrs": {
    "vie": 75,
    "force": 15,
@@ -189,12 +194,13 @@ export const ENEMIES_GEN = {
     "min": 1,
     "max": 1
    }
-  ]
+  ],
+  "desc": "Carapace dure comme la roche, il creuse sans relâche les galeries."
  },
  "araignee_de_cave": {
   "id": "araignee_de_cave",
   "name": "Araignée de Cave",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/arraignee_cave.png",
   "attrs": {
    "vie": 30,
    "force": 7,
@@ -208,12 +214,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "tissu": 15
   },
-  "loot": []
+  "loot": [],
+  "desc": "Tisse ses toiles dans l'obscurité, guettant le moindre pas imprudent."
  },
  "loup_affame": {
   "id": "loup_affame",
   "name": "Loup Affamé",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/loup_affame.png",
   "attrs": {
    "vie": 35,
    "force": 8,
@@ -227,12 +234,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "tissu": 12
   },
-  "loot": []
+  "loot": [],
+  "desc": "Chasse en solitaire depuis que sa meute a déserté la forêt."
  },
  "sanglier_furieux": {
   "id": "sanglier_furieux",
   "name": "Sanglier Furieux",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/sanglier_furieux.png",
   "attrs": {
    "vie": 50,
    "force": 12,
@@ -246,12 +254,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "bois": 15
   },
-  "loot": []
+  "loot": [],
+  "desc": "Charge tout ce qui bouge, sans distinction entre ami et ennemi."
  },
  "araignee_geante": {
   "id": "araignee_geante",
   "name": "Araignée Géante",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/arraignee_geante.png",
   "attrs": {
    "vie": 80,
    "force": 15,
@@ -265,12 +274,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "tissu": 40
   },
-  "loot": []
+  "loot": [],
+  "desc": "Cousine monstrueuse des araignées de cave, tisseuse de pièges mortels."
  },
  "griffon": {
   "id": "griffon",
   "name": "Griffon",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/griffon.png",
   "attrs": {
    "vie": 200,
    "force": 30,
@@ -297,7 +307,7 @@ export const ENEMIES_GEN = {
  "basilic": {
   "id": "basilic",
   "name": "Basilic",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/basilic.png",
   "attrs": {
    "vie": 250,
    "force": 35,
@@ -324,7 +334,7 @@ export const ENEMIES_GEN = {
  "scorpion_des_sables": {
   "id": "scorpion_des_sables",
   "name": "Scorpion des Sables",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/scorpion_sable.png",
   "attrs": {
    "vie": 90,
    "force": 18,
@@ -345,12 +355,13 @@ export const ENEMIES_GEN = {
     "min": 1,
     "max": 1
    }
-  ]
+  ],
+  "desc": "Son dard distille un venin qui trouble les sens et le rythme."
  },
  "ver_des_sables": {
   "id": "ver_des_sables",
   "name": "Ver des Sables Géant",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/ver_sable.png",
   "attrs": {
    "vie": 400,
    "force": 50,
@@ -370,7 +381,7 @@ export const ENEMIES_GEN = {
  "gobelin_frondeur": {
   "id": "gobelin_frondeur",
   "name": "Gobelin Frondeur",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/gobelin_frondeur.png",
   "attrs": {
    "vie": 20,
    "force": 5,
@@ -391,12 +402,13 @@ export const ENEMIES_GEN = {
     "min": 1,
     "max": 1
    }
-  ]
+  ],
+  "desc": "Lâche mais précis, il harcèle ses proies à distance avant de fuir."
  },
  "chef_gobelin": {
   "id": "chef_gobelin",
   "name": "Chef Gobelin Dissonant",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/chef_gobelin.png",
   "attrs": {
    "vie": 80,
    "force": 12,
@@ -410,12 +422,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "bois": 5
   },
-  "loot": []
+  "loot": [],
+  "desc": "Un chef de guerre corrompu par le silence, hurlant des ordres discordants."
  },
  "orc_berserker": {
   "id": "orc_berserker",
   "name": "Orc Berserker",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/orc_berserker.png",
   "attrs": {
    "vie": 140,
    "force": 25,
@@ -442,7 +455,7 @@ export const ENEMIES_GEN = {
  "squelette_guerrier": {
   "id": "squelette_guerrier",
   "name": "Squelette Guerrier",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/squelette_guerrier.png",
   "attrs": {
    "vie": 70,
    "force": 14,
@@ -456,12 +469,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "metal": 15
   },
-  "loot": []
+  "loot": [],
+  "desc": "Ossements ranimés par une volonté qui refuse le repos éternel."
  },
  "necromancien_apprenti": {
   "id": "necromancien_apprenti",
   "name": "Nécromancien Apprenti",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/necromancien_apprenti.png",
   "attrs": {
    "vie": 70,
    "force": 8,
@@ -480,7 +494,7 @@ export const ENEMIES_GEN = {
  "cultiste_zelote": {
   "id": "cultiste_zelote",
   "name": "Cultiste Zélote",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/cultiste_zelote.png",
   "attrs": {
    "vie": 80,
    "force": 15,
@@ -500,7 +514,7 @@ export const ENEMIES_GEN = {
  "garde_automate": {
   "id": "garde_automate",
   "name": "Garde Automate",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/garde_automate.png",
   "attrs": {
    "vie": 180,
    "force": 28,
@@ -519,7 +533,7 @@ export const ENEMIES_GEN = {
  "initie_de_l_ombre": {
   "id": "initie_de_l_ombre",
   "name": "Initié de l'Ombre",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/initie_ombre.png",
   "attrs": {
    "vie": 150,
    "force": 22,
@@ -539,7 +553,7 @@ export const ENEMIES_GEN = {
  "assassin_de_l_ombre": {
   "id": "assassin_de_l_ombre",
   "name": "Assassin de l'Ombre",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/assassin_ombre.png",
   "attrs": {
    "vie": 280,
    "force": 38,
@@ -560,7 +574,7 @@ export const ENEMIES_GEN = {
  "maitre_de_l_ombre": {
   "id": "maitre_de_l_ombre",
   "name": "Maître de l'Ombre",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/maitre_ombre.png",
   "attrs": {
    "vie": 450,
    "force": 55,
@@ -581,7 +595,7 @@ export const ENEMIES_GEN = {
  "spectre_gemissant": {
   "id": "spectre_gemissant",
   "name": "Spectre Gémissant",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/spectre_gemissant.png",
   "attrs": {
    "vie": 75,
    "force": 12,
@@ -607,7 +621,7 @@ export const ENEMIES_GEN = {
  "elementaire_de_magma": {
   "id": "elementaire_de_magma",
   "name": "Élémentaire de Magma",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/elementaire_magma.png",
   "attrs": {
    "vie": 220,
    "force": 38,
@@ -627,7 +641,7 @@ export const ENEMIES_GEN = {
  "harpie": {
   "id": "harpie",
   "name": "Harpie",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/harpie.png",
   "attrs": {
    "vie": 85,
    "force": 14,
@@ -653,7 +667,7 @@ export const ENEMIES_GEN = {
  "momie_gardienne": {
   "id": "momie_gardienne",
   "name": "Momie Gardienne",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/momie.png",
   "attrs": {
    "vie": 180,
    "force": 25,
@@ -672,7 +686,7 @@ export const ENEMIES_GEN = {
  "djinn": {
   "id": "djinn",
   "name": "Djinn",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/djinn.png",
   "attrs": {
    "vie": 300,
    "force": 30,
@@ -692,7 +706,7 @@ export const ENEMIES_GEN = {
  "le_collecteur": {
   "id": "le_collecteur",
   "name": "Le Collecteur (Golem)",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/collectionneur.png",
   "attrs": {
    "vie": 500,
    "force": 45,
@@ -712,7 +726,7 @@ export const ENEMIES_GEN = {
  "chimere": {
   "id": "chimere",
   "name": "Chimère",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/chimere.png",
   "attrs": {
    "vie": 600,
    "force": 55,
@@ -740,7 +754,7 @@ export const ENEMIES_GEN = {
  "chimere_renforcee": {
   "id": "chimere_renforcee",
   "name": "Chimère Renforcée",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/chimere.png",
   "attrs": {
    "vie": 6000,
    "force": 55,
@@ -757,7 +771,7 @@ export const ENEMIES_GEN = {
  "hydre_des_marais": {
   "id": "hydre_des_marais",
   "name": "Hydre des Marais",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/hydre_marais.png",
   "attrs": {
    "vie": 750,
    "force": 60,
@@ -777,7 +791,7 @@ export const ENEMIES_GEN = {
  "otyugh": {
   "id": "otyugh",
   "name": "Otyugh",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/otyugh.png",
   "attrs": {
    "vie": 180,
    "force": 25,
@@ -797,7 +811,7 @@ export const ENEMIES_GEN = {
  "minotaure": {
   "id": "minotaure",
   "name": "Minotaure",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/minotaure.png",
   "attrs": {
    "vie": 300,
    "force": 45,
@@ -817,7 +831,7 @@ export const ENEMIES_GEN = {
  "profond_guerrier": {
   "id": "profond_guerrier",
   "name": "Guerrier Profond",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/profond_guerrier.png",
   "attrs": {
    "vie": 250,
    "force": 40,
@@ -844,7 +858,7 @@ export const ENEMIES_GEN = {
  "profond_champion": {
   "id": "profond_champion",
   "name": "Champion Profond",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/profond_champion.png",
   "attrs": {
    "vie": 450,
    "force": 55,
@@ -871,7 +885,7 @@ export const ENEMIES_GEN = {
  "archange": {
   "id": "archange",
   "name": "Archange de Lumière",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/archange.png",
   "attrs": {
    "vie": 800,
    "force": 70,
@@ -898,7 +912,7 @@ export const ENEMIES_GEN = {
  "dragon_rouge_ancien": {
   "id": "dragon_rouge_ancien",
   "name": "Dragon Rouge Ancien",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/dragon_ancien.png",
   "attrs": {
    "vie": 1500,
    "force": 120,
@@ -925,7 +939,7 @@ export const ENEMIES_GEN = {
  "archimage_dement": {
   "id": "archimage_dement",
   "name": "Archimage Dément",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/archimage_dement.png",
   "attrs": {
    "vie": 650,
    "force": 50,
@@ -945,7 +959,7 @@ export const ENEMIES_GEN = {
  "roi_singe_esprit": {
   "id": "roi_singe_esprit",
   "name": "Esprit du Roi Singe",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/roi_singe.png",
   "attrs": {
    "vie": 700,
    "force": 65,
@@ -972,7 +986,7 @@ export const ENEMIES_GEN = {
  "shoggoth": {
   "id": "shoggoth",
   "name": "Shoggoth",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/shoggoth.png",
   "attrs": {
    "vie": 1200,
    "force": 90,
@@ -991,7 +1005,7 @@ export const ENEMIES_GEN = {
  "golem_pierre_mythique": {
   "id": "golem_pierre_mythique",
   "name": "Gardien de Pierre Mythique",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/gardien_pierre_eternel.png",
   "attrs": {
    "vie": 2000,
    "force": 100,
@@ -1010,7 +1024,7 @@ export const ENEMIES_GEN = {
  "roi_barbare": {
   "id": "roi_barbare",
   "name": "Hrothgar, le Roi Barbare",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/roi_barbare.png",
   "attrs": {
    "vie": 900,
    "force": 85,
@@ -1030,7 +1044,7 @@ export const ENEMIES_GEN = {
  "archere_elfe": {
   "id": "archere_elfe",
   "name": "Lirael, l'Archère Elfe",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/archere_elfe.png",
   "attrs": {
    "vie": 600,
    "force": 50,
@@ -1050,7 +1064,7 @@ export const ENEMIES_GEN = {
  "chevalier_eternel": {
   "id": "chevalier_eternel",
   "name": "Sir Gideon, le Chevalier Éternel",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/chevalier_eternel.png",
   "attrs": {
    "vie": 1100,
    "force": 75,
@@ -1069,7 +1083,7 @@ export const ENEMIES_GEN = {
  "forgeron_demon": {
   "id": "forgeron_demon",
   "name": "Forgeron des Âmes",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/forgeron_demon.png",
   "attrs": {
    "vie": 1300,
    "force": 110,
@@ -1089,7 +1103,7 @@ export const ENEMIES_GEN = {
  "demon_mineur": {
   "id": "demon_mineur",
   "name": "Démon Mineur",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/demon_mineur.png",
   "attrs": {
    "vie": 400,
    "force": 60,
@@ -1115,7 +1129,7 @@ export const ENEMIES_GEN = {
  "general_demon": {
   "id": "general_demon",
   "name": "Général Démon",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/general_demon.png",
   "attrs": {
    "vie": 1400,
    "force": 100,
@@ -1142,7 +1156,7 @@ export const ENEMIES_GEN = {
  "horreur_dimensionnelle": {
   "id": "horreur_dimensionnelle",
   "name": "Horreur Dimensionnelle",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/horreur_dimentionnelle.png",
   "attrs": {
    "vie": 1800,
    "force": 130,
@@ -1168,7 +1182,7 @@ export const ENEMIES_GEN = {
  "griffon_corrompu": {
   "id": "griffon_corrompu",
   "name": "Griffon Corrompu",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/griffon_corrompu.png",
   "attrs": {
    "vie": 1600,
    "force": 110,
@@ -1187,7 +1201,7 @@ export const ENEMIES_GEN = {
  "dragon_corrompu": {
   "id": "dragon_corrompu",
   "name": "Dragon Ancien Corrompu",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/dragon_corrompu.png",
   "attrs": {
    "vie": 2500,
    "force": 150,
@@ -1207,7 +1221,7 @@ export const ENEMIES_GEN = {
  "dieu_fou": {
   "id": "dieu_fou",
   "name": "Malakor, le Dieu Fou",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/dieu_fou.png",
   "attrs": {
    "vie": 5000,
    "force": 200,
@@ -1226,7 +1240,7 @@ export const ENEMIES_GEN = {
  "double_sombre": {
   "id": "double_sombre",
   "name": "Double Sombre",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/double_sombre.png",
   "attrs": {
    "vie": 1500,
    "force": 100,
@@ -1245,7 +1259,7 @@ export const ENEMIES_GEN = {
  "ouroboros": {
   "id": "ouroboros",
   "name": "Ouroboros, Gardien du Cycle",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/ouroboros.png",
   "attrs": {
    "vie": 3000,
    "force": 140,
@@ -1264,7 +1278,7 @@ export const ENEMIES_GEN = {
  "talos_reforge": {
   "id": "talos_reforge",
   "name": "Talos reforgé",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/talos_reforge.png",
   "attrs": {
    "vie": 2800,
    "force": 160,
@@ -1283,7 +1297,7 @@ export const ENEMIES_GEN = {
  "scarabee_goliath": {
   "id": "scarabee_goliath",
   "name": "Scarabée-Goliath",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/garden_beetle.png",
   "attrs": {
    "vie": 50,
    "force": 10,
@@ -1294,15 +1308,20 @@ export const ENEMIES_GEN = {
   },
   "crit": 0,
   "xp": 20,
-  "resourceLoot": {
-   "Chitine Renforcée": 1
-  },
-  "loot": []
+  "resourceLoot": {},
+  "loot": [
+   {
+    "tid": "chitine_renforcee",
+    "chance": 1.0,
+    "min": 1,
+    "max": 1
+   }
+  ]
  },
  "ver_de_racine": {
   "id": "ver_de_racine",
   "name": "Ver de Racine Blindé",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/garden_worm.png",
   "attrs": {
    "vie": 80,
    "force": 12,
@@ -1313,15 +1332,20 @@ export const ENEMIES_GEN = {
   },
   "crit": 0,
   "xp": 25,
-  "resourceLoot": {
-   "Chitine Renforcée": 2
-  },
-  "loot": []
+  "resourceLoot": {},
+  "loot": [
+   {
+    "tid": "chitine_renforcee",
+    "chance": 1.0,
+    "min": 2,
+    "max": 2
+   }
+  ]
  },
  "tutorial_dummy": {
   "id": "tutorial_dummy",
   "name": "Effigie Corrompue",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/dummy.png",
   "attrs": {
    "vie": 20,
    "force": 2,
@@ -1338,7 +1362,7 @@ export const ENEMIES_GEN = {
  "loup_dissonant": {
   "id": "loup_dissonant",
   "name": "Loup Dissonant",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/loup_dissonant.png",
   "attrs": {
    "vie": 35,
    "force": 10,
@@ -1352,12 +1376,13 @@ export const ENEMIES_GEN = {
   "resourceLoot": {
    "tissu": 15
   },
-  "loot": []
+  "loot": [],
+  "desc": "Un loup dont le hurlement déchire l'harmonie environnante."
  },
  "gardien_erode": {
   "id": "gardien_erode",
   "name": "Gardien Érodé",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/gardien_erode.png",
   "attrs": {
    "vie": 300,
    "force": 33,
@@ -1377,7 +1402,7 @@ export const ENEMIES_GEN = {
  "juge_dissonant": {
   "id": "juge_dissonant",
   "name": "Juge Dissonant",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/maitre_ombre.png",
   "attrs": {
    "vie": 2500,
    "force": 120,
@@ -1389,15 +1414,21 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 15000,
   "resourceLoot": {
-   "fragments": 250,
-   "eclats_instables": 150
+   "fragments": 250
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 150,
+    "max": 150
+   }
+  ]
  },
  "esprit_ancien_tourmente": {
   "id": "esprit_ancien_tourmente",
   "name": "Esprit Ancien Tourmenté",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/esprit_ancien_tourmente.png",
   "attrs": {
    "vie": 450,
    "force": 80,
@@ -1409,15 +1440,21 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 3000,
   "resourceLoot": {
-   "fragments": 50,
-   "eclats_instables": 25
+   "fragments": 50
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 25,
+    "max": 25
+   }
+  ]
  },
  "heraut_du_silence": {
   "id": "heraut_du_silence",
   "name": "Héraut du Silence",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/heraut_du_silence.png",
   "attrs": {
    "vie": 1200,
    "force": 100,
@@ -1429,15 +1466,21 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 8000,
   "resourceLoot": {
-   "fragments": 100,
-   "eclats_instables": 75
+   "fragments": 100
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 75,
+    "max": 75
+   }
+  ]
  },
  "fragment_de_dissonance_mineur": {
   "id": "fragment_de_dissonance_mineur",
   "name": "Fragment de Dissonance Mineur",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/fragment_de_dissonance.png",
   "attrs": {
    "vie": 600,
    "force": 90,
@@ -1449,16 +1492,27 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 4000,
   "resourceLoot": {
-   "fragments": 75,
-   "eclats_instables": 30,
-   "essence_dissonante": 5
+   "fragments": 75
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 30,
+    "max": 30
+   },
+   {
+    "tid": "essence_dissonante",
+    "chance": 1.0,
+    "min": 5,
+    "max": 5
+   }
+  ]
  },
  "gardien_verrouille": {
   "id": "gardien_verrouille",
   "name": "Gardien Verrouillé",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/gardien_verrouille.png",
   "attrs": {
    "vie": 1800,
    "force": 110,
@@ -1470,16 +1524,27 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 9000,
   "resourceLoot": {
-   "fragments": 120,
-   "eclats_instables": 80,
-   "essence_dissonante": 15
+   "fragments": 120
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 80,
+    "max": 80
+   },
+   {
+    "tid": "essence_dissonante",
+    "chance": 1.0,
+    "min": 15,
+    "max": 15
+   }
+  ]
  },
  "arme_de_larry": {
   "id": "arme_de_larry",
   "name": "Arme de Larry",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/arme_de_larry.png",
   "attrs": {
    "vie": 3500,
    "force": 150,
@@ -1491,16 +1556,27 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 20000,
   "resourceLoot": {
-   "fragments": 300,
-   "eclats_instables": 200,
-   "essence_dissonante": 50
+   "fragments": 300
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 200,
+    "max": 200
+   },
+   {
+    "tid": "essence_dissonante",
+    "chance": 1.0,
+    "min": 50,
+    "max": 50
+   }
+  ]
  },
  "harmoniste_corrompu": {
   "id": "harmoniste_corrompu",
   "name": "Harmoniste Corrompu",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/harmoniste_corrompu.png",
   "attrs": {
    "vie": 4000,
    "force": 160,
@@ -1512,16 +1588,27 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 25000,
   "resourceLoot": {
-   "fragments": 400,
-   "eclats_instables": 250,
-   "essence_dissonante_pure": 1
+   "fragments": 400
   },
-  "loot": []
+  "loot": [
+   {
+    "tid": "eclats_instables",
+    "chance": 1.0,
+    "min": 250,
+    "max": 250
+   },
+   {
+    "tid": "essence_dissonante_pure",
+    "chance": 1.0,
+    "min": 1,
+    "max": 1
+   }
+  ]
  },
  "larry_invincible": {
   "id": "larry_invincible",
   "name": "Projection de Larry",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/arme_de_larry.png",
   "attrs": {
    "vie": 99999,
    "force": 40,
@@ -1538,7 +1625,7 @@ export const ENEMIES_GEN = {
  "fragment_de_douleur": {
   "id": "fragment_de_douleur",
   "name": "Fragment de Douleur",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/fragment_de_dissonance.png",
   "attrs": {
    "vie": 50,
    "force": 5,
@@ -1557,7 +1644,7 @@ export const BOSSES_GEN = [
  {
   "id": "boss_0",
   "name": "Grand Gobelin Grognon",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/mobs/gobelin.png",
   "attrs": {
    "vie": 50,
    "force": 8,
@@ -1570,12 +1657,21 @@ export const BOSSES_GEN = [
   "xp": 200,
   "resourceReward": 50,
   "itemDropChance": 0.3,
-  "levelRequirement": 5
+  "levelRequirement": 5,
+  "loot": [
+   {
+    "tid": "vif",
+    "chance": 0.15,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "desc": "Chef incontesté des tribus gobelines locales, aussi bruyant que dangereux."
  },
  {
   "id": "boss_1",
   "name": "Ogre Colossal",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/bosses/ogre.png",
   "attrs": {
    "vie": 180,
    "force": 28,
@@ -1588,12 +1684,21 @@ export const BOSSES_GEN = [
   "xp": 800,
   "resourceReward": 200,
   "itemDropChance": 0.5,
-  "levelRequirement": 15
+  "levelRequirement": 15,
+  "loot": [
+   {
+    "tid": "soin",
+    "chance": 0.2,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "desc": "Une montagne de muscles qui écrase tout sur son passage sans réfléchir."
  },
  {
   "id": "boss_2",
   "name": "Dragonnet de Feu",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/bosses/dragonnet.png",
   "attrs": {
    "vie": 320,
    "force": 40,
@@ -1606,12 +1711,21 @@ export const BOSSES_GEN = [
   "xp": 2500,
   "resourceReward": 750,
   "itemDropChance": 0.7,
-  "levelRequirement": 25
+  "levelRequirement": 25,
+  "loot": [
+   {
+    "tid": "foudre",
+    "chance": 0.25,
+    "min": 1,
+    "max": 1
+   }
+  ],
+  "desc": "Jeune dragon impétueux, déjà capable de cracher des flammes ravageuses."
  },
  {
   "id": "boss_3",
   "name": "Seigneur Vampire",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/bosses/vampire.png",
   "attrs": {
    "vie": 600,
    "force": 65,
@@ -1624,12 +1738,20 @@ export const BOSSES_GEN = [
   "xp": 5000,
   "resourceReward": 1500,
   "itemDropChance": 0.8,
-  "levelRequirement": 35
+  "levelRequirement": 35,
+  "loot": [
+   {
+    "tid": "fureur",
+    "chance": 0.3,
+    "min": 1,
+    "max": 1
+   }
+  ]
  },
  {
   "id": "boss_4",
   "name": "Lich Archimage",
-  "sprite": "placeholder",
+  "sprite": "assets/sprites/bosses/liche.png",
   "attrs": {
    "vie": 1200,
    "force": 80,
@@ -1642,6 +1764,14 @@ export const BOSSES_GEN = [
   "xp": 10000,
   "resourceReward": 3000,
   "itemDropChance": 0.9,
-  "levelRequirement": 45
+  "levelRequirement": 45,
+  "loot": [
+   {
+    "tid": "parfait",
+    "chance": 0.35,
+    "min": 1,
+    "max": 1
+   }
+  ]
  }
 ];

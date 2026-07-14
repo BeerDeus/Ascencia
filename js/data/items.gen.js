@@ -205,7 +205,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "FA"
+   "note": "DO"
   }
  },
  "gourdin_simple": {
@@ -225,7 +225,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "FA"
+   "note": "LA"
   }
  },
  "gants_de_travail": {
@@ -262,7 +262,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "RÉ"
+   "note": "LA"
   }
  },
  "brassards_en_cuir": {
@@ -314,7 +314,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "DO"
+   "note": "MI"
   }
  },
  "gants_en_tissu": {
@@ -395,7 +395,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "MI"
+   "note": "SI"
   }
  },
  "bottes_de_paille": {
@@ -678,7 +678,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "MI"
+   "note": "LA"
   }
  },
  "casque_en_fer": {
@@ -768,7 +768,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "MI"
+   "note": "SOL"
   }
  },
  "hache_de_guerre_en_fer": {
@@ -789,7 +789,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "FA"
+   "note": "RÉ"
   }
  },
  "plastron_de_mercenaire": {
@@ -842,7 +842,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "RÉ"
+   "note": "FA"
   }
  },
  "cape_de_voyage": {
@@ -911,7 +911,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "SI"
+   "note": "FA"
   }
  },
  "gants_de_traqueur": {
@@ -995,7 +995,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "DO"
+   "note": "SI"
   }
  },
  "sceptre_de_novice": {
@@ -1016,7 +1016,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "LA"
+   "note": "SI"
   }
  },
  "robe_d_adepte": {
@@ -1129,7 +1129,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "DO"
+   "note": "FA"
   }
  },
  "cuirasse_de_plaques": {
@@ -1167,7 +1167,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "FA"
+   "note": "DO"
   }
  },
  "hallebarde_de_la_garde": {
@@ -1188,7 +1188,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "MI"
+   "note": "SOL"
   }
  },
  "jambieres_de_plaques": {
@@ -1243,7 +1243,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "RÉ"
+   "note": "DO"
   }
  },
  "poings_americains": {
@@ -1517,7 +1517,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "MI"
+   "note": "SI"
   }
  },
  "sandales_de_conjurateur": {
@@ -1553,7 +1553,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "LA"
+   "note": "SI"
   }
  },
  "gantelets_runiques": {
@@ -1747,7 +1747,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "SI"
+   "note": "DO"
   }
  },
  "heaume_du_juggernaut": {
@@ -1785,7 +1785,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "SI"
+   "note": "RÉ"
   }
  },
  "arc_de_chasseur_d_ombres": {
@@ -1846,7 +1846,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "FA"
+   "note": "MI"
   }
  },
  "jambieres_de_l_assassin": {
@@ -1900,7 +1900,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "LA"
+   "note": "FA"
   }
  },
  "bottes_de_l_arpenteur_silencieux": {
@@ -1971,7 +1971,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "RÉ"
+   "note": "SI"
   }
  },
  "mantelet_du_stratege": {
@@ -2185,7 +2185,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "SI"
+   "note": "DO"
   }
  },
  "kriss_de_sacrifice": {
@@ -2207,7 +2207,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "SI"
+   "note": "MI"
   }
  },
  "le_mur_du_roi_dechu": {
@@ -2261,7 +2261,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "SOL"
+   "note": "LA"
   }
  },
  "gantelets_du_colosse": {
@@ -2302,7 +2302,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "DO"
+   "note": "FA"
   }
  },
  "griffes_de_l_ombre": {
@@ -2357,7 +2357,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "LA"
+   "note": "FA"
   }
  },
  "manteau_de_l_insaisissable": {
@@ -2490,7 +2490,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "DO"
+   "note": "SI"
   }
  },
  "chapeau_de_l_archonte": {
@@ -2752,7 +2752,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "LA"
+   "note": "DO"
   }
  },
  "cuirasse_du_colosse": {
@@ -2849,7 +2849,7 @@ export const ITEMS_GEN = {
   "class": "Archer",
   "weapon": {
    "tempo": 2,
-   "note": "SI"
+   "note": "FA"
   }
  },
  "gambison_de_l_astre_mortel": {
@@ -2944,7 +2944,7 @@ export const ITEMS_GEN = {
   "class": "Mage",
   "weapon": {
    "tempo": 2.3,
-   "note": "FA"
+   "note": "SI"
   }
  },
  "robe_du_tisseur_de_sorts": {
@@ -3134,7 +3134,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "SOL"
+   "note": "DO"
   }
  },
  "hache_du_berserker": {
@@ -3155,7 +3155,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "DO"
+   "note": "RÉ"
   }
  },
  "bouclier_carapace": {
@@ -3196,7 +3196,7 @@ export const ITEMS_GEN = {
   "class": "Guerrier",
   "weapon": {
    "tempo": 2.6,
-   "note": "FA"
+   "note": "DO"
   }
  },
  "bottes_ailees": {
@@ -3386,7 +3386,7 @@ export const ITEMS_GEN = {
   ],
   "weapon": {
    "tempo": 2.4,
-   "note": "RÉ"
+   "note": "DO"
   }
  }
 };

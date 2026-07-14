@@ -1,5 +1,5 @@
 // ===== Composant carte de menu (Forge, Alchimiste, Marchand...) =====
-import { el } from '../utils/dom.js';
+import { el, iconNode } from '../utils/dom.js';
 
 // menuCard({id,title,icon,status,desc,full,locked}, onClick)
 export function menuCard(data, onClick) {
@@ -9,7 +9,7 @@ export function menuCard(data, onClick) {
     onclick: () => onClick && onClick(data),
   }, [
     el('div.mc-title', {}, [
-      el('span.icon', { text: data.icon || '' }),
+      iconNode(data.icon, 'icon'),
       el('span', { text: data.title }),
     ]),
     el('div.mc-sep'),

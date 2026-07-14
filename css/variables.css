@@ -37,6 +37,14 @@
   --res-coin-alt: #cfa53a;
   --res-echo: #e0405a;
 
+  /* Rareté d'équipement (Forge — catalogue généré) */
+  --rarity-common: #9aa0a8;
+  --rarity-uncommon: #6bbf59;
+  --rarity-rare: #4aa8d9;
+  --rarity-epic: #b45ad9;
+  --rarity-legendary: #f0c25e;
+  --rarity-mythic: #e0405a;
+
   /* Typographie */
   --font-title: 'Cinzel', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;

@@ -21,16 +21,17 @@ CAHIER DES CHARGES DÉTAILLÉ - PROJET "ASCENCIA"
 - En-tête : Affichage du joueur (Niveau, Avatar), Jauge de Vie, et Ressources principales.
 - Zone Centrale : Contenu dynamique géré par onglets.
 - Navigation Basse : Barre de menu fixe.
-- Quartiers du Village : Blocs "cartes" pour Forge, Alchimiste, Cuisinier, Marchand, Primes (défis quotidiens).
+- Quartiers du Village : Blocs "cartes" pour Forge, Cuisinier, Minage, Marchand (Alchimiste et Primes/défis quotidiens restent à faire — voir Roadmap).
+- Iconographie : AUCUN emoji dans l'UI. Chaque icône (attributs, stats, ressources, navigation, Codex, Minage...) est un sprite dédié dans assets/sprites/, chargé via le helper commun iconNode() (utils/dom.js). Les sprites manquants sont générés via IA image sur prompt validé, jamais générés directement par l'IA de code.
 - Menu Profil : Sous-onglets (Combat, Global, Traits) affichant les attributs (Force, Agilité, etc.) et les stats détaillées (Régénération, Critique, Pénétration d'armure).
 - Départ & Progression : Le joueur commence NIVEAU 1 avec 10 PV et 1 dans chaque attribut. Chaque montée de niveau octroie 3 points d'attribut à répartir manuellement (bouton flottant hors onglet Personnage, boutons "+" dans le panneau Attributs). Aucune régénération de PV en combat (soins via consommables craftés à la Cuisine).
 - Effets des attributs :
-  * ❤️ Vie : PV max (+3 PV / point).
-  * 💪 Force : dégâts de compétences (Guerrier) ; pour toutes classes → Régén PV hors combat + Pénétration d'armure. (Base Attaque d'auto-attaque.)
-  * 🤸 Agilité : dégâts de compétences (Archer) ; pour toutes classes → Dégâts Critiques + Chance d'Esquive (+ Vitesse d'attaque).
-  * 🍀 Chance : succès des événements, qualité du butin, Chance de Coup Critique.
-  * 🧠 Intelligence : dégâts de sorts + Mana (Mage) ; pour toutes classes → Gain d'XP, Chance de Toucher, Résistance aux dégâts.
-  * 🛡️ Défense : réduction PLATE des dégâts (−1 dégât / point). Non attribuable manuellement : uniquement via équipement ou +1 tous les 10 niveaux.
+  * Vie : PV max (+3 PV / point).
+  * Force : dégâts de compétences (Guerrier) ; pour toutes classes → Régén PV hors combat + Pénétration d'armure. (Base Attaque d'auto-attaque.)
+  * Agilité : dégâts de compétences (Archer) ; pour toutes classes → Dégâts Critiques + Chance d'Esquive (+ Vitesse d'attaque).
+  * Chance : succès des événements, qualité du butin, Chance de Coup Critique.
+  * Intelligence : dégâts de sorts + Mana (Mage) ; pour toutes classes → Gain d'XP, Chance de Toucher, Résistance aux dégâts.
+  * Défense : réduction PLATE des dégâts (−1 dégât / point). Non attribuable manuellement : uniquement via équipement ou +1 tous les 10 niveaux.
 
 4. MOTEUR DE COMBAT (SEMI-IDLE & TEMPO)
 --------------------------------------------------------------------------------
@@ -48,7 +49,7 @@ CAHIER DES CHARGES DÉTAILLÉ - PROJET "ASCENCIA"
 - Les Bulles Flottantes : Chaque attaque (ou événement de combat) a une chance de générer une bulle de note de musique (DO, RÉ, MI...) qui flotte sur l'écran (animation fluide via Tweening).
 - La Mesure : Une file de type FIFO (First In, First Out) de 4 emplacements affichée sur l'UI.
 - Interaction : Le joueur clique sur les bulles pour les insérer dans La Mesure. La nouvelle note pousse les plus anciennes vers la sortie.
-- Les Accords : Le joueur peut équiper jusqu'à 3 "Sorts / Accords" passifs. Dès que le contenu de La Mesure correspond au pattern de l'Accord, le sort se déclenche (Soin, Buff, Attaque critique).
+- Les Accords : Le joueur peut équiper jusqu'à 3 "Sorts / Accords" (objets équipables, slots dédiés du paperdoll — obtenus en drop sur les 5 boss de zone). Cast MANUEL : dès que le pattern d'un Accord équipé est satisfait par La Mesure, un bouton dédié s'allume en combat et le joueur choisit de le déclencher ou non (pas d'auto-trigger à la complétion).
 
 6. AUTO-BATTLE ET ENDURANCE (ÉNERGIE)
 --------------------------------------------------------------------------------
@@ -67,3 +68,24 @@ CAHIER DES CHARGES DÉTAILLÉ - PROJET "ASCENCIA"
 --------------------------------------------------------------------------------
 - Scénario : Intégré au Lore (Acte III) suite à une défaite scénarisée contre Larry.
 - Mécanique : Remise à zéro des niveaux et de l'équipement basique en échange d'une monnaie permanente (Constellations) augmentant drastiquement les multiplicateurs de statistiques pour les runs suivants.
+
+9. CODEX (BESTIAIRE, MAÎTRISE, RÉCITS)
+--------------------------------------------------------------------------------
+- Accès : Onglet principal dédié, 3 sous-onglets.
+- Bestiaire : Une fiche par monstre/boss réellement branché dans une Zone (pas de fiches pour le contenu pas encore jouable). Déblocage par paliers de kills cumulés sur CE monstre : 50 (Trouvé dans), 100 (Statistiques de base), 500 (Ressource Premium + passif +1% Trouvaille d'or), 1000 (Bonus : +1 à l'attribut dominant du monstre, permanent).
+- Maîtrise : 4 Voies de progression à paliers cumulatifs (Chasseur : kills totaux : Vétéran : boss distincts vaincus ; Naturaliste : espèces découvertes ; Bestiaire : espèces maîtrisées à 1000 kills). Chaque palier atteint reste actif et octroie un bonus permanent (attribut ou stat %), dérivé à la volée depuis l'historique de kills — jamais stocké séparément.
+- Récits (Fragments d'Écho) : Lecteur dédié (liste de chapitres + panneau de lecture) racontant le Lore du jeu (voir "Lore Ascencia.txt") sous forme de fragments débloqués par la progression réelle (kills ciblés, zones/boss vaincus, total de kills). Chaque fragment débloqué octroie un petit bonus permanent. Contenu actuel : Acte I uniquement (7 fragments), le reste du Lore suivra le contenu de jeu au fur et à mesure de son extension (Actes II+).
+
+10. MINAGE (VILLAGE)
+--------------------------------------------------------------------------------
+- Accès : Quartier dédié du Village, sous-onglet "Minage".
+- Principe : Filons à progression temporisée (barre qui se remplit sur X secondes), façon action idle — pas un combat. Cliquer sur le filon actif donne un "coup de pioche" manuel (boost instantané de la barre).
+- Progression : Compétence de Minage dédiée (niveau/XP propre, indépendante du niveau du personnage), pensée pour accueillir Forge/Cuisine sous la même forme plus tard.
+- Récompense : Ressources versées directement dans les ressources du Village (métal, fragments...) à chaque cycle complet, + XP de Minage.
+- Limite actuelle : Le minage s'arrête dès qu'on quitte l'onglet (pas de minage en arrière-plan/hors-ligne pour l'instant — prévu avec la bascule vers une sauvegarde serveur).
+
+11. LA CAPITALE
+--------------------------------------------------------------------------------
+- Accès : Onglet principal dédié, débloqué à partir de la Zone 5.
+- Rôle : Hub d'optimisation avancée (au-delà du Village), structure extensible par quartiers.
+- Enchanteur : Premier quartier prévu — bonus de stats supplémentaires sur l'équipement + chance de faire apparaître une note à chaque coup encaissé une fois enchanté. Interface posée, logique à implémenter.

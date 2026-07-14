@@ -2,6 +2,8 @@
 // L'état brut vit dans state.js ; ici = règles de jeu. Les attributs sont la
 // source de vérité ; toutes les stats de combat en découlent (recalcul auto).
 import { state, setState } from '../state.js';
+import { codexBonuses, masteryBonuses } from './codex.js';
+import { loreBonuses } from './lore.js';
 
 const r2 = (n) => Math.round(n * 100) / 100;
 
@@ -17,10 +19,15 @@ export const ALLOCATABLE = ['vie', 'force', 'agilite', 'chance', 'intelligence']
 // L'équipement donne des ATTRIBUTS (Vie, Force…) via bonuses.flat ; les stats
 // détaillées en découlent. Clés attributs : vie, force, agilite, chance, intelligence, defense.
 export const ATTR_KEYS = ['vie', 'force', 'agilite', 'chance', 'intelligence', 'defense'];
+// Bonus additifs combinés : équipement (player.bonuses) + Codex + Maîtrise (dérivés
+// à la volée depuis monsterWins, jamais stockés — voir game/codex.js).
 export function effectiveAttributes(player = state.player) {
   const a = { ...player.attributes };
-  const flat = (player.bonuses && player.bonuses.flat) || {};
-  for (const k of ATTR_KEYS) a[k] = (a[k] || 0) + (flat[k] || 0);
+  const eq = (player.bonuses && player.bonuses.flat) || {};
+  const cx = codexBonuses().flat;
+  const ms = masteryBonuses().flat;
+  const lr = loreBonuses().flat;
+  for (const k of ATTR_KEYS) a[k] = (a[k] || 0) + (eq[k] || 0) + (cx[k] || 0) + (ms[k] || 0) + (lr[k] || 0);
   return a;
 }
 
@@ -63,8 +70,12 @@ const POWER_W = {
 export function derive(player = state.player) {
   const a = effectiveAttributes(player);
   const out = baseStats(a, player.level || 1);
-  const pct = (player.bonuses && player.bonuses.pct) || {};
-  for (const k of Object.keys(out)) if (pct[k]) out[k] *= (1 + pct[k] / 100); // bonus % éventuels (futur)
+  const pct = { ...((player.bonuses && player.bonuses.pct) || {}) };
+  const cxPct = codexBonuses().pct, msPct = masteryBonuses().pct, lrPct = loreBonuses().pct;
+  for (const k of Object.keys(cxPct)) pct[k] = (pct[k] || 0) + cxPct[k];
+  for (const k of Object.keys(msPct)) pct[k] = (pct[k] || 0) + msPct[k];
+  for (const k of Object.keys(lrPct)) pct[k] = (pct[k] || 0) + lrPct[k];
+  for (const k of Object.keys(out)) if (pct[k]) out[k] *= (1 + pct[k] / 100); // bonus % (équipement + Codex + Maîtrise)
   out.maxHp = Math.round(out.maxHp);
   out.attaque = Math.round(out.attaque);
   out.puissance = Math.round(
@@ -161,5 +172,44 @@ function syncCombatHp(p, full = false) {
   else p.combatHp.cur = Math.min(p.combatHp.cur, max);
 }
 
+// ---- Régénération de PV HORS combat (Force → PV/s, voir baseStats.regenHors) ----
+// Aucune régén pendant un combat (retirée) ; la vie est globale et persiste entre
+// les combats (voir game/combat.js: start() reprend combatHp.cur, onLoss() n'en
+// restaure qu'une fraction). `lastRegenTick` = horloge de session, non persistée ;
+// le rattrapage hors-ligne passe par `regenSince(ts)` avec meta.lastSeen (main.js).
+let lastRegenTick = Date.now();
+
+function applyRegen(elapsedSec) {
+  if (elapsedSec <= 0) return;
+  // Garde en amont : si déjà pleine vie, on ne déclenche même pas de setState
+  // (évite d'écrire en storage / de notifier l'UI à chaque tick pour rien —
+  // important maintenant que le tick tourne toutes les ~1s, voir main.js).
+  const max0 = derive(state.player).maxHp;
+  if (!state.player.combatHp || state.player.combatHp.cur >= max0) return;
+  setState((s) => {
+    const max = derive(s.player).maxHp;
+    if (!s.player.combatHp) s.player.combatHp = { cur: max, max };
+    if (s.player.combatHp.cur >= max) return;
+    const rate = derive(s.player).regenHors; // PV/s
+    const gained = rate * elapsedSec;
+    if (gained <= 0) return;
+    s.player.combatHp.cur = Math.min(max, s.player.combatHp.cur + gained);
+  });
+}
+
+// Tick appelé périodiquement pendant que l'app est ouverte (voir main.js).
+export function regenTick(now = Date.now()) {
+  const elapsedSec = Math.max(0, (now - lastRegenTick) / 1000);
+  lastRegenTick = now;
+  applyRegen(elapsedSec);
+}
+
+// Rattrapage hors-ligne : à appeler une fois au boot avec l'ancien meta.lastSeen.
+export function regenSince(sinceTs, now = Date.now()) {
+  const elapsedSec = Math.max(0, (now - (sinceTs || now)) / 1000);
+  lastRegenTick = now;
+  applyRegen(elapsedSec);
+}
+
 // API console pour tester (voir aussi main.js -> window.Ascencia).
-export const playerApi = { addXp, allocate, addAttribute, addResource, spendResource, damage, heal, derive, displayStats, formatStat, xpForLevel, ALLOCATABLE, ATTR_POINTS_PER_LEVEL };
+export const playerApi = { addXp, allocate, addAttribute, addResource, spendResource, damage, heal, derive, displayStats, formatStat, xpForLevel, regenTick, regenSince, ALLOCATABLE, ATTR_POINTS_PER_LEVEL };

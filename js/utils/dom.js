@@ -30,3 +30,14 @@ export function el(sel, attrs = {}, children = []) {
 export const clear = (node) => { while (node.firstChild) node.removeChild(node.firstChild); };
 export const fmt = (n) => Number(n).toLocaleString('fr-FR');
 export const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+// Icône mixte : chemin de sprite (image) OU emoji brut (texte) — convention commune
+// à toute l'UI. `cls` est appliquée au noeud quel que soit le mode, pour que le CSS
+// existant (dimensionné en font-size pour les emoji) puisse cibler l'équivalent
+// <img> avec width/height. Tant que tous les items n'ont pas de sprite dédié, les
+// deux formes coexistent (ex : symphonies en image, armes encore en emoji).
+export function iconNode(val, cls = '') {
+  const isPath = val && (val === 'placeholder' || val.includes('/') || val.endsWith('.png'));
+  if (isPath) return el('img' + (cls ? '.' + cls : ''), { src: val === 'placeholder' ? 'assets/sprites/placeholder.png' : val, alt: '' });
+  return el('span' + (cls ? '.' + cls : ''), { text: val || '' });
+}

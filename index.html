@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/views.css">
+  <link rel="stylesheet" href="css/boot.css">
 </head>
 <body>
   <div id="app">
@@ -20,6 +21,9 @@
     <nav id="subnav" class="subnav"></nav>
     <nav id="mainnav" class="mainnav"></nav>
   </div>
+  <!-- Écran de boot / login : couvre tout tant que la connexion (réseau, compte,
+       sync cloud) n'est pas résolue — voir components/bootScreen.js + loginScreen.js. -->
+  <div id="boot-overlay" class="boot-overlay"></div>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

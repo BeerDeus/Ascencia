@@ -1,170 +1,210 @@
 // ===== Vue Aventure : interface de Zone <-> interface de Combat (Phase 2) =====
-import { el } from '../utils/dom.js';
+import { el, iconNode } from '../utils/dom.js';
 import { state, setState } from '../state.js';
 import { ZONES } from '../config.js';
 import { rerender } from '../router.js';
 import { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ } from '../game/combat.js';
 import { ITEMS } from '../game/items.js';
 import { makeMonster, makeBoss } from '../game/monsters.js';
-import { ACCORDS, noteById, MAX_ACCORDS } from '../game/symphony.js';
 
 // Sprite : image (placeholder / chemin) ou emoji.
 export function spriteImg(sprite) {
-  if (sprite && (sprite === 'placeholder' || sprite.includes('/') || sprite.endsWith('.png'))) {
-    const src = sprite === 'placeholder' ? 'assets/sprites/placeholder.png' : sprite;
-    return el('img.sprite-img', { src, alt: '' });
-  }
-  return el('span', { text: sprite || '❓' });
+  const isPath = sprite && (sprite === 'placeholder' || sprite.includes('/') || sprite.endsWith('.png'));
+  const src = isPath && sprite !== 'placeholder' ? sprite : 'assets/sprites/placeholder.png';
+  return el('img.sprite-img', { src, alt: '' });
 }
 
 export function renderAventure(root, sub = 'combat') {
   const view = el('div.view');
-  if (sub === 'carte')     { view.append(placeholder('Carte', 'Vue carte des zones — Phase 5.')); root.append(view); return; }
-  if (sub === 'symphonie') { renderSymphonie(view); root.append(view); return; }
+  if (sub === 'carte')     { view.append(placeholder('Carte', 'Vue carte des zones — Phase 5.')); root.append(view); return () => {}; }
 
-  if (isActive()) renderCombat(view);
-  else            renderZone(view);
+  // ---- sub 'combat' : bascule Zone <-> Combat, avec mount persistant du combat ----
+  // Le combat (bulles/pool/animations, voir game/combat.js) ne doit être monté
+  // qu'UNE FOIS par bataille : les setState pendant le combat (loot, XP, level-up)
+  // ne doivent patcher que les contrôles, jamais reconstruire la scène.
+  let mode = isActive() ? 'combat' : 'zone';
+  let zoneUpdate = null;
+  let combatRefs = null;
+
+  mountMode();
   root.append(view);
+
+  function mountMode() {
+    view.replaceChildren();
+    if (mode === 'zone') zoneUpdate = renderZone(view);
+    else combatRefs = mountCombatShell(view);
+  }
+
+  function update() {
+    const wantMode = isActive() ? 'combat' : 'zone';
+    if (wantMode !== mode) { mode = wantMode; mountMode(); return; }
+    if (mode === 'zone') zoneUpdate && zoneUpdate();
+    else combatRefs && syncCombatControls(combatRefs);
+  }
+  return update;
 }
 
-// ---------- Interface de Zone ----------
+// ---------- Interface de Zone (refs + update ; rebuild interne seulement si la zone change) ----------
 function renderZone(view) {
-  const prog = state.progress;
-  const zone = ZONES.find((z) => z.id === prog.selected) || ZONES[0];
-  const wins = state.monsterWins;
-  const cleared = zone.monsters.filter((id) => (wins[id] || 0) >= WIN_REQ).length;
-  const allCleared = cleared === zone.monsters.length;
-  const bossDone = !!prog.bossDefeated[zone.id];
+  let zone = currentZone();
+  const refs = {};
+  build();
 
-  // En-tête zone + sélecteur
-  const canPrev = ZONES.some((z) => z.id === zone.id - 1);
-  const canNext = zone.id + 1 <= prog.unlocked;
-  view.append(el('div.zone-head', {}, [
-    el('button.zone-arrow', { text: '‹', disabled: canPrev ? null : 'true', onclick: () => switchZone(zone.id - 1) }),
-    el('div.zone-title', {}, [
-      el('div.zone-name', { text: zone.name }),
-      el('div.zone-diff', { text: `${zone.difficulty} · Zone ${zone.id}` }),
-    ]),
-    el('button.zone-arrow', { text: '›', disabled: canNext ? null : 'true', onclick: () => switchZone(zone.id + 1) }),
-  ]));
-  view.append(el('div.zone-progress', { text: `Monstres nettoyés : ${cleared} / ${zone.monsters.length}` }));
+  function currentZone() {
+    return ZONES.find((z) => z.id === state.progress.selected) || ZONES[0];
+  }
 
-  // Cartes monstres
-  const grid = el('div.monster-grid');
-  for (const id of zone.monsters) {
-    const m = makeMonster(id, zone.scale);
-    if (!m) continue;
-    const w = wins[id] || 0;
-    const done = w >= WIN_REQ;
-    const bar = el('div.mini-gauge', {}, [el('div.fill', { style: `width:${Math.min(100, w / WIN_REQ * 100)}%` })]);
-    const actions = [ el('button.btn-fight', { text: 'Affronter', onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id }) }) ];
-    if (done) {
-      const noEnd = state.endurance.cur <= 0;
-      actions.push(el('button.btn-auto', {
-        text: noEnd ? '⚡ Épuisé' : '▶ Auto',
-        disabled: noEnd ? 'true' : null,
-        onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id, auto: true }),
-      }));
-    }
-    grid.append(el('div.monster-card' + (done ? '.cleared' : ''), {}, [
-      el('div.mc-sprite', {}, [spriteImg(m.sprite)]),
-      el('div.mc-name', { text: m.name }),
-      el('div.mc-stats', { text: `PV ${m.hp} · Atq ${m.attaque} · Déf ${m.defense}` }),
-      el('div.mc-wins', { text: `${done ? '✓ ' : ''}${w} / ${WIN_REQ} victoires` }),
-      bar,
-      el('div.mc-actions', {}, actions),
+  function build() {
+    view.replaceChildren();
+    refs.monsterCards = {};
+
+    view.append(el('div.zone-head', {}, [
+      refs.prevBtn = el('button.zone-arrow', { text: '‹', onclick: () => switchZone(zone.id - 1) }),
+      el('div.zone-title', {}, [
+        el('div.zone-name', { text: zone.name }),
+        el('div.zone-diff', { text: `${zone.difficulty} · Zone ${zone.id}` }),
+      ]),
+      refs.nextBtn = el('button.zone-arrow', { text: '›', onclick: () => switchZone(zone.id + 1) }),
     ]));
-  }
-  view.append(grid);
+    refs.progressTxt = el('div.zone-progress');
+    view.append(refs.progressTxt);
 
-  // Boss
-  const boss = makeBoss(zone.boss, zone.scale) || makeMonster(zone.boss, zone.scale);
-  if (boss) {
-    const bossCard = el('div.boss-card' + (bossDone ? '.done' : allCleared ? '' : '.locked'), {}, [
-      el('div.mc-sprite', {}, [spriteImg(boss.sprite)]),
-      el('div.mc-name', { text: `Boss · ${boss.name}` }),
-      el('div.mc-stats', { text: `PV ${boss.hp} · Atq ${boss.attaque} · Déf ${boss.defense}` }),
-      el('div.mc-wins', { text: bossDone ? '✓ Vaincu' : allCleared ? 'Prêt au combat' : `Nettoie les ${zone.monsters.length} monstres (10x)` }),
-      allCleared || bossDone
-        ? el('button.btn-boss', { text: bossDone ? 'Réaffronter le boss' : 'Affronter le boss', onclick: () => launch(makeBoss(zone.boss, zone.scale) || makeMonster(zone.boss, zone.scale), { zoneId: zone.id, isBoss: true }) })
-        : el('div.placeholder-note', { text: 'Boss verrouillé.' }),
-    ]);
-    view.append(bossCard);
+    const grid = el('div.monster-grid');
+    for (const id of zone.monsters) {
+      const m = makeMonster(id, zone.scale);
+      if (!m) continue;
+      const cr = {
+        bar: el('div.fill'),
+        winsTxt: el('div.mc-wins'),
+        actions: el('div.mc-actions'),
+      };
+      cr.root = el('div.monster-card', {}, [
+        el('div.mc-sprite', {}, [spriteImg(m.sprite)]),
+        el('div.mc-name', { text: m.name }),
+        cr.winsTxt,
+        el('div.mini-gauge', {}, [cr.bar]),
+        cr.actions,
+      ]);
+      refs.monsterCards[id] = cr;
+      grid.append(cr.root);
+    }
+    view.append(grid);
+
+    const boss = makeBoss(zone.boss, zone.scale) || makeMonster(zone.boss, zone.scale);
+    refs.bossCard = null;
+    if (boss) {
+      refs.bossWins = el('div.mc-wins');
+      refs.bossAction = el('div');
+      refs.bossCard = el('div.boss-card', {}, [
+        el('div.mc-sprite', {}, [spriteImg(boss.sprite)]),
+        el('div.mc-name', { text: `Boss · ${boss.name}` }),
+        refs.bossWins,
+        refs.bossAction,
+      ]);
+      view.append(refs.bossCard);
+    }
+    refs.unlockNote = el('div.zone-unlock');
+    view.append(refs.unlockNote);
+
+    syncDynamic();
   }
 
-  if (bossDone && zone.id + 1 <= prog.unlocked) {
-    view.append(el('div.zone-unlock', { text: `⭐ Zone ${zone.id + 1} débloquée !` }));
+  function syncDynamic() {
+    const prog = state.progress;
+    const wins = state.monsterWins;
+    const cleared = zone.monsters.filter((id) => (wins[id] || 0) >= WIN_REQ).length;
+    const allCleared = cleared === zone.monsters.length;
+    const bossDone = !!prog.bossDefeated[zone.id];
+
+    refs.prevBtn.disabled = !ZONES.some((z) => z.id === zone.id - 1);
+    refs.nextBtn.disabled = !(zone.id + 1 <= prog.unlocked);
+    refs.progressTxt.textContent = `Monstres nettoyés : ${cleared} / ${zone.monsters.length}`;
+
+    for (const id of zone.monsters) {
+      const cr = refs.monsterCards[id];
+      if (!cr) continue;
+      const w = wins[id] || 0;
+      const done = w >= WIN_REQ;
+      cr.root.classList.toggle('cleared', done);
+      cr.winsTxt.textContent = `${w} / ${WIN_REQ} victoires`;
+      cr.bar.style.width = Math.min(100, (w / WIN_REQ) * 100) + '%';
+      const actions = [el('button.btn-fight', { text: 'Affronter', onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id }) })];
+      if (done) {
+        const noEnd = state.endurance.cur <= 0;
+        actions.push(el('button.btn-auto', {
+          text: noEnd ? 'Épuisé' : 'Auto',
+          disabled: noEnd ? 'true' : null,
+          onclick: () => launch(makeMonster(id, zone.scale), { zoneId: zone.id, auto: true }),
+        }));
+      }
+      cr.actions.replaceChildren(...actions);
+    }
+
+    if (refs.bossCard) {
+      refs.bossCard.classList.toggle('done', bossDone);
+      refs.bossCard.classList.toggle('locked', !bossDone && !allCleared);
+      refs.bossWins.textContent = bossDone ? 'Vaincu' : allCleared ? 'Prêt au combat' : `Nettoie les ${zone.monsters.length} monstres (10x)`;
+      refs.bossAction.replaceChildren(
+        allCleared || bossDone
+          ? el('button.btn-boss', { text: bossDone ? 'Réaffronter le boss' : 'Affronter le boss', onclick: () => launch(makeBoss(zone.boss, zone.scale) || makeMonster(zone.boss, zone.scale), { zoneId: zone.id, isBoss: true }) })
+          : el('div.placeholder-note', { text: 'Boss verrouillé.' }),
+      );
+    }
+
+    refs.unlockNote.textContent = bossDone && zone.id + 1 <= prog.unlocked ? `Zone ${zone.id + 1} débloquée !` : '';
   }
+
+  function update() {
+    const z = currentZone();
+    if (z.id !== zone.id) { zone = z; build(); return; }
+    syncDynamic();
+  }
+  return update;
 }
 
-// ---------- Interface de Combat ----------
-function renderCombat(view) {
-  const rt = current();
+// ---------- Interface de Combat : mount unique + patch des contrôles ----------
+function mountCombatShell(view) {
   const stage = el('div.combat-screen');
-  renderInto(stage);
-  view.append(stage);
+  renderInto(stage); // construit bulles/pool/refs internes — UNE seule fois par combat
+  const consumeBox = el('div');
+  const controlsBox = el('div');
+  view.append(stage, consumeBox, controlsBox);
+  const refs = { consumeBox, controlsBox };
+  syncCombatControls(refs);
+  return refs;
+}
 
-  // Consommable équipé : utilisable en combat (soigne + Tempo joueur à 0)
+function syncCombatControls(refs) {
+  const rt = current();
+  if (!rt) return;
+
   const conso = state.player.equipment.conso;
-  if (rt.phase === 'fighting' && conso && conso.count > 0 && ITEMS[conso.tid]) {
-    const it = ITEMS[conso.tid];
-    view.append(el('div.combat-consume', {}, [
-      el('button.btn-consume', { text: `${it.icon} ${it.name} (${conso.count})`, onclick: () => consume() }),
-    ]));
-  }
+  const consumeChild = rt.phase === 'fighting' && conso && conso.count > 0 && ITEMS[conso.tid]
+    ? el('div.combat-consume', {}, [
+        el('button.btn-consume', { onclick: () => consume() }, [
+          iconNode(ITEMS[conso.tid].icon, 'icon'),
+          el('span', { text: ` ${ITEMS[conso.tid].name} (${conso.count})` }),
+        ]),
+      ])
+    : null;
+  refs.consumeBox.replaceChildren(...(consumeChild ? [consumeChild] : []));
 
   const unlocked = (state.monsterWins[rt.enemyId] || 0) >= WIN_REQ;
   const controls = el('div.combat-controls');
   if (rt.auto) {
-    controls.append(el('button.btn-stop', { text: "⏹ Arrêter l'auto-battle", onclick: () => stop() }));
+    controls.append(el('button.btn-stop', { text: "Arrêter l'auto-battle", onclick: () => stop() }));
   } else {
     controls.append(el('button.btn-quit', { text: 'Quitter', onclick: () => stop() }));
     if (unlocked && !rt.isBoss) {
       const noEnd = state.endurance.cur <= 0;
       controls.append(el('button.btn-auto', {
-        text: noEnd ? '⚡ Endurance épuisée' : "▶ Activer l'auto-battle",
+        text: noEnd ? 'Endurance épuisée' : "Activer l'auto-battle",
         disabled: noEnd ? 'true' : null,
         onclick: () => { toggleAuto(); rerender(); },
       }));
     }
   }
-  view.append(controls);
-}
-
-// ---------- Interface Symphonie (gestion des Accords) ----------
-function renderSymphonie(view) {
-  const equipped = state.accords;
-  view.append(el('h2.section-title', { text: 'Accords' }));
-  view.append(el('div.accord-info', { text: `Équipe jusqu'à ${MAX_ACCORDS} accords. En combat, remplis La Mesure (clique les bulles de notes) : dès qu'elle finit par le motif d'un accord, l'effet se déclenche.` }));
-  view.append(el('div.accord-count', { text: `Accords équipés : ${equipped.length} / ${MAX_ACCORDS}` }));
-
-  for (const a of ACCORDS) {
-    const on = equipped.includes(a.id);
-    const full = equipped.length >= MAX_ACCORDS;
-    view.append(el('div.accord-card' + (on ? '.on' : ''), {}, [
-      el('div.accord-head', {}, [
-        el('span.accord-icon', { text: a.icon }),
-        el('span.accord-name', { text: a.name }),
-      ]),
-      el('div.accord-pattern', {}, a.pattern.map((nid) => {
-        const n = noteById(nid);
-        const chip = el('span.note-mini', { text: n.label }); chip.style.setProperty('--nc', n.color); return chip;
-      })),
-      el('div.accord-desc', { text: a.desc }),
-      el('button.btn-accord' + (on ? '.equipped' : ''), {
-        text: on ? 'Retirer' : (full ? 'Emplacements pleins' : 'Équiper'),
-        disabled: (!on && full) ? 'true' : null,
-        onclick: () => toggleAccord(a.id),
-      }),
-    ]));
-  }
-}
-function toggleAccord(id) {
-  setState((s) => {
-    const i = s.accords.indexOf(id);
-    if (i >= 0) s.accords.splice(i, 1);
-    else if (s.accords.length < MAX_ACCORDS) s.accords.push(id);
-  });
+  refs.controlsBox.replaceChildren(controls);
 }
 
 // ---------- Actions ----------
