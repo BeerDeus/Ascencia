@@ -30,6 +30,7 @@ export function renderHeader(root) {
   R.tissu.textContent = fmt(r.tissu);
   R.fragments.textContent = fmt(r.fragments);
   R.or.textContent = fmt(r.or);
+  R.eclats.textContent = fmt(r.eclats_ascension);
 }
 
 function build(root) {
@@ -57,11 +58,17 @@ function build(root) {
       el('div.res', {}, [iconNode('assets/sprites/ressources/metal.png', 'icon'), refs.metal = el('span', { text: '' })]),
       el('div.res', {}, [iconNode('assets/sprites/ressources/tissu.png', 'icon'), refs.tissu = el('span', { text: '' })]),
       el('div.res', {}, [iconNode('assets/sprites/ressources/fragment.png', 'icon'), refs.fragments = el('span', { text: '' })]),
+      // Or : ressource secondaire depuis l'ajout des Éclats d'Ascension (voir
+      // .hdr-premium ci-dessous) — déplacé ici avec le reste du vrac le 2026-07-15.
+      el('div.res', {}, [iconNode('assets/sprites/objets/piece_or.png', 'icon'), refs.or = el('span', { text: '' })]),
     ]),
 
+    // Monnaie premium : Éclats d'Ascension (game/codex.js ECLATS_PER_KILL, palier
+    // Codex "Ressource Premium" à 500 kills/monstre) — a remplacé l'or ici le
+    // 2026-07-15, l'or n'étant plus la ressource la plus rare du jeu.
     el('div.hdr-premium', {}, [
-      iconNode('assets/sprites/objets/piece_or.png', 'icon'),
-      refs.or = el('span', { text: '' }),
+      iconNode('assets/sprites/ressources/eclats_ascension.png', 'icon'),
+      refs.eclats = el('span', { text: '' }),
     ]),
   );
   return refs;

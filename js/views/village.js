@@ -5,6 +5,7 @@ import { menuCard, panel } from '../components/card.js';
 import { navigateSub } from '../router.js';
 import { ITEMS, RECIPES, RESOURCE_KEYS, BUY_CATALOG, craft, canCraft, maxCraftable, invCount, buyItem, buyPrice, sellItem } from '../game/items.js';
 import { MINING_NODES, currentNode, getProgress, canMine, startMining, stopMining, creditPending, miningLevel, miningXp, xpForLevel } from '../game/mining.js';
+import { list as primesList, claim as claimPrime } from '../game/primes.js';
 import { state } from '../state.js';
 
 const VILLAGE_SUBS = new Set(SUBNAV.village.map((s) => s.id));
@@ -15,12 +16,14 @@ const RES_ICON = {
   metal: 'assets/sprites/ressources/metal.png',
   tissu: 'assets/sprites/ressources/tissu.png',
   fragments: 'assets/sprites/ressources/fragment.png',
+  eclats_ascension: 'assets/sprites/ressources/eclats_ascension.png',
 };
 const STAT_ABR = { vie: 'Vie', force: 'For', agilite: 'Agi', chance: 'Cha', intelligence: 'Int', defense: 'Déf' };
+const POTION_STAT_LABEL = { attaque: 'Attaque', crit: 'Critique', esquive: 'Esquive' };
 // Libellés des filtres de tri (Forge/Cuisine) — clé = `kind` de l'item produit par la recette.
 const KIND_LABEL = {
   tete: 'Tête', arme: 'Arme', torse: 'Torse', mains: 'Mains', jambes: 'Jambes', pieds: 'Pieds',
-  accessoire: 'Accessoire', artefact: 'Artefact', conso: 'Soins', energie: 'Énergie', materiau: 'Matériaux',
+  accessoire: 'Accessoire', artefact: 'Artefact', conso: 'Soins', energie: 'Énergie', materiau: 'Matériaux', potion: 'Philtres',
 };
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'special'];
 const RARITY_LABEL = {
@@ -97,10 +100,12 @@ function qtyStepper(getMax, onChange) {
 export function renderVillage(root, sub = 'hub') {
   const view = el('div.view');
 
-  if (sub === 'forge')     { const upd = renderCraft(view, 'forge',   'Forge du Forgeron', 'Forger'); root.append(view); return upd; }
-  if (sub === 'cuisinier') { const upd = renderCraft(view, 'cuisine', 'Cuisine',           'Cuisiner'); root.append(view); return upd; }
+  if (sub === 'forge')      { const upd = renderCraft(view, 'forge',    'Forge du Forgeron', 'Forger'); root.append(view); return upd; }
+  if (sub === 'cuisinier')  { const upd = renderCraft(view, 'cuisine',  'Cuisine',            'Cuisiner'); root.append(view); return upd; }
+  if (sub === 'alchimiste') { const upd = renderCraft(view, 'alchimie', 'Alchimiste',         'Distiller'); root.append(view); return upd; }
   if (sub === 'minage')    { const upd = renderMinage(view); root.append(view); return upd; }
   if (sub === 'marchand')  { const upd = renderMarchand(view); root.append(view); return upd; }
+  if (sub === 'primes')    { const upd = renderPrimes(view); root.append(view); return upd; }
   if (sub !== 'hub')       { view.append(comingSoon(sub)); root.append(view); return () => {}; }
 
   for (const q of VILLAGE) {
@@ -152,6 +157,7 @@ function renderCraft(view, station, title, verb) {
       ? `${Object.entries(out.stats).map(([k, v]) => `+${v} ${STAT_ABR[k] || k}`).join(' · ')} · Tempo ${out.weapon.tempo}s · Note ${out.weapon.note}`
       : out.heal ? `+${out.heal} PV`
       : out.endurance ? `+${out.endurance} Endurance`
+      : out.kind === 'potion' ? `+${out.pct}% ${POTION_STAT_LABEL[out.stat] || out.stat} · ${Math.round(out.ms / 1000)}s`
       : out.stats ? Object.entries(out.stats).map(([k, v]) => `+${v} ${STAT_ABR[k] || k}`).join(' · ')
       : '';
 
@@ -310,6 +316,51 @@ function renderMarchand(view) {
           el('button.btn-craft', { text: 'Vendre 1', onclick: () => sellItem(s.tid, 1) }),
         ]));
       }
+    }
+  }
+
+  function update() { if (computeSig() !== sig) build(); }
+  build();
+  return update;
+}
+
+// ---------- Primes : 3 défis quotidiens (voir game/primes.js) — signature-guard ----------
+function renderPrimes(view) {
+  view.append(el('h2.section-title', { text: 'Primes' }));
+  view.append(el('div.placeholder-note', { text: 'Renouvelées chaque jour. Progression suivie automatiquement.' }));
+
+  const list = el('div.craft-list');
+  view.append(list);
+
+  let sig = null;
+  const computeSig = () => JSON.stringify(primesList());
+
+  function build() {
+    sig = computeSig();
+    list.replaceChildren();
+    for (const p of primesList()) {
+      const bar = el('div.fill');
+      const claimBtn = el('button.btn-craft', {
+        text: p.claimed ? 'Réclamée' : p.ready ? 'Réclamer' : `${p.progress} / ${p.target}`,
+        disabled: !p.ready || p.claimed ? 'true' : null,
+        onclick: () => { claimPrime(p.id); build(); },
+      });
+      list.append(el('div.craft-card' + (p.claimed ? '.disabled' : ''), {}, [
+        el('div.craft-head', {}, [
+          iconNode(p.icon, 'craft-icon'),
+          el('div.craft-info', {}, [
+            el('div.craft-name', { text: p.label }),
+            el('div.craft-stats', { text: p.desc }),
+          ]),
+        ]),
+        el('div.mini-gauge', {}, [bar]),
+        el('div.craft-stats', {}, [
+          el('span', { text: `${p.progress} / ${p.target}` }),
+          ...Object.entries(p.reward || {}).flatMap(([k, v]) => [el('span', { text: '  ·  ' }), iconNode(RES_ICON[k] || '', 'icon'), el('span', { text: `+${v}` })]),
+        ]),
+        claimBtn,
+      ]));
+      bar.style.width = Math.min(100, (p.progress / p.target) * 100) + '%';
     }
   }
 

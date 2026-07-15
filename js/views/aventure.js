@@ -3,7 +3,7 @@ import { el, iconNode } from '../utils/dom.js';
 import { state, setState } from '../state.js';
 import { ZONES } from '../config.js';
 import { rerender } from '../router.js';
-import { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ } from '../game/combat.js';
+import { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ, setChangeHook } from '../game/combat.js';
 import { ITEMS } from '../game/items.js';
 import { makeMonster, makeBoss } from '../game/monsters.js';
 
@@ -171,6 +171,9 @@ function mountCombatShell(view) {
   view.append(stage, consumeBox, controlsBox);
   const refs = { consumeBox, controlsBox };
   syncCombatControls(refs);
+  // Relance auto-battle = setTimeout côté combat.js, pas un setState : sans ce hook
+  // les contrôles (dont le consommable) restent figés après le 1er monstre.
+  setChangeHook(() => syncCombatControls(refs));
   return refs;
 }
 

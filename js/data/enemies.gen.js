@@ -1,19 +1,27 @@
 // AUTO-GÉNÉRÉ depuis _legacy (db + locales). Ne pas éditer à la main.
+// EXCEPTIONS corrigées manuellement (si régénération depuis _legacy, ré-appliquer) :
+//  - 2026-07-15  BOSSES_GEN.boss_0 : vie 50→220, force 8→26, agilite 10→14, defense 4→8.
+//  - 2026-07-15 (revue d'équilibrage v2, courbe de difficulté — voir config.js ZONES) :
+//     rat_geant 25/6→45/10 (xp50→75), reine_des_rats 40/8→70/13 (xp100→140),
+//     chef_bandit 110/18→135/22, golem_pierre 300/35→620/60 (xp305→900, metal75→160),
+//     djinn 300/30→380/40, archimage_dement 650/50→820/85,
+//     juge_dissonant 2500/120→6000/260 (def70→90, boss final), BOSSES_GEN.boss_1 180/28→300/40 (def18→20).
+//     Bois ajouté : squelette_guerrier (+6), momie_gardienne (+15).
 export const ENEMIES_GEN = {
  "rat_geant": {
   "id": "rat_geant",
   "name": "Rat Géant",
   "sprite": "assets/sprites/mobs/rat.png",
   "attrs": {
-   "vie": 25,
-   "force": 6,
+   "vie": 45,
+   "force": 10,
    "agilite": 8,
    "defense": 2,
    "intelligence": 1,
    "chance": 5
   },
   "crit": 0,
-  "xp": 50,
+  "xp": 75,
   "resourceLoot": {
    "tissu": 10
   },
@@ -25,15 +33,15 @@ export const ENEMIES_GEN = {
   "name": "Reine des Rats",
   "sprite": "assets/sprites/mobs/reine_rat.png",
   "attrs": {
-   "vie": 40,
-   "force": 8,
+   "vie": 70,
+   "force": 13,
    "agilite": 12,
    "defense": 3,
    "intelligence": 2,
    "chance": 10
   },
   "crit": 0,
-  "xp": 100,
+  "xp": 140,
   "resourceLoot": {
    "tissu": 15,
    "fragments": 1
@@ -67,8 +75,8 @@ export const ENEMIES_GEN = {
   "name": "Chef des Bandits",
   "sprite": "assets/sprites/mobs/chef_bandit.png",
   "attrs": {
-   "vie": 110,
-   "force": 18,
+   "vie": 135,
+   "force": 22,
    "agilite": 15,
    "defense": 8,
    "intelligence": 8,
@@ -89,17 +97,17 @@ export const ENEMIES_GEN = {
   "name": "Golem de Pierre",
   "sprite": "assets/sprites/mobs/golem_pierre.png",
   "attrs": {
-   "vie": 300,
-   "force": 35,
+   "vie": 620,
+   "force": 60,
    "agilite": 2,
-   "defense": 25,
+   "defense": 40,
    "intelligence": 2,
    "chance": 1
   },
   "crit": 0,
-  "xp": 305,
+  "xp": 900,
   "resourceLoot": {
-   "metal": 75
+   "metal": 160
   },
   "loot": []
  },
@@ -467,7 +475,8 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 45,
   "resourceLoot": {
-   "metal": 15
+   "metal": 15,
+   "bois": 6
   },
   "loot": [],
   "desc": "Ossements ranimés par une volonté qui refuse le repos éternel."
@@ -679,7 +688,8 @@ export const ENEMIES_GEN = {
   "crit": 0,
   "xp": 220,
   "resourceLoot": {
-   "tissu": 120
+   "tissu": 120,
+   "bois": 15
   },
   "loot": []
  },
@@ -688,8 +698,8 @@ export const ENEMIES_GEN = {
   "name": "Djinn",
   "sprite": "assets/sprites/mobs/djinn.png",
   "attrs": {
-   "vie": 300,
-   "force": 30,
+   "vie": 380,
+   "force": 40,
    "agilite": 30,
    "defense": 20,
    "intelligence": 30,
@@ -941,8 +951,8 @@ export const ENEMIES_GEN = {
   "name": "Archimage Dément",
   "sprite": "assets/sprites/mobs/archimage_dement.png",
   "attrs": {
-   "vie": 650,
-   "force": 50,
+   "vie": 820,
+   "force": 85,
    "agilite": 55,
    "defense": 35,
    "intelligence": 85,
@@ -1404,10 +1414,10 @@ export const ENEMIES_GEN = {
   "name": "Juge Dissonant",
   "sprite": "assets/sprites/mobs/maitre_ombre.png",
   "attrs": {
-   "vie": 2500,
-   "force": 120,
+   "vie": 6000,
+   "force": 260,
    "agilite": 80,
-   "defense": 70,
+   "defense": 90,
    "intelligence": 90,
    "chance": 25
   },
@@ -1646,10 +1656,10 @@ export const BOSSES_GEN = [
   "name": "Grand Gobelin Grognon",
   "sprite": "assets/sprites/mobs/gobelin.png",
   "attrs": {
-   "vie": 50,
-   "force": 8,
-   "agilite": 10,
-   "defense": 4,
+   "vie": 220,
+   "force": 26,
+   "agilite": 14,
+   "defense": 8,
    "intelligence": 2,
    "chance": 5
   },
@@ -1673,10 +1683,10 @@ export const BOSSES_GEN = [
   "name": "Ogre Colossal",
   "sprite": "assets/sprites/bosses/ogre.png",
   "attrs": {
-   "vie": 180,
-   "force": 28,
+   "vie": 300,
+   "force": 40,
    "agilite": 8,
-   "defense": 18,
+   "defense": 20,
    "intelligence": 5,
    "chance": 8
   },

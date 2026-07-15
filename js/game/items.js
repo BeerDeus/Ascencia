@@ -5,9 +5,10 @@ import { state, setState } from '../state.js';
 import { ITEMS_GEN, MATERIALS_GEN } from '../data/items.gen.js';
 import { ACCORDS } from './symphony.js';
 import { restore as restoreEndurance } from './endurance.js';
+import { incrementMetric } from './primes.js';
 
 // Ressources "vrac" (en-tête) vs matériaux (inventaire, stackés).
-export const RESOURCE_KEYS = ['or', 'bois', 'metal', 'tissu', 'fragments'];
+export const RESOURCE_KEYS = ['or', 'bois', 'metal', 'tissu', 'fragments', 'eclats_ascension'];
 
 // Consommables (soin en combat).
 const CONSUMABLES = {
@@ -25,6 +26,21 @@ const ENERGY_ITEMS = {
     icon: 'assets/sprites/packs/stamina_regen.png', kind: 'energie',
     endurance: 5, sell: 10, desc: "Restaure 5 points d'Endurance. Se consomme depuis le sac, hors combat.",
   },
+};
+
+// Potions (Alchimiste, Phase 5.2) : buff temporaire en % sur une stat dérivée (voir
+// game/player.js potionBonuses()/derive()). Un seul buff actif par stat à la fois —
+// boire à nouveau la même potion écrase juste la durée, jamais de stack. Bues depuis
+// le sac (drinkPotion, hors combat comme l'Infusion Tonique — la vue Combat plein
+// écran masque de toute façon la nav pendant un combat, donc de facto pré-combat).
+// Cumul : reboire une potion pendant qu'elle est active ADDITIONNE le temps restant à
+// la nouvelle durée (2:30 restant + 5:00 = 7:30), plafonné haut (1h) pour éviter un
+// stock illimité tout en récompensant l'anticipation (décision produit, cf. discussion).
+export const POTION_BUFF_CAP_MS = 60 * 60 * 1000;
+const POTIONS = {
+  potion_force:     { id: 'potion_force',     name: 'Philtre de Force',     icon: 'assets/sprites/potions/potion_orange.png',   kind: 'potion', stat: 'attaque', pct: 25, ms: 5 * 60 * 1000, sell: 15, desc: '+25% Attaque pendant 5 min.' },
+  potion_precision: { id: 'potion_precision', name: 'Philtre de Précision', icon: 'assets/sprites/potions/potion_jaune.png',    kind: 'potion', stat: 'crit',    pct: 20, ms: 5 * 60 * 1000, sell: 15, desc: '+20% Critique pendant 5 min.' },
+  potion_esquive:   { id: 'potion_esquive',   name: 'Philtre de Fuite',     icon: 'assets/sprites/potions/potion_sarcelle.png', kind: 'potion', stat: 'esquive', pct: 20, ms: 5 * 60 * 1000, sell: 15, desc: '+20% Esquive pendant 5 min.' },
 };
 
 // Matériaux spécifiques aux monstres (drops de famille).
@@ -70,7 +86,7 @@ const SYMPHONY_ITEMS = Object.fromEntries(ACCORDS.map((a) => [a.id, {
   id: a.id, name: a.name, icon: a.icon, kind: 'symphonie', rarity: 'special', sell: 0, desc: a.desc,
 }]));
 
-export const ITEMS = { ...ITEMS_GEN, ...MATERIALS_GEN, ...MONSTER_MATS, ...CONSUMABLES, ...ENERGY_ITEMS, ...SYMPHONY_ITEMS };
+export const ITEMS = { ...ITEMS_GEN, ...MATERIALS_GEN, ...MONSTER_MATS, ...CONSUMABLES, ...ENERGY_ITEMS, ...POTIONS, ...SYMPHONY_ITEMS };
 for (const [tid, icon] of Object.entries(MATERIAL_ICON_OVERRIDES)) { if (ITEMS[tid]) ITEMS[tid].icon = icon; }
 export const getItem = (tid) => ITEMS[tid];
 
@@ -116,7 +132,14 @@ export const RECIPES = {
     { out: 'pain',        cost: { herbes_medicinales: 2 } },
     { out: 'ragout',      cost: { herbes_medicinales: 3, tissu: 20 } },
     { out: 'potion_soin', cost: { herbes_medicinales: 5, fragments: 1 } },
+  ],
+  // Alchimiste (Phase 5.2) : potions de buff temporaire + Infusion Tonique (déplacée
+  // depuis Cuisine — un tonique d'Endurance a plus sa place ici qu'un plat).
+  alchimie: [
     { out: 'infusion_tonique', cost: { herbes_medicinales: 4, fragments: 2 } },
+    { out: 'potion_force',     cost: { herbes_medicinales: 3, metal: 15, fragments: 1 } },
+    { out: 'potion_precision', cost: { herbes_medicinales: 3, tissu: 15, fragments: 1 } },
+    { out: 'potion_esquive',   cost: { herbes_medicinales: 3, bois: 15, fragments: 1 } },
   ],
 };
 
@@ -155,6 +178,25 @@ export function useConsumable(tid) {
   restoreEndurance(it.endurance);
   return true;
 }
+// Boit une Potion (kind 'potion') : retire 1 du stack, pose/CUMULE le buff temporaire
+// sur la stat visée (voir state.player.potionBuffs + game/player.js potionBonuses()).
+// Le temps restant s'additionne à la nouvelle durée, plafonné à POTION_BUFF_CAP_MS.
+export function drinkPotion(tid) {
+  const it = ITEMS[tid];
+  if (!it || it.kind !== 'potion') return false;
+  if (invCount(tid) < 1) return false;
+  setState((s) => {
+    _remove(s.inventory, tid, 1);
+    s.player.potionBuffs = s.player.potionBuffs || {};
+    const now = Date.now();
+    const cur = s.player.potionBuffs[it.stat];
+    const remaining = cur && cur.until > now ? cur.until - now : 0;
+    const totalMs = Math.min(remaining + it.ms, POTION_BUFF_CAP_MS);
+    s.player.potionBuffs[it.stat] = { pct: it.pct, until: now + totalMs, name: it.name, icon: it.icon, baseMs: it.ms };
+  });
+  return true;
+}
+
 export function sellItem(tid, n = 1) {
   const it = ITEMS[tid]; if (!it) return false;
   if (invCount(tid) < n) return false;
@@ -283,7 +325,8 @@ export function craft(recipe, n = 1) {
     }
     tryAddItem(s.inventory, recipe.out, n, inventoryCapacity(s));
   });
+  incrementMetric('craftCount', n); // Primes (game/primes.js) — Forge + Cuisine
   return true;
 }
 
-export const itemsApi = { ITEMS, SLOTS, RECIPES, RESOURCE_KEYS, BUY_CATALOG, addItem, useConsumable, sellItem, buyItem, buyPrice, equip, unequip, craft, canCraft, maxCraftable, invCount, recomputeBonuses, equippedSymphonyIds, inventoryCapacity, hasRoomFor, tryAddItem, nextSlotCost, buyInventorySlot };
+export const itemsApi = { ITEMS, SLOTS, RECIPES, RESOURCE_KEYS, BUY_CATALOG, addItem, useConsumable, drinkPotion, POTION_BUFF_CAP_MS, sellItem, buyItem, buyPrice, equip, unequip, craft, canCraft, maxCraftable, invCount, recomputeBonuses, equippedSymphonyIds, inventoryCapacity, hasRoomFor, tryAddItem, nextSlotCost, buyInventorySlot };

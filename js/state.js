@@ -19,6 +19,11 @@ function defaultState() {
       // Bonus additifs (flat) et multiplicatifs (pct, en %) par clé de stat.
       // flat est recalculé depuis l'équipement (game/items.js) ; pct réservé (Constellations).
       bonuses: { flat: {}, pct: {} },
+      // Buffs de Potion (Alchimiste, Phase 5.2) : { [statKey]: { pct, until, name } }.
+      // Un seul buff actif par stat (boire à nouveau la même potion prolonge/écrase,
+      // pas de stack) ; expiration lue par timestamp dans game/player.js potionBonuses(),
+      // jamais purgée activement (poignée de clés max, coût négligeable).
+      potionBuffs: {},
       // Emplacements d'équipement (taxo legacy). null = vide. conso = { tid, count }.
       // symphonie1-3 : Symphonies équipées, gérées comme un équipement normal
       // (paperdoll Profil > Équipement, sous Accessoire/Artefact).
@@ -32,6 +37,7 @@ function defaultState() {
       or: 50,          // monnaie principale
       bois: 300, metal: 300, tissu: 300, // matériaux de craft de base
       fragments: 0,    // monnaie premium / enchantement
+      eclats_ascension: 0, // ressource Codex "Ressource Premium" (500 kills/monstre) — voir game/combat.js onWin()
     },
     endurance: { cur: SETTINGS.enduranceMax, max: SETTINGS.enduranceMax, regenAt: null }, // regenAt = ts prochain point (Phase 4)
     mesure: [],            // FIFO notes (Phase 3)
@@ -52,6 +58,13 @@ function defaultState() {
       { tid: 'vif',     count: 1 },
       { tid: 'parfait', count: 1 },
     ],
+    // Primes (Phase 5.2) : 3 défis tirés chaque jour dans le pool (game/primes.js).
+    // date = jour de génération (YYYY-MM-DD) → régénération auto au changement de jour.
+    // primeStats = compteurs du jour (kills, gold, miningCycles, craftCount, larryKills,
+    // bossKills), remis à zéro à chaque régénération ; la progression d'une Prime se lit
+    // à la volée depuis primeStats (jamais dupliquée dans `list`).
+    primes: { date: null, list: [] },
+    primeStats: {},
     constellations: 0,     // prestige (Phase 6)
     // Compétences façon "Minage" (progression XP/niveau dédiée) — pensé pour accueillir
     // Forge/Cuisine plus tard sous la même forme (voir game/mining.js). `active` = filon
@@ -70,6 +83,11 @@ function withDefaults(saved) {
   const base = defaultState();
   return saved ? deepMerge(base, saved) : base;
 }
+// Capturé UNE FOIS avant toute mutation : distingue "vraie sauvegarde locale" de
+// "état par défaut tout neuf" (les deux ont un meta.lastSeen ~= maintenant, donc ce
+// booléen est le seul moyen fiable de savoir si `state.meta.lastSeen` reflète une
+// vraie session passée ou juste l'instant du boot — voir main.js hydrateFromCloud().
+export const hadLocalSave = !!load();
 export let state = withDefaults(load());
 
 export function subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); }

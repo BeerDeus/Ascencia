@@ -3,18 +3,31 @@
 // voir game/combat.js onWin). Aucune donnée persistée en plus : tout est dérivé.
 import { state } from '../state.js';
 import { ZONES, ATTRIBUTES } from '../config.js';
-import { ENEMIES, BOSSES, familyMat } from './monsters.js';
+import { ENEMIES, BOSSES, familyMat, varianceFor, statRange } from './monsters.js';
 import { ITEMS } from './items.js';
 
 export const ATTR_LABEL = Object.fromEntries(ATTRIBUTES.map((a) => [a.key, a.label]));
 
 // Paliers de déblocage d'une fiche Codex (kills du monstre concerné).
+// RÉORGANISATION 2026-07-15 : "Trouvé dans" (zones) supprimé, remplacé par
+// "Statistiques de Base" — baissé de 100 à 50 kills (1 palier plus tôt). Le palier
+// 100 kills, vacant, devient "Estimation des Ressources" (resourceEstimateFor
+// ci-dessous). "Ressource Premium" (500 kills) glisse de sens : au lieu de
+// ré-afficher les mêmes ressources, il octroie désormais un petit bonus passif —
+// voir ECLATS_PER_KILL + game/combat.js onWin().
 export const CODEX_TIERS = [
-  { id: 'trouve',    kills: 50,   label: 'Trouvé dans' },
-  { id: 'stats',     kills: 100,  label: 'Statistiques de Base' },
-  { id: 'ressource', kills: 500,  label: 'Ressource Premium' },
-  { id: 'bonus',     kills: 1000, label: 'Bonus' },
+  { id: 'stats',      kills: 50,   label: 'Statistiques de Base' },
+  { id: 'estimation', kills: 100,  label: 'Estimation des Ressources' },
+  { id: 'ressource',  kills: 500,  label: 'Ressource Premium' },
+  { id: 'bonus',      kills: 1000, label: 'Bonus' },
 ];
+
+// Ressource "Éclats d'Ascension" gagnée à CHAQUE victoire une fois le palier
+// "Ressource Premium" (500 kills, CODEX_TIERS ci-dessus) atteint sur ce monstre —
+// petit montant volontairement fixe (pas scalé par zone, ressource de fin de jeu).
+// Appliquée dans game/combat.js onWin() ; affichée dans views/codex.js.
+export const ECLATS_PER_KILL = 1;
+export const PREMIUM_TIER_KILLS = CODEX_TIERS.find((t) => t.id === 'ressource').kills;
 
 function allEntries() {
   const list = Object.values(ENEMIES).map((e) => ({ ...e, isBoss: false }));
@@ -86,6 +99,43 @@ export function resourceInfoFor(id) {
   return { lines };
 }
 
+// Zone (scale + isBoss) où un monstre apparaît — même recherche que statRangeFor
+// (monsters.js), dupliquée ici pour ne pas exporter ce détail interne depuis
+// monsters.js juste pour ce besoin d'affichage Codex.
+function zoneScaleFor(id) {
+  let scale = 1, isBoss = BOSSES.some((b) => b.id === id);
+  for (const z of ZONES) {
+    if (z.monsters.includes(id)) return { scale: z.scale, isBoss: false };
+    if (z.boss === id) return { scale: z.scale, isBoss: true };
+  }
+  return { scale, isBoss };
+}
+
+// ---- Estimation des Ressources (palier 100 kills, CODEX_TIERS) ----
+// Les quantités de resourceLoot (data/enemies.*.js) sont fixes en jeu (pas de
+// variance à chaque kill) : on affiche ici une FOURCHETTE indicative en leur
+// appliquant la même variance que les stats de combat (varianceFor/statRange,
+// monsters.js) — cohérent visuellement avec le palier "Statistiques de Base",
+// explicitement présenté comme une estimation plutôt qu'un chiffre garanti.
+// Drops rares : matériau de famille (50% de chance, voir monsters.js rollLoot)
+// + entrées `loot` (déjà de vraies fourchettes chance/min/max) — vide tant
+// qu'aucun loot rare n'est défini sur le monstre ("à ajouter plus tard").
+export function resourceEstimateFor(id) {
+  const e = codexEntry(id);
+  if (!e) return { guaranteed: [], rare: [] };
+  const { scale, isBoss } = zoneScaleFor(id);
+  const variance = varianceFor(scale, isBoss);
+  const guaranteed = Object.entries(e.resourceLoot || {}).map(([key, base]) => {
+    const [lo, hi] = statRange(base, variance);
+    return { key, lo, hi };
+  });
+  const rare = [];
+  const mat = familyMat(id);
+  if (mat) { const mi = ITEMS[mat]; rare.push({ name: mi ? mi.name : mat, min: 1, max: 2, chance: 0.5 }); }
+  for (const d of (e.loot || [])) { const it = ITEMS[d.tid]; rare.push({ name: it ? it.name : d.tid, min: d.min, max: d.max, chance: d.chance }); }
+  return { guaranteed, rare };
+}
+
 // ---- Maîtrise : 4 voies, paliers cumulatifs (chaque palier atteint reste actif) ----
 const totalKills = (wins) => Object.values(wins || {}).reduce((s, v) => s + v, 0);
 // Boss DIFFÉRENTS vaincus au moins 1 fois (pas le total de kills) : sinon on peut
@@ -153,4 +203,4 @@ export function masteryBonuses(wins = state.monsterWins) {
   return { flat, pct };
 }
 
-export const codexApi = { codexEntry, discoverableIds, foundIn, dominantAttr, kills, discoveredIds, masteredIds, codexBonuses, resourceInfoFor, MASTERY_TRACKS, masteryBonuses, CODEX_TIERS, ATTR_LABEL };
+export const codexApi = { codexEntry, discoverableIds, foundIn, dominantAttr, kills, discoveredIds, masteredIds, codexBonuses, resourceInfoFor, resourceEstimateFor, MASTERY_TRACKS, masteryBonuses, CODEX_TIERS, ECLATS_PER_KILL, PREMIUM_TIER_KILLS, ATTR_LABEL };

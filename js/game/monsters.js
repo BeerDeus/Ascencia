@@ -4,9 +4,14 @@
 import { state, setState } from '../state.js';
 import { SETTINGS, ZONES } from '../config.js';
 import { ENEMIES_GEN, BOSSES_GEN } from '../data/enemies.gen.js';
+import { ENEMIES_CUSTOM } from '../data/enemies.custom.js';
 import { tryAddItem, inventoryCapacity } from './items.js';
 
-export const ENEMIES = ENEMIES_GEN;
+// ENEMIES_CUSTOM (game/data/enemies.custom.js) : monstres hand-authored absents du
+// catalogue auto-généré (slimes, variantes réutilisant des sprites orphelins — voir
+// Zones 6-20, config.js). Même forme que ENEMIES_GEN, simple merge, aucun traitement
+// différent ensuite (build()/rollLoot() ne font pas la distinction).
+export const ENEMIES = { ...ENEMIES_GEN, ...ENEMIES_CUSTOM };
 export const BOSSES = BOSSES_GEN;
 const sq = Math.sqrt;
 

@@ -4,11 +4,14 @@
 import { el, clear, clamp, iconNode } from '../utils/dom.js';
 import { state, setState } from '../state.js';
 import { SETTINGS, ZONES } from '../config.js';
-import { derive, addXp } from './player.js';
+import { derive, addXp, activePotionBuffs } from './player.js';
 import { ITEMS, equippedSymphonyIds } from './items.js';
 import { rollLoot, makeMonster, rollLarryAffix, applyLarryAffix } from './monsters.js';
 import { NOTES, accordById, noteById, noteByLabel, pushNote, accordMatches, accordProgress, MESURE_SIZE } from './symphony.js';
 import { hasEndurance, spend as spendEndurance } from './endurance.js';
+import { incrementMetric } from './primes.js';
+import { PREMIUM_TIER_KILLS, ECLATS_PER_KILL } from './codex.js';
+import { isMining, stopMining } from './mining.js';
 import { showToast } from '../components/toast.js';
 
 // Icônes + libellés des ressources vrac pour les toasts de loot (mêmes chemins que
@@ -19,8 +22,12 @@ const RES_ICON = {
   metal: 'assets/sprites/ressources/metal.png',
   tissu: 'assets/sprites/ressources/tissu.png',
   fragments: 'assets/sprites/ressources/fragment.png',
+  eclats_ascension: 'assets/sprites/ressources/eclats_ascension.png',
 };
-const RES_LABEL = { or: 'Or', bois: 'Bois', metal: 'Métal', tissu: 'Tissu', fragments: 'Fragments' };
+const RES_LABEL = { or: 'Or', bois: 'Bois', metal: 'Métal', tissu: 'Tissu', fragments: 'Fragments', eclats_ascension: "Éclats d'Ascension" };
+// Libellés courts pour le tooltip des badges de buff (voir buildBuffRow ci-dessous).
+const BUFF_STAT_LABEL = { attaque: 'Attaque', crit: 'Critique', esquive: 'Esquive' };
+const BUFF_LOW_MS = 30_000; // seuil d'alerte (anneau rouge pulsant) — dernières 30s
 
 const TEMPO_RATE  = 42;    // points de Tempo / seconde à vitesse 1 (jauge = 100)
 const RELAUNCH_MS = 1200;  // délai avant relance en auto-battle
@@ -33,8 +40,22 @@ const rand100 = () => Math.random() * 100;
 export const isActive = () => !!rt && rt.active;
 export const current   = () => rt;
 
+// Hook de patch des contrôles externes (consommable/boutons auto-battle, gérés par
+// aventure.js hors de renderInto). Nécessaire car relaunch() est déclenché par un
+// setTimeout (pas un setState) : sans ce hook, syncCombatControls() ne serait plus
+// jamais rappelé après la 1ère relance auto-battle, et le bouton consommable/les
+// contrôles resteraient figés sur l'état du combat précédent (bug constaté : le
+// consommable n'apparaît plus après le 1er monstre en auto-battle).
+let onChange = null;
+export function setChangeHook(fn) { onChange = fn; }
+
 // ---- Démarrage / relance ----
 export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}) {
+  // Toute autre activité interrompt le minage en cours (crédite d'abord les cycles
+  // pleins déjà écoulés, comme le bouton "Arrêter le filon" — voir game/mining.js
+  // stopMining()). Pattern à reproduire pour toute future activité exclusive
+  // (donjons...) : appeler stopMining() en entrée de son propre start().
+  if (isMining()) stopMining();
   // Instabilité de Larry : roll à CHAQUE lancement (initial ou relance auto-battle),
   // jamais sur les boss — voir game/monsters.js LARRY_AFFIXES. `monster` est toujours
   // une instance fraîche (makeMonster/makeBoss), donc pas de risque de double-affixe.
@@ -72,6 +93,7 @@ export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}
   if (wantsAuto && !autoGranted) pushLog('Endurance épuisée — combat lancé en mode manuel.');
   paint();
   loop();
+  onChange && onChange(); // resync consommable/contrôles (voir setChangeHook) — couvre la relance auto
 }
 
 function relaunch() {
@@ -279,14 +301,31 @@ function onWin() {
   // Codex : compteur de kills illimité (monsterWins), y compris les boss — sert au
   // déblocage de fiche + aux paliers de Maîtrise. Première victoire → ligne de log dédiée.
   const firstKill = !(state.monsterWins[e.id] > 0);
+  // Palier "Ressource Premium" (game/codex.js CODEX_TIERS, 500 kills) : une fois
+  // atteint sur CE monstre, chaque victoire supplémentaire rapporte aussi des
+  // Éclats d'Ascension — petit montant fixe (ECLATS_PER_KILL), pas de scale zone.
+  let eclatsGained = 0;
   setState((s) => {
     s.monsterWins[e.id] = (s.monsterWins[e.id] || 0) + 1;
+    if (s.monsterWins[e.id] >= PREMIUM_TIER_KILLS) {
+      eclatsGained = ECLATS_PER_KILL;
+      s.resources.eclats_ascension = (s.resources.eclats_ascension || 0) + eclatsGained;
+    }
     if (isBoss) {
       s.progress.bossDefeated[zoneId] = true;
       if (ZONES.some((z) => z.id === zoneId + 1)) s.progress.unlocked = Math.max(s.progress.unlocked, zoneId + 1);
     }
   });
   if (firstKill) pushLog(`Nouvelle entrée du Codex : ${e.name} !`);
+  if (eclatsGained) {
+    pushLog(`+${eclatsGained} Éclats d'Ascension (Ressource Premium).`);
+    showToast(`+${eclatsGained} ${RES_LABEL.eclats_ascension}`, { icon: RES_ICON.eclats_ascension });
+  }
+  // Primes (défis quotidiens, voir game/primes.js) : compteurs du jour.
+  incrementMetric('kills', 1);
+  incrementMetric('gold', e.gold || 0);
+  if (isBoss) incrementMetric('bossKills', 1);
+  if (e.larryAffix) incrementMetric('larryKills', 1);
   const { drops, res, lost } = rollLoot(e); // ressources + items + or (game/monsters.js)
   const resTxt = Object.entries(res).map(([k, v]) => `${k} ×${v}`).join(', ');
   if (resTxt || e.gold) pushLog(`+${e.gold} or${resTxt ? ', ' + resTxt : ''}`);
@@ -335,6 +374,7 @@ export function stop() {
   if (rt.relaunchTimer) clearTimeout(rt.relaunchTimer);
   rt.active = false;
   toZones();
+  onChange = null;
 }
 
 // Consomme le stack équipé (slot CON) : soigne et remet le Tempo joueur à 0.
@@ -401,7 +441,15 @@ export function renderInto(parent) {
     const s = el('div.mesure-slot'); r.mesureSlots.push(s); return s;
   }));
 
+  // Buffs de Potion actifs (Alchimiste) : icône + anneau chrono, construits UNE
+  // fois au montage (comme les boutons de Symphonie — un combat ne peut pas voir
+  // de nouveau buff apparaître en cours de route, la nav est masquée pendant qu'il
+  // tourne). paint() ne fait que patcher la fraction de l'anneau et masquer à expiration.
+  r.buffRow = el('div.combat-buffs');
+  r.buffBadges = buildBuffBadges(r.buffRow);
+
   const gauges = el('div.tempo-wrap', {}, [
+    r.buffRow,
     el('div.hpbar.player', {}, [ r.pHpFill = el('div.fill'), r.pHpTxt = el('span.hpbar-txt') ]),
     labeledBar('Tempo Joueur', 'tempo player', (o) => (r.pTempoFill = o)),
     labeledBar('Tempo Ennemi', 'tempo enemy',  (o) => (r.eTempoFill = o)),
@@ -437,6 +485,23 @@ export function renderInto(parent) {
   return parent;
 }
 
+// Construit les badges (icône + anneau) pour les buffs de Potion actifs à l'instant
+// du montage — voir commentaire d'appel ci-dessus. Renvoie les refs à patcher par
+// paint() : { until, baseMs, ring, badge }.
+function buildBuffBadges(row) {
+  const buffs = activePotionBuffs(state.player);
+  const badges = buffs.map((b) => {
+    const ring = el('div.buff-ring');
+    const badge = el('div.buff-badge', {
+      title: `${b.name} — +${b.pct}% ${BUFF_STAT_LABEL[b.stat] || b.stat}`,
+    }, [ring, iconNode(b.icon, 'buff-icon')]);
+    return { until: b.until, baseMs: b.baseMs, ring, badge };
+  });
+  row.replaceChildren(...badges.map((b) => b.badge));
+  row.style.display = badges.length ? '' : 'none';
+  return badges;
+}
+
 function labeledBar(label, cls, setFill) {
   const fill = el('div.fill');
   setFill(fill);
@@ -466,6 +531,19 @@ function paint() {
     if (r._spriteVal !== rt.enemy.sprite) { setSprite(r.eSprite, rt.enemy.sprite); r._spriteVal = rt.enemy.sprite; }
     r.eSprite.classList.toggle('larry-sprite', !!rt.enemy.larryAffix);
   }
+  if (r.buffBadges && r.buffBadges.length) {
+    // Date.now() ici, PAS le now() du module (performance.now(), horloge relative au
+    // chargement de la page) — b.until vient de state.player.potionBuffs, posé en
+    // epoch ms par game/items.js drinkPotion().
+    const t = Date.now();
+    for (const b of r.buffBadges) {
+      const left = b.until - t;
+      if (left <= 0) { b.badge.style.display = 'none'; continue; }
+      const frac = Math.min(100, (left / b.baseMs) * 100);
+      b.ring.style.setProperty('--frac', frac.toFixed(1));
+      b.badge.classList.toggle('low', left < BUFF_LOW_MS);
+    }
+  }
 }
 const pct = (v, max) => Math.max(0, Math.min(100, (v / max) * 100));
 
@@ -477,4 +555,4 @@ function setSprite(node, sprite) {
   node.append(el('img.sprite-img', { src, alt: '' }));
 }
 
-export const combatApi = { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ, castAccord, debugPushNote, debugTestAccord };
+export const combatApi = { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ, castAccord, debugPushNote, debugTestAccord, setChangeHook };

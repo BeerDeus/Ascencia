@@ -5,8 +5,8 @@ import { state } from '../state.js';
 import { rerender } from '../router.js';
 import { panel } from '../components/card.js';
 import { gauge, setGauge } from '../components/gauge.js';
-import { derive, formatStat, allocate } from '../game/player.js';
-import { ITEMS, SLOTS, SLOT_ROWS, equip, unequip, useConsumable, sellItem, invCount, inventoryCapacity, nextSlotCost, buyInventorySlot } from '../game/items.js';
+import { derive, formatStat, allocate, activePotionBuffs } from '../game/player.js';
+import { ITEMS, SLOTS, SLOT_ROWS, equip, unequip, useConsumable, drinkPotion, sellItem, invCount, inventoryCapacity, nextSlotCost, buyInventorySlot } from '../game/items.js';
 import { ACCORDS, noteById } from '../game/symphony.js';
 import { showInfoModal } from '../components/infoModal.js';
 
@@ -49,6 +49,13 @@ function renderPersonnage(view) {
     hpGauge,
   ]));
   refs.hpGauge = hpGauge;
+
+  // Effets actifs (Potions, Alchimiste) — masqué si aucun buff en cours. Rafraîchi
+  // par update() (tout setState) + un tick local 1s tant que la vue reste montée
+  // (même pattern que la boucle d'affichage du Minage, village.js) pour que le
+  // compte à rebours ne reste pas figé entre deux mutations d'état.
+  refs.buffsBox = el('div.id-chips', { style: 'margin-bottom:16px;' });
+  view.append(refs.buffsBox);
 
   // Niveau + XP
   const xpGauge = gauge({ type: 'xp', value: 0, max: 1 });
@@ -162,9 +169,22 @@ function renderPersonnage(view) {
       node.textContent = formatStat(s.fmt, d[k]);
     }
   }
+  function syncBuffs() {
+    const buffs = activePotionBuffs(state.player);
+    refs.buffsBox.style.display = buffs.length ? '' : 'none';
+    refs.buffsBox.replaceChildren(...buffs.map((b) =>
+      chip('', `${STAT_LBL[b.stat] || b.stat} +${b.pct}% — ${Math.ceil(b.msLeft / 1000)}s`)
+    ));
+  }
 
-  function update() { syncVie(); syncXp(); syncAttrs(); syncStats(); }
+  function update() { syncVie(); syncXp(); syncAttrs(); syncStats(); syncBuffs(); }
   update();
+  // Tick local (1s) tant que la vue reste montée : fait vivre le compte à rebours
+  // des buffs sans dépendre d'un setState externe (voir commentaire plus haut).
+  const buffTimer = setInterval(() => {
+    if (!document.body.contains(view)) { clearInterval(buffTimer); return; }
+    syncBuffs();
+  }, 1000);
   return update;
 }
 
@@ -255,6 +275,7 @@ function itemChips(it) {
   if (it.weapon) return [...statChips(it.stats), chip('', 'Tempo ' + it.weapon.tempo + 's'), chip('', 'Note ' + it.weapon.note)];
   if (it.kind === 'conso') return [chip('assets/sprites/icons/vie.png', '+' + it.heal + ' PV')];
   if (it.kind === 'energie') return [chip('assets/sprites/icons/stamina.png', '+' + it.endurance + ' Endurance')];
+  if (it.kind === 'potion') return [chip('', `+${it.pct}% ${STAT_LBL[it.stat] || it.stat}`), chip('', `${Math.round(it.ms / 1000)}s`)];
   if (it.kind === 'symphonie') {
     const a = ACCORDS.find((x) => x.id === it.id);
     const motif = a ? a.pattern.map((nid) => noteById(nid).label).join(' · ') : '';
@@ -288,6 +309,12 @@ function itemDetail(tid) {
     // Pas d'équipement (aucun slot dédié) : consommation immédiate depuis le sac.
     card.append(el('div.id-equip-row', {}, [
       el('button.btn-equip', { text: `Consommer (+${it.endurance} Endurance)`, onclick: () => { useConsumable(tid); } }),
+    ]));
+  } else if (it.kind === 'potion') {
+    // Idem : pas de slot dédié, buff temporaire posé immédiatement (voir game/player.js
+    // potionBonuses() — un seul buff actif par stat, boire à nouveau prolonge la durée).
+    card.append(el('div.id-equip-row', {}, [
+      el('button.btn-equip', { text: `Boire (+${it.pct}% ${STAT_LBL[it.stat] || it.stat}, ${Math.round(it.ms / 1000)}s)`, onclick: () => { drinkPotion(tid); } }),
     ]));
   } else if (it.kind !== 'materiau') {
     const repl = equipTargetName(it);

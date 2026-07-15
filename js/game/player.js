@@ -66,16 +66,46 @@ const POWER_W = {
   precision: 0.3, esquive: 2, resistance: 2, harmonie: 1, resDissonance: 1,
 };
 
+// ---- Potions (Alchimiste, Phase 5.2) : buffs temporaires en % (voir game/items.js
+// drinkPotion()). Stockés dans state.player.potionBuffs = { [statKey]: { pct, until,
+// name } } ; expirés = simplement ignorés ici (pas de purge active, cf. state.js). ----
+export function potionBonuses(player = state.player) {
+  const now = Date.now();
+  const pct = {};
+  for (const [stat, b] of Object.entries(player.potionBuffs || {})) {
+    if (b && b.until > now) pct[stat] = (pct[stat] || 0) + b.pct;
+  }
+  return { flat: {}, pct };
+}
+// Durée de base par défaut (fallback pour d'anciennes sauvegardes sans baseMs stocké,
+// avant l'ajout du cumul — voir game/items.js drinkPotion()).
+const DEFAULT_POTION_BASE_MS = 5 * 60 * 1000;
+
+// Liste des buffs actifs — utilisée par Profil > Personnage (countdown texte) ET par
+// l'indicateur en combat (icône + anneau chrono, voir game/combat.js) : { stat, name,
+// pct, icon, baseMs, until (timestamp absolu, pour un recalcul live frame par frame),
+// msLeft (calculé à l'instant de l'appel, pratique pour un affichage non recalculé) }.
+export function activePotionBuffs(player = state.player) {
+  const now = Date.now();
+  return Object.entries(player.potionBuffs || {})
+    .filter(([, b]) => b && b.until > now)
+    .map(([stat, b]) => ({
+      stat, name: b.name, pct: b.pct, icon: b.icon, baseMs: b.baseMs || DEFAULT_POTION_BASE_MS,
+      until: b.until, msLeft: b.until - now,
+    }));
+}
+
 // ---- Stats dérivées = baseStats(attributs effectifs incl. équipement) ----
 export function derive(player = state.player) {
   const a = effectiveAttributes(player);
   const out = baseStats(a, player.level || 1);
   const pct = { ...((player.bonuses && player.bonuses.pct) || {}) };
-  const cxPct = codexBonuses().pct, msPct = masteryBonuses().pct, lrPct = loreBonuses().pct;
+  const cxPct = codexBonuses().pct, msPct = masteryBonuses().pct, lrPct = loreBonuses().pct, ptPct = potionBonuses(player).pct;
   for (const k of Object.keys(cxPct)) pct[k] = (pct[k] || 0) + cxPct[k];
   for (const k of Object.keys(msPct)) pct[k] = (pct[k] || 0) + msPct[k];
   for (const k of Object.keys(lrPct)) pct[k] = (pct[k] || 0) + lrPct[k];
-  for (const k of Object.keys(out)) if (pct[k]) out[k] *= (1 + pct[k] / 100); // bonus % (équipement + Codex + Maîtrise)
+  for (const k of Object.keys(ptPct)) pct[k] = (pct[k] || 0) + ptPct[k];
+  for (const k of Object.keys(out)) if (pct[k]) out[k] *= (1 + pct[k] / 100); // bonus % (équipement + Codex + Maîtrise + Potions)
   out.maxHp = Math.round(out.maxHp);
   out.attaque = Math.round(out.attaque);
   out.puissance = Math.round(
@@ -212,4 +242,4 @@ export function regenSince(sinceTs, now = Date.now()) {
 }
 
 // API console pour tester (voir aussi main.js -> window.Ascencia).
-export const playerApi = { addXp, allocate, addAttribute, addResource, spendResource, damage, heal, derive, displayStats, formatStat, xpForLevel, regenTick, regenSince, ALLOCATABLE, ATTR_POINTS_PER_LEVEL };
+export const playerApi = { addXp, allocate, addAttribute, addResource, spendResource, damage, heal, derive, displayStats, formatStat, xpForLevel, regenTick, regenSince, ALLOCATABLE, ATTR_POINTS_PER_LEVEL, potionBonuses, activePotionBuffs };

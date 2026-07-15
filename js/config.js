@@ -16,10 +16,12 @@ export const HOME_SUB = { village: 'hub' };
 // Sous-navigation contextuelle par vue.
 export const SUBNAV = {
   village: [
-    { id: 'forge',     label: 'Forge',      icon: 'assets/sprites/icons/forge.png' },
-    { id: 'cuisinier', label: 'Cuisinier',  icon: 'assets/sprites/icons/cuisine.png' },
-    { id: 'minage',    label: 'Minage',     icon: 'assets/sprites/objets/pioche.png' },
-    { id: 'marchand',  label: 'Marchand',   icon: 'assets/sprites/objets/piece_or.png' },
+    { id: 'forge',      label: 'Forge',      icon: 'assets/sprites/icons/forge.png' },
+    { id: 'cuisinier',  label: 'Cuisinier',  icon: 'assets/sprites/icons/cuisine.png' },
+    { id: 'alchimiste', label: 'Alchimiste', icon: 'assets/sprites/potions/potion_violette.png' },
+    { id: 'minage',     label: 'Minage',     icon: 'assets/sprites/objets/pioche.png' },
+    { id: 'marchand',   label: 'Marchand',   icon: 'assets/sprites/objets/piece_or.png' },
+    { id: 'primes',     label: 'Primes',     icon: 'assets/sprites/objets/parchemin_scelle.png' },
   ],
   profil: [
     { id: 'personnage', label: 'Personnage', icon: 'assets/sprites/portraits/default_avatar.png' },
@@ -127,12 +129,81 @@ export const STATS = [
 // Zones à thème (monstres = ids du catalogue généré ; boss = id BOSSES ou monstre).
 // scale = facteur d'équilibrage appliqué aux stats/récompenses (les mobs legacy sont
 // calibrés pour un joueur avec points de départ ; on rééquilibre pour notre niveau 1).
+// Scale : facteur multiplicatif appliqué aux attrs bruts (ENEMIES_GEN/CUSTOM) de
+// chaque monstre — voir game/monsters.js build()/deriveEnemy().
+//
+// RÉORGANISATION 2026-07-15 (arrivée massive de nouveaux sprites : familles Slime/
+// Rat/Gobelin complètes + ~35 créatures diverses, voir data/enemies.custom.js) :
+// Zone 1 devient une zone 100% Slime (demande explicite), ce qui a fait glisser les
+// Rats (ex-Zone 1) en Zone 2 et les Gobelins en Zone 3 — les Zones 3-5 d'origine
+// (Bois Sauvages/Route des Bandits/Mines de Pierre) glissent donc à 4-6. Au-delà,
+// même ordre thématique qu'avant, juste décalé de +1, PLUS 4 zones toutes neuves en
+// fin de liste (22-25) pour arriver à 25 au total. Attention si du code référençait
+// un ancien numéro de zone en dur (aucun cas trouvé au moment du décalage, mais
+// vérifier game/lore.js si de nouveaux Récits sont ajoutés plus tard).
+//
+// Courbe de scale RECALCULÉE, plus agressive que la précédente : la demande était
+// explicite (« la difficulté doit monter de plus en plus vite »). Toujours pas de
+// plafond à la Zone 25 : le contenu Dissonance encore en réserve après (voir plus
+// bas) continuera sur la même lancée. Le choix des monstres (tiers croissants)
+// porte toujours l'essentiel de la progression, `scale` affine par-dessus.
+//
+// Monstres/boss réutilisés d'une zone à l'autre (ex: boss_1 sur Zones 5-6) : pattern
+// volontaire, un monstre peut réapparaître en zone adjacente, rescalé, sans que ce
+// soit un bug. Les monstres au thème explicitement Dissonance/Larry restent en
+// réserve, sauf `dieu_fou`/`juge_dissonant` désormais utilisés en toute fin de
+// liste (Zones 24-25) — première incursion volontaire dans cette réserve, le reste
+// (`arme_de_larry`, `harmoniste_corrompu`, `ouroboros`, `talos_reforge`,
+// `horreur_dimensionnelle`, `gardien_verrouille`, `golem_pierre_mythique`,
+// `dragon_corrompu`, `fragment_de_dissonance_mineur`, `heraut_du_silence`,
+// `fragment_de_douleur`, `gardien_erode`) reste tenu en réserve pour plus tard.
+//
+// Boss qui sont des monstres RÉGULIERS (pas d'entrée BOSSES_GEN dédiée) utilisés
+// via le fallback `makeBoss(id) || makeMonster(id)` (voir views/aventure.js) : la
+// majorité des boss à partir de la Zone 7 — pas de réduction de variance ×0.6 des
+// vrais boss sur ces combats-là, un peu plus d'aléatoire, sans gêne. `roi_slime`
+// n'a pas de sprite fourni (sprite: 'placeholder', voir data/enemies.custom.js) —
+// à remplacer dès que l'art sera prêt.
+//
+// REVUE D'ÉQUILIBRAGE v2 2026-07-15 : refonte de la courbe de difficulté (métrique
+// puissance = √(vie·force)·scale). Objectifs : courbe montante stricte (boss et
+// moyenne monotones), boss = pic de sa zone, PALIERS marqués tous les 10 (Z10, Z20
+// = saut ~+40% vs zone précédente là où les autres montent ~+20%, forçant le farm),
+// et la zone post-palier reste AU-DESSUS du palier (Z11>Z10, Z21>Z20 — on ne repart
+// pas sur la trajectoire d'avant le mur). Z25 = capstone final (juge_dissonant très
+// au-dessus de tout). Scales retouchés sur les 25 zones + attrs réhaussés côté data
+// (rats Z2, gobelins bas Z3, chef_bandit, rat_garou, djinn Z9, archimage Z14,
+// golem_pierre Z13, boss_1 Z4/5, golem_sombre Z23, juge_dissonant Z25, ver_terre Z6)
+// — voir enemies.gen.js / enemies.custom.js. Bois ajouté à des mobs mid-zone (Z5/6/8/9).
+// Laissés volontairement : rampes intra-zone trash→élite des zones early (Z1/Z3/Z4,
+// un mob élite tanky par zone) et boss endgame Z18/20/21/22 ≈ top mob (ces boss sont
+// réutilisés comme mobs de la zone suivante, écart <15%, effet domino sinon).
 export const ZONES = [
-  { id: 1, name: 'Cave aux Rats',     difficulty: 'Facile',    scale: 0.25, monsters: ['rat_geant', 'araignee_de_cave', 'reine_des_rats'],          boss: 'boss_0' },
-  { id: 2, name: 'Camp de Gobelins',  difficulty: 'Facile',    scale: 0.40, monsters: ['gobelin_frondeur', 'chef_gobelin', 'sanglier_furieux'],       boss: 'boss_0' },
-  { id: 3, name: 'Bois Sauvages',     difficulty: 'Modéré',    scale: 0.60, monsters: ['loup_affame', 'loup_dissonant', 'araignee_geante'],           boss: 'boss_1' },
-  { id: 4, name: 'Route des Bandits', difficulty: 'Modéré',    scale: 0.80, monsters: ['bandit', 'squelette_guerrier', 'chef_bandit'],                boss: 'boss_1' },
-  { id: 5, name: 'Mines de Pierre',   difficulty: 'Difficile', scale: 1.00, monsters: ['insecte_mineur', 'scorpion_des_sables', 'mini_golem_pierre'], boss: 'boss_2' },
+  { id: 1,  name: 'Marécage de Gelée',      difficulty: 'Facile',        scale: 0.20,  monsters: ['slime_gelatineux', 'slime_vert_enerve', 'slime_bleu', 'slime_bleu_enerve', 'slime_corrosif'],                    boss: 'roi_slime' },
+  { id: 2,  name: 'Cave aux Rats',          difficulty: 'Facile',        scale: 0.42,  monsters: ['rat_geant', 'reine_des_rats', 'rat_gris', 'rat_sauvage', 'rat_brun', 'gros_rat'],                                boss: 'rat_garou' },
+  { id: 3,  name: 'Camp de Gobelins',       difficulty: 'Facile',        scale: 0.52,  monsters: ['gobelin_vulnerable', 'gobelin_recrue', 'gobelin_eclaireur', 'gobelin_frondeur', 'gobelin_chasseur', 'gobelin_champion'], boss: 'boss_0' },
+  { id: 4,  name: 'Bois Sauvages',          difficulty: 'Modéré',        scale: 0.66,  monsters: ['loup_affame', 'loup_dissonant', 'araignee_geante', 'arbre_vivant', 'rat_infecte'],                              boss: 'boss_1' },
+  { id: 5,  name: 'Route des Bandits',      difficulty: 'Modéré',        scale: 0.95,  monsters: ['bandit', 'squelette_guerrier', 'chef_bandit', 'gobelin_assassin', 'gobelin_squelette', 'rat_voleur'],           boss: 'boss_1' },
+  { id: 6,  name: 'Mines de Pierre',        difficulty: 'Difficile',     scale: 1.08,  monsters: ['insecte_mineur', 'scorpion_des_sables', 'mini_golem_pierre', 'ver_terre', 'mini_golem', 'troglodyte'],          boss: 'boss_2' },
+  { id: 7,  name: 'Marais Empoisonné',      difficulty: 'Difficile',     scale: 1.28,  monsters: ['ver_de_racine', 'cultiste_zelote', 'harpie', 'otyugh', 'serpent_marais', 'sangsue_geante'],                    boss: 'geant' },
+  { id: 8,  name: 'Crypte des Oubliés',     difficulty: 'Difficile',     scale: 1.62,  monsters: ['necromancien_apprenti', 'spectre_gemissant', 'momie_gardienne', 'fantome', 'nuee_chauve_souris'],               boss: 'gardien_de_pierre_eterne' },
+  { id: 9,  name: 'Antre Gelée',            difficulty: 'Difficile',     scale: 1.90,  monsters: ['elementaire_eau', 'esprit_glacial', 'initie_de_l_ombre', 'elementaire_glace', 'salamandre_bleue'],              boss: 'djinn' },
+  { id: 10, name: 'Camp Orc',               difficulty: 'Difficile',     scale: 2.60,  monsters: ['orc_berserker', 'garde_automate', 'griffon', 'minotaure_jeune', 'moustique_geant'],                            boss: 'minotaure' },
+  { id: 11, name: 'Cité Engloutie',         difficulty: 'Très difficile',scale: 3.15,  monsters: ['profond_guerrier', 'assassin_de_l_ombre', 'elementaire_de_magma', 'basilic', 'araignee_variante', 'loup_alpha'], boss: 'chimere' },
+  { id: 12, name: 'Sables Hurlants',        difficulty: 'Très difficile',scale: 3.80,  monsters: ['ver_des_sables', 'demon_mineur', 'araignee_geante_variante', 'reptilien'],                                     boss: 'boss_3' },
+  { id: 13, name: 'Bastion en Ruines',      difficulty: 'Très difficile',scale: 4.55,  monsters: ['profond_champion', 'maitre_de_l_ombre', 'le_collecteur', 'automate', 'mimique_coffre'],                        boss: 'golem_pierre' },
+  { id: 14, name: "Repaire de l'Archimage", difficulty: 'Très difficile',scale: 5.40,  monsters: ['archere_elfe', 'esprit_ancien_tourmente', 'oeil_volant'],                                                      boss: 'archimage_dement' },
+  { id: 15, name: 'Cimes des Griffons',     difficulty: 'Extrême',       scale: 6.40,  monsters: ['hydre_des_marais', 'roi_singe_esprit', 'pieuvre_violette'],                                                    boss: 'archange' },
+  { id: 16, name: 'Cathédrale Silencieuse', difficulty: 'Extrême',       scale: 7.55,  monsters: ['roi_barbare', 'spectre_sombre', 'voyageur_sombre'],                                                            boss: 'boss_4' },
+  { id: 17, name: 'Forge Infernale',        difficulty: 'Extrême',       scale: 8.90,  monsters: ['chevalier_eternel', 'roi_barbare', 'forgeron_demon_mineur'],                                                   boss: 'shoggoth' },
+  { id: 18, name: 'Sanctuaire Corrompu',    difficulty: 'Extrême',       scale: 10.50, monsters: ['forgeron_demon', 'chevalier_eternel', 'demon_cornu'],                                                          boss: 'general_demon' },
+  { id: 19, name: 'Pic du Dragon',          difficulty: 'Cauchemar',     scale: 12.40, monsters: ['general_demon', 'forgeron_demon', 'mimique_monstre'],                                                          boss: 'dragon_rouge_ancien' },
+  { id: 20, name: 'Abysses Sombres',        difficulty: 'Cauchemar',     scale: 17.90, monsters: ['dragon_rouge_ancien', 'general_demon', 'chevalier_sombre'],                                                    boss: 'double_sombre' },
+  { id: 21, name: 'Seuil de la Dissonance', difficulty: 'Cauchemar',     scale: 21.20, monsters: ['double_sombre', 'dragon_rouge_ancien'],                                                                         boss: 'griffon_corrompu' },
+  { id: 22, name: 'Faille du Néant',        difficulty: 'Cauchemar',     scale: 26.00, monsters: ['chevalier_sombre', 'griffon_corrompu'],                                                                        boss: 'chevalier_neant' },
+  { id: 23, name: 'Fournaise Abyssale',     difficulty: 'Cauchemar',     scale: 29.50, monsters: ['demon_cornu', 'chevalier_neant'],                                                                               boss: 'golem_sombre' },
+  { id: 24, name: 'Cœur de la Dissonance',  difficulty: 'Cauchemar',     scale: 33.00, monsters: ['golem_sombre', 'chevalier_neant'],                                                                              boss: 'dieu_fou' },
+  { id: 25, name: 'Le Silence Absolu',      difficulty: 'Cauchemar',     scale: 36.50, monsters: ['dieu_fou', 'golem_sombre'],                                                                                     boss: 'juge_dissonant' },
 ];
 
 // Quartiers du village (structure maquette).
@@ -140,8 +211,9 @@ export const VILLAGE = [
   {
     quartier: 'Quartier des Artisans',
     cards: [
-      { id: 'forge',     title: 'Forge',     icon: 'assets/sprites/icons/forge.png',  status: 'Niveau 3',   desc: 'Fabrication Rare' },
-      { id: 'cuisinier', title: 'Cuisinier', icon: 'assets/sprites/icons/cuisine.png', status: 'Disponible', desc: 'Plats de récupération.', full: true },
+      { id: 'forge',      title: 'Forge',      icon: 'assets/sprites/icons/forge.png',  status: 'Niveau 3',   desc: 'Fabrication Rare' },
+      { id: 'cuisinier',  title: 'Cuisinier',  icon: 'assets/sprites/icons/cuisine.png', status: 'Disponible', desc: 'Plats de récupération.', full: true },
+      { id: 'alchimiste', title: 'Alchimiste', icon: 'assets/sprites/potions/potion_violette.png', status: 'Disponible', desc: 'Philtres de combat.', full: true },
     ],
   },
   {
@@ -154,6 +226,7 @@ export const VILLAGE = [
     quartier: 'Quartier Commerçant',
     cards: [
       { id: 'marchand', title: 'Marchand', icon: 'assets/sprites/objets/piece_or.png', status: 'Disponible', desc: 'Échange de biens.', full: true },
+      { id: 'primes',   title: 'Primes',   icon: 'assets/sprites/objets/parchemin_scelle.png', status: 'Disponible', desc: 'Défis quotidiens.', full: true },
     ],
   },
 ];

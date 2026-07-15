@@ -8,6 +8,7 @@
 // revenir 3h plus tard calcule exactement les mêmes cycles que rester sur l'écran
 // (voir game/offlineReport.js pour le rapport affiché à la reconnexion).
 import { state, setState } from '../state.js';
+import { incrementMetric } from './primes.js';
 
 export const MINING_NODES = [
   { id: 'eclat_pierre',     name: 'Éclat de Pierre',  icon: 'assets/sprites/ressources/pierre.png',           levelReq: 1,  duration: 6000,  xp: 8,  resource: 'metal',     amount: 3,  desc: 'Un simple éclat arraché à la roche. Rapide à extraire.' },
@@ -55,6 +56,7 @@ export function creditPending() {
     while (sk.xp >= req) { sk.xp -= req; sk.level += 1; leveledTo = sk.level; req = xpForLevel(sk.level); }
     if (sk.active) sk.active.startedAt += cycles * node.duration; // garde le reliquat sous la durée d'un cycle
   });
+  incrementMetric('miningCycles', cycles); // Primes (game/primes.js)
 
   return { nodeId: node.id, nodeName: node.name, icon: node.icon, cycles, resource: node.resource, resourceGained: node.amount * cycles, xpGained: node.xp * cycles, leveledTo };
 }

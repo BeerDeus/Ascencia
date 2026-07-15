@@ -4,8 +4,8 @@ import { state } from '../state.js';
 import { STATS } from '../config.js';
 import { statRangeFor } from '../game/monsters.js';
 import {
-  codexEntry, discoverableIds, foundIn, dominantAttr, kills, resourceInfoFor,
-  MASTERY_TRACKS, masteryBonuses, ATTR_LABEL,
+  codexEntry, discoverableIds, dominantAttr, kills, resourceEstimateFor,
+  MASTERY_TRACKS, masteryBonuses, ATTR_LABEL, ECLATS_PER_KILL,
 } from '../game/codex.js';
 import { LORE_FRAGMENTS, isUnlocked } from '../game/lore.js';
 
@@ -93,9 +93,9 @@ function buildModal(id, onClose) {
       el('div.codex-sec-title', { text: 'Description' }),
       el('div.codex-sec-body', { text: e.desc || 'Aucune description enregistrée.' }),
     ]),
-    lockedSection('Trouvé dans', 50, k, () => el('div.codex-sec-body', { text: foundIn(id).join(' · ') || 'Inconnu' })),
-    lockedSection('Statistiques de Base', 100, k, () => statsNode(id)),
-    lockedSection('Ressource Premium', 500, k, () => resourceNode(id)),
+    lockedSection('Statistiques de Base', 50, k, () => statsNode(id)),
+    lockedSection('Estimation des Ressources', 100, k, () => resourceEstimateNode(id)),
+    lockedSection('Ressource Premium', 500, k, () => premiumResourceNode()),
     lockedSection('Bonus', 1000, k, () => bonusNode(e)),
     el('button.modal-close', { text: 'Fermer', onclick: onClose }),
   ]);
@@ -119,10 +119,36 @@ function statsNode(id) {
   return el('div.codex-sec-body', { text: `PV ${r.hp[0]}-${r.hp[1]} · Attaque ${r.atk[0]}-${r.atk[1]} · Défense ${r.defense} · Tempo ${r.tempo.toFixed(2)}s` });
 }
 
-function resourceNode(id) {
-  const { lines } = resourceInfoFor(id);
+// Libellés FR des clés de ressources vrac (voir game/items.js RESOURCE_KEYS —
+// pas de dictionnaire partagé pour l'instant, même limitation que combat.js/village.js).
+const RES_KEY_LABEL = { or: 'Or', bois: 'Bois', metal: 'Métal', tissu: 'Tissu', fragments: 'Fragments', eclats_ascension: "Éclats d'Ascension" };
+
+// Palier "Estimation des Ressources" (100 kills) : fourchette indicative des
+// ressources garanties + estimation des drops rares (matériau de famille + loot
+// d'objets). Voir game/codex.js resourceEstimateFor pour le détail du calcul.
+function resourceEstimateNode(id) {
+  const { guaranteed, rare } = resourceEstimateFor(id);
+  const guaranteedTxt = guaranteed.length
+    ? guaranteed.map((l) => `${RES_KEY_LABEL[l.key] || l.key} : ${l.lo === l.hi ? l.lo : `${l.lo} à ${l.hi}`}`).join(' · ')
+    : 'Aucune ressource garantie connue.';
+  const rareTxt = rare.length
+    ? rare.map((r) => `${r.name} : ${r.min === r.max ? r.min : `${r.min} à ${r.max}`} (${Math.round(r.chance * 100)}% de chance)`).join(' · ')
+    : 'Aucun drop rare connu pour l’instant.';
   return el('div', {}, [
-    el('div.codex-sec-body', { text: lines.length ? lines.join(' · ') : 'Aucune ressource spécifique.' }),
+    el('div.codex-sec-body', { text: guaranteedTxt }),
+    el('div.codex-sec-bonus', { text: 'Drops rares (estimation) : ' + rareTxt }),
+  ]);
+}
+
+// Palier "Ressource Premium" (500 kills) : chaque victoire supplémentaire sur ce
+// monstre rapporte désormais aussi des Éclats d'Ascension (voir game/codex.js
+// ECLATS_PER_KILL + game/combat.js onWin()), en plus du passif +1% Trouvaille d'or
+// déjà accordé par codexBonuses().
+function premiumResourceNode() {
+  return el('div', {}, [
+    el('div.codex-sec-body', {
+      text: `Chaque victoire supplémentaire sur cet ennemi rapporte aussi +${ECLATS_PER_KILL} Éclat${ECLATS_PER_KILL > 1 ? 's' : ''} d'Ascension.`,
+    }),
     el('div.codex-sec-bonus', { text: "Passif actif : +1% Trouvaille d'or" }),
   ]);
 }

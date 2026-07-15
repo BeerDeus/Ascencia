@@ -2,7 +2,7 @@
 // Boot en 4 étapes visibles (voir components/bootScreen.js) : app -> connexion
 // internet -> compte (Google/email, écran de login si nécessaire) -> synchronisation
 // cloud (chargement Firestore + rattrapage hors-ligne : Vie, Endurance, Minage).
-import { state, subscribe, resetSave, hydrateFromCloud, save } from './state.js';
+import { state, subscribe, resetSave, hydrateFromCloud, save, hadLocalSave } from './state.js';
 import { renderHeader } from './components/header.js';
 import { renderMainNav } from './components/navbar.js';
 import { renderFab } from './components/fab.js';
@@ -19,7 +19,7 @@ import { mountBootScreen } from './components/bootScreen.js';
 import { mountLoginScreen } from './components/loginScreen.js';
 import { showOfflineReportModal } from './components/offlineReportModal.js';
 import { mountToasts } from './components/toast.js';
-import { setNotification, notificationsApi } from './game/notifications.js';
+import { notificationsApi } from './game/notifications.js';
 
 async function start() {
   const overlay = document.getElementById('boot-overlay');
@@ -59,10 +59,18 @@ async function start() {
   let report = null;
   try {
     const cloudData = await loadCloudSave(user.uid);
-    const cloudLastSeen = (cloudData && cloudData.meta && cloudData.meta.lastSeen) || state.meta.lastSeen;
+    const cloudLastSeen = (cloudData && cloudData.meta && cloudData.meta.lastSeen) || 0;
+    const localLastSeen = state.meta.lastSeen; // capturé AVANT hydratation (state = local, voir state.js)
     const isFirstSync = !cloudData;
-    hydrateFromCloud(cloudData); // fusionne la sauvegarde distante AVANT tout rattrapage
-    report = buildOfflineReport(cloudLastSeen); // Vie + Endurance + Minage, voir game/offlineReport.js
+    // Ne fusionner le cloud QUE s'il est réellement plus récent que le local, ou s'il
+    // n'existe aucune sauvegarde locale (nouvel appareil). Sinon un cloud périmé
+    // (autosave toutes les 25s, voir firebase/sync.js) peut écraser un état local plus
+    // frais — ex : minage arrêté puis rafraîchissement de page avant le prochain push
+    // cloud, le deepMerge ressuscitait `skills.mining.active` depuis le cloud. Bug
+    // corrigé le 2026-07-15.
+    const shouldHydrate = !hadLocalSave || cloudLastSeen > localLastSeen;
+    if (shouldHydrate) hydrateFromCloud(cloudData); // fusionne la sauvegarde distante AVANT tout rattrapage
+    report = buildOfflineReport(shouldHydrate ? cloudLastSeen : localLastSeen); // Vie + Endurance + Minage, voir game/offlineReport.js
     save(); // re-persiste l'état rattrapé (nouveau meta.lastSeen) avant de démarrer l'auto-sync
     startAutoSync(user.uid);
     if (isFirstSync) flushNow(); // 1ère sauvegarde cloud immédiate (pas d'attente du minuteur de 25s)
@@ -87,12 +95,6 @@ function mountApp() {
   const drawFab = () => renderFab(app, state, navigate);
 
   recomputeBonuses(state.player); // resync des bonus d'équipement (rattrapage hors-ligne déjà fait dans start())
-
-  // Notification de TEST (badge Village + Forge) — les vraies conditions de
-  // déclenchement (quête dispo, craft prêt, etc.) seront branchées plus tard ; pour
-  // l'instant ça démontre juste le système (voir game/notifications.js). À retirer
-  // une fois de vrais triggers en place.
-  setNotification('village', 'forge');
 
   mountToasts(app);
   renderHeader(header);

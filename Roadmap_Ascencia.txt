@@ -16,7 +16,7 @@ PHASE 2 : MOTEUR DE COMBAT ET JAUGES DE TEMPO — [FAIT]
 - Tâche 2.3 : [FAIT] Module de calcul des dégâts (attaque, défense, esquive, critique).
 - Tâche 2.4 : [FAIT] Panneau de Logs textuels (auto-défilant).
 - Tâche 2.5 : [FAIT] Sprites ennemis dans l'UI de combat.
-- Tâche 2.6 : [FAIT] Structure de Zones (5 zones à ce jour, difficulté croissante).
+- Tâche 2.6 : [FAIT, étendu 2026-07-15 x2] Structure de Zones — 25 zones désormais (5 → 20 → 25), difficulté croissante et de plus en plus rapide (scale 0.20→26.50). Réorganisation suite à l'arrivée de ~65 nouveaux sprites : Zone 1 = zone 100% Slime (Roi Slime en boss, placeholder), Zone 2 = famille Rat complète, Zone 3 = famille Gobelin complète (boss_0 inchangé) — ce qui a décalé les anciennes Zones 3-5 en 4-6 et tout le reste d'autant (voir game/lore.js, checks Récits Acte I recalés en conséquence). 4 zones toutes neuves en fin de liste (22-25), dont les 2 dernières piochent pour la première fois dans la réserve Dissonance/Larry (`dieu_fou`, `juge_dissonant`) — le reste de cette réserve (~13 monstres) reste tenu pour plus tard. Voir game/data/enemies.custom.js pour le détail des ~65 monstres hand-authored (auto-généré = interdit d'édition manuelle). Seul `roi_slime` reste en placeholder (pas de sprite fourni).
 - Tâche 2.7 : [FAIT] Interface de Zone <-> Interface de Combat (bascule).
 - Tâche 2.8 : [FAIT] Progression 10x/monstre + Boss -> déblocage zone suivante ; auto-battle par monstre.
 
@@ -39,7 +39,7 @@ PHASE 4 : SYSTÈME D'IDLE, AUTO-BATTLE ET ENDURANCE — [FAIT]
 PHASE 5 : MÉTHODES DE FARMING & L'INSTABILITÉ DE LARRY — [PARTIEL]
 --------------------------------------------------------------------------------
 - Tâche 5.1 : [FAIT, périmètre revu] Inventaire + Loot : ressources (resourceLoot) + matériaux de famille OK. Décision produit : pas de loot table d'équipement (armes/armures) sur les monstres — toute acquisition d'équipement passe par le craft (Forge, voir Tâche 5.2/10.2, catalogue complet). Les items.gen.js `loot` restants (matériaux uniquement) suffisent pour la Forge.
-- Tâche 5.2 : [PARTIEL] Village : Forge (catalogue complet, filtres Type/Rareté/Stat) et Cuisine (craft) + Marchand (achat/vente, quantités multiples) + Minage (voir Phase 7) implémentés. Alchimiste dédié et Primes (défis quotidiens) : PAS FAIT.
+- Tâche 5.2 : [FAIT] Village : Forge (catalogue complet, filtres Type/Rareté/Stat), Cuisine (craft), Alchimiste (potions de buff temporaire : Attaque/Critique/Esquive, voir game/player.js potionBonuses()) + Marchand (achat/vente, quantités multiples) + Minage (voir Phase 7) implémentés. Primes (3 défis quotidiens tirés d'un pool de 7, reset par date, voir game/primes.js) : FAIT.
 - Tâche 5.3 : [FAIT] L'Instabilité de Larry (10% de spawn variante sur les monstres réguliers, jamais les boss — voir game/monsters.js LARRY_AFFIXES/rollLarryAffix/applyLarryAffix). 3 affixes générés : Dissonant (stats+résistance+butin Dissonance), Zébré (Tempo erratique+esquive), Instable (gros dégâts/crit mais PV réduits). Stats/loot/nom mutés au lancement du combat (combat.js start()), halo violet Dissonance en combat (CSS .larry-name/.larry-sprite).
 - Tâche 5.4 : [FAIT, non prévu initialement] Capacité de sac achetable (inventorySlots croissants, achat via or).
 

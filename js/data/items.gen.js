@@ -5,7 +5,7 @@ export const ITEMS_GEN = {
   "name": "Anneau simple",
   "kind": "accessoire",
   "rarity": "common",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/anneau_simple.png",
   "stats": {
    "chance": 2
   },
@@ -19,7 +19,7 @@ export const ITEMS_GEN = {
   "name": "Bottes usagées",
   "kind": "pieds",
   "rarity": "common",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_usagees.png",
   "stats": {
    "agilite": 1,
    "defense": 1
@@ -35,7 +35,7 @@ export const ITEMS_GEN = {
   "name": "Bracelet de force",
   "kind": "accessoire",
   "rarity": "common",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/bracelet_de_force.png",
   "stats": {
    "force": 1
   },
@@ -49,7 +49,7 @@ export const ITEMS_GEN = {
   "name": "Casque en cuir usé",
   "kind": "tete",
   "rarity": "common",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/casque_en_cuir_use.png",
   "stats": {
    "vie": 3,
    "defense": 1
@@ -65,7 +65,7 @@ export const ITEMS_GEN = {
   "name": "Ceinture en corde",
   "kind": "accessoire",
   "rarity": "common",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/ceinture_en_corde.png",
   "stats": {
    "vie": 2
   },
@@ -79,7 +79,7 @@ export const ITEMS_GEN = {
   "name": "Heaume de bois",
   "kind": "tete",
   "rarity": "common",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/heaume_de_bois.png",
   "stats": {
    "defense": 2
   },
@@ -93,7 +93,7 @@ export const ITEMS_GEN = {
   "name": "Jambières de voyageur",
   "kind": "jambes",
   "rarity": "common",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/jambieres_de_voyageur.png",
   "stats": {
    "vie": 3
   },
@@ -107,7 +107,7 @@ export const ITEMS_GEN = {
   "name": "Pantalon de paysan",
   "kind": "jambes",
   "rarity": "common",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/pantalon_de_paysan.png",
   "stats": {
    "agilite": 1,
    "vie": 1
@@ -122,7 +122,7 @@ export const ITEMS_GEN = {
   "name": "Protège-tibias en cuir",
   "kind": "jambes",
   "rarity": "common",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/protege_tibias_en_cuir.png",
   "stats": {
    "defense": 2
   },
@@ -137,7 +137,7 @@ export const ITEMS_GEN = {
   "name": "Tunique déchirée",
   "kind": "torse",
   "rarity": "common",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/tunique_dechiree.png",
   "stats": {
    "vie": 4
   },
@@ -151,7 +151,7 @@ export const ITEMS_GEN = {
   "name": "Ceinture en cuir simple",
   "kind": "accessoire",
   "rarity": "common",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/ceinture_en_cuir_simple.png",
   "stats": {
    "vie": 3
   },
@@ -165,7 +165,7 @@ export const ITEMS_GEN = {
   "name": "Sandales usées",
   "kind": "pieds",
   "rarity": "common",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/sandales_usees.png",
   "stats": {
    "agilite": 1
   },
@@ -179,7 +179,7 @@ export const ITEMS_GEN = {
   "name": "Jambières en tissu rapiécé",
   "kind": "jambes",
   "rarity": "common",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/jambieres_en_tissu_rapiece.png",
   "stats": {
    "defense": 1,
    "vie": 1
@@ -194,7 +194,7 @@ export const ITEMS_GEN = {
   "name": "Épée rouillée",
   "kind": "arme",
   "rarity": "common",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/epee_rouillee.png",
   "stats": {
    "force": 2
   },
@@ -213,7 +213,7 @@ export const ITEMS_GEN = {
   "name": "Gourdin simple",
   "kind": "arme",
   "rarity": "common",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/gourdin_simple.png",
   "stats": {
    "force": 3,
    "agilite": -1
@@ -233,7 +233,7 @@ export const ITEMS_GEN = {
   "name": "Gants de travail",
   "kind": "mains",
   "rarity": "common",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/gants_de_travail.png",
   "stats": {
    "force": 1,
    "chance": 1
@@ -250,7 +250,7 @@ export const ITEMS_GEN = {
   "name": "Targe en bois",
   "kind": "arme",
   "rarity": "common",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/targe_en_bois.png",
   "stats": {
    "defense": 2,
    "agilite": -1
@@ -270,7 +270,7 @@ export const ITEMS_GEN = {
   "name": "Brassards en cuir",
   "kind": "mains",
   "rarity": "common",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/brassards_en_cuir.png",
   "stats": {
    "force": 1,
    "defense": 1
@@ -286,7 +286,7 @@ export const ITEMS_GEN = {
   "name": "Plastron de cuir brut",
   "kind": "torse",
   "rarity": "common",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/plastron_de_cuir_brut.png",
   "stats": {
    "force": 1,
    "defense": 1
@@ -303,7 +303,7 @@ export const ITEMS_GEN = {
   "name": "Dague ébréchée",
   "kind": "arme",
   "rarity": "common",
-  "icon": "🏹",
+  "icon": "assets/sprites/equipements/dague_ebrechee.png",
   "stats": {
    "agilite": 2
   },
@@ -322,7 +322,7 @@ export const ITEMS_GEN = {
   "name": "Gants en tissu",
   "kind": "mains",
   "rarity": "common",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/gants_en_tissu.png",
   "stats": {
    "agilite": 1
   },
@@ -337,7 +337,7 @@ export const ITEMS_GEN = {
   "name": "Carquois simple",
   "kind": "accessoire",
   "rarity": "common",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/carquois_simple.png",
   "stats": {
    "agilite": 2
   },
@@ -353,7 +353,7 @@ export const ITEMS_GEN = {
   "name": "Pourpoint en cuir",
   "kind": "torse",
   "rarity": "common",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/pourpoint_en_cuir.png",
   "stats": {
    "agilite": 1,
    "defense": 1
@@ -369,7 +369,7 @@ export const ITEMS_GEN = {
   "name": "Capuche de rôdeur simple",
   "kind": "tete",
   "rarity": "common",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/capuche_de_rodeur_simple.png",
   "stats": {
    "agilite": 2
   },
@@ -403,7 +403,7 @@ export const ITEMS_GEN = {
   "name": "Bottes de paille",
   "kind": "pieds",
   "rarity": "common",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_de_paille.png",
   "stats": {
    "intelligence": 1
   },
@@ -418,7 +418,7 @@ export const ITEMS_GEN = {
   "name": "Chemise de lin",
   "kind": "torse",
   "rarity": "common",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/chemise_de_lin.png",
   "stats": {
    "intelligence": 1,
    "chance": 1
@@ -434,7 +434,7 @@ export const ITEMS_GEN = {
   "name": "Pendentif en os",
   "kind": "accessoire",
   "rarity": "common",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/pendentif_en_os.png",
   "stats": {
    "intelligence": 2,
    "vie": -1
@@ -450,7 +450,7 @@ export const ITEMS_GEN = {
   "name": "Vieux chapeau pointu",
   "kind": "tete",
   "rarity": "common",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/vieux_chapeau_pointu.png",
   "stats": {
    "intelligence": 2
   },
@@ -465,7 +465,7 @@ export const ITEMS_GEN = {
   "name": "Circlet d'apprenti",
   "kind": "tete",
   "rarity": "common",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/circlet_d_apprenti.png",
   "stats": {
    "intelligence": 1,
    "vie": 1
@@ -481,7 +481,7 @@ export const ITEMS_GEN = {
   "name": "Robe simple",
   "kind": "torse",
   "rarity": "common",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/robe_simple.png",
   "stats": {
    "intelligence": 2
   },
@@ -496,7 +496,7 @@ export const ITEMS_GEN = {
   "name": "Mitaines d'apprenti",
   "kind": "mains",
   "rarity": "common",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/mitaines_d_apprenti.png",
   "stats": {
    "intelligence": 1
   },
@@ -511,7 +511,7 @@ export const ITEMS_GEN = {
   "name": "Chausses de novice",
   "kind": "jambes",
   "rarity": "common",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/chausses_de_novice.png",
   "stats": {
    "intelligence": 1,
    "vie": 2
@@ -527,7 +527,7 @@ export const ITEMS_GEN = {
   "name": "Armure légère",
   "kind": "torse",
   "rarity": "uncommon",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/armure_legere.png",
   "stats": {
    "vie": 6,
    "defense": 1
@@ -543,7 +543,7 @@ export const ITEMS_GEN = {
   "name": "Bottes de marche",
   "kind": "pieds",
   "rarity": "uncommon",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_de_marche.png",
   "stats": {
    "agilite": 2,
    "defense": 1
@@ -559,7 +559,7 @@ export const ITEMS_GEN = {
   "name": "Bottes fourrées",
   "kind": "pieds",
   "rarity": "uncommon",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_fourrees.png",
   "stats": {
    "vie": 4,
    "agilite": -1
@@ -575,7 +575,7 @@ export const ITEMS_GEN = {
   "name": "Jambières renforcées",
   "kind": "jambes",
   "rarity": "uncommon",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/jambieres_renforcees.png",
   "stats": {
    "vie": 3,
    "defense": 3
@@ -606,7 +606,7 @@ export const ITEMS_GEN = {
   "name": "Talisman de vitalité",
   "kind": "accessoire",
   "rarity": "uncommon",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/talisman_de_vitalite.png",
   "stats": {
    "vie": 5
   },
@@ -621,7 +621,7 @@ export const ITEMS_GEN = {
   "name": "Trèfle à quatre feuilles",
   "kind": "accessoire",
   "rarity": "uncommon",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/trefle_a_quatre_feuilles.png",
   "stats": {
    "chance": 5
   },
@@ -635,7 +635,7 @@ export const ITEMS_GEN = {
   "name": "Pendentif de chance",
   "kind": "accessoire",
   "rarity": "uncommon",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/pendentif_de_chance.png",
   "stats": {
    "chance": 4,
    "vie": 1
@@ -650,7 +650,7 @@ export const ITEMS_GEN = {
   "name": "Bottes de voyageur aguerri",
   "kind": "pieds",
   "rarity": "uncommon",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_de_voyageur_aguerri.png",
   "stats": {
    "vie": 3,
    "defense": 2
@@ -665,7 +665,7 @@ export const ITEMS_GEN = {
   "name": "Bouclier de tour en bois",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/bouclier_de_tour_en_bois.png",
   "stats": {
    "defense": 4,
    "force": -2
@@ -686,7 +686,7 @@ export const ITEMS_GEN = {
   "name": "Casque en fer",
   "kind": "tete",
   "rarity": "uncommon",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/casque_en_fer.png",
   "stats": {
    "defense": 3,
    "agilite": -1
@@ -702,7 +702,7 @@ export const ITEMS_GEN = {
   "name": "Gantelets cloutés",
   "kind": "mains",
   "rarity": "uncommon",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/gantelets_cloutes.png",
   "stats": {
    "force": 3,
    "defense": 1
@@ -719,7 +719,7 @@ export const ITEMS_GEN = {
   "name": "Hache de bûcheron",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/hache_de_bucheron.png",
   "stats": {
    "force": 4,
    "vie": 2
@@ -755,7 +755,7 @@ export const ITEMS_GEN = {
   "name": "Lance de milicien",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/lance_de_milicien.png",
   "stats": {
    "force": 3,
    "defense": 2
@@ -776,7 +776,7 @@ export const ITEMS_GEN = {
   "name": "Hache de guerre en fer",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/hache_de_guerre_en_fer.png",
   "stats": {
    "force": 5,
    "defense": 1
@@ -797,7 +797,7 @@ export const ITEMS_GEN = {
   "name": "Plastron de mercenaire",
   "kind": "torse",
   "rarity": "uncommon",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/plastron_de_mercenaire.png",
   "stats": {
    "vie": 8,
    "defense": 2
@@ -814,7 +814,7 @@ export const ITEMS_GEN = {
   "name": "Casque de soldat du front",
   "kind": "tete",
   "rarity": "uncommon",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/casque_de_soldat_du_front.png",
   "stats": {
    "force": 3,
    "vie": 4
@@ -831,7 +831,7 @@ export const ITEMS_GEN = {
   "name": "Arc court",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🏹",
+  "icon": "assets/sprites/equipements/arc_court.png",
   "stats": {
    "agilite": 4
   },
@@ -850,7 +850,7 @@ export const ITEMS_GEN = {
   "name": "Cape de voyage",
   "kind": "torse",
   "rarity": "uncommon",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/cape_de_voyage.png",
   "stats": {
    "agilite": 2,
    "chance": 2
@@ -866,7 +866,7 @@ export const ITEMS_GEN = {
   "name": "Capuche d'éclaireur",
   "kind": "tete",
   "rarity": "uncommon",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/capuche_d_eclaireur.png",
   "stats": {
    "agilite": 3,
    "defense": 1
@@ -883,7 +883,7 @@ export const ITEMS_GEN = {
   "name": "Gants de pickpocket",
   "kind": "mains",
   "rarity": "uncommon",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/gants_de_pickpocket.png",
   "stats": {
    "agilite": 2,
    "chance": 2
@@ -899,7 +899,7 @@ export const ITEMS_GEN = {
   "name": "Arc de chasseur",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🏹",
+  "icon": "assets/sprites/equipements/arc_de_chasseur.png",
   "stats": {
    "agilite": 5,
    "chance": 1
@@ -935,7 +935,7 @@ export const ITEMS_GEN = {
   "name": "Jambières de hors-la-loi",
   "kind": "jambes",
   "rarity": "uncommon",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/jambieres_de_hors_la_loi.png",
   "stats": {
    "agilite": 3,
    "chance": 3
@@ -951,7 +951,7 @@ export const ITEMS_GEN = {
   "name": "Amulette de l'érudit",
   "kind": "accessoire",
   "rarity": "uncommon",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/amulette_de_l_erudit.png",
   "stats": {
    "intelligence": 5
   },
@@ -967,7 +967,7 @@ export const ITEMS_GEN = {
   "name": "Catalyseur arcanique",
   "kind": "accessoire",
   "rarity": "uncommon",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/catalyseur_arcanique.png",
   "stats": {
    "intelligence": 3,
    "chance": 2
@@ -984,7 +984,7 @@ export const ITEMS_GEN = {
   "name": "Fouet d'initié",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🪄",
+  "icon": "assets/sprites/equipements/fouet_d_initie.png",
   "stats": {
    "intelligence": 4
   },
@@ -1003,7 +1003,7 @@ export const ITEMS_GEN = {
   "name": "Sceptre de novice",
   "kind": "arme",
   "rarity": "uncommon",
-  "icon": "🪄",
+  "icon": "assets/sprites/equipements/sceptre_de_novice.png",
   "stats": {
    "intelligence": 5,
    "vie": 1
@@ -1024,7 +1024,7 @@ export const ITEMS_GEN = {
   "name": "Robe d'adepte",
   "kind": "torse",
   "rarity": "uncommon",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/robe_d_adepte.png",
   "stats": {
    "intelligence": 3,
    "vie": 5
@@ -1070,7 +1070,7 @@ export const ITEMS_GEN = {
   "name": "Casque de soldat",
   "kind": "tete",
   "rarity": "rare",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/casque_de_soldat.png",
   "stats": {
    "vie": 5,
    "defense": 2
@@ -1155,7 +1155,7 @@ export const ITEMS_GEN = {
   "name": "Espadon de mercenaire",
   "kind": "arme",
   "rarity": "rare",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/espadon_de_mercenaire.png",
   "stats": {
    "force": 9,
    "agilite": -2
@@ -1175,7 +1175,7 @@ export const ITEMS_GEN = {
   "name": "Hallebarde de la garde",
   "kind": "arme",
   "rarity": "rare",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/hallebarde_de_la_garde.png",
   "stats": {
    "force": 8,
    "defense": 1
@@ -1230,7 +1230,7 @@ export const ITEMS_GEN = {
   "name": "Longue épée de chevalier",
   "kind": "arme",
   "rarity": "rare",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/longue_epee_de_chevalier.png",
   "stats": {
    "force": 7,
    "vie": 4
@@ -1299,7 +1299,7 @@ export const ITEMS_GEN = {
   "name": "Marteau de guerre",
   "kind": "arme",
   "rarity": "rare",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/marteau_de_guerre.png",
   "stats": {
    "force": 10,
    "agilite": -2
@@ -1387,7 +1387,7 @@ export const ITEMS_GEN = {
   "name": "Masque du filou",
   "kind": "tete",
   "rarity": "rare",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/masque_du_filou.png",
   "stats": {
    "chance": 7,
    "defense": -1
@@ -1437,7 +1437,7 @@ export const ITEMS_GEN = {
   "name": "Masque de franc-tireur",
   "kind": "tete",
   "rarity": "rare",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/masque_de_franc_tireur.png",
   "stats": {
    "agilite": 7
   },
@@ -1453,7 +1453,7 @@ export const ITEMS_GEN = {
   "name": "Amulette de la fortune",
   "kind": "accessoire",
   "rarity": "rare",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/amulette_de_la_fortune.png",
   "stats": {
    "chance": 6,
    "intelligence": 2
@@ -1470,7 +1470,7 @@ export const ITEMS_GEN = {
   "name": "Broche du diplomate",
   "kind": "accessoire",
   "rarity": "rare",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/broche_du_diplomate.png",
   "stats": {
    "intelligence": 8,
    "chance": 4
@@ -1487,7 +1487,7 @@ export const ITEMS_GEN = {
   "name": "Manteau de l'illusionniste",
   "kind": "torse",
   "rarity": "rare",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/manteau_de_l_illusionniste.png",
   "stats": {
    "intelligence": 6,
    "agilite": 4
@@ -1577,7 +1577,7 @@ export const ITEMS_GEN = {
   "name": "Bague de lutteur",
   "kind": "accessoire",
   "rarity": "rare",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/bague_de_lutteur.png",
   "stats": {
    "force": 5,
    "agilite": 5
@@ -1682,7 +1682,7 @@ export const ITEMS_GEN = {
   "name": "Corne de guerre du berserker",
   "kind": "accessoire",
   "rarity": "epic",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/corne_de_guerre_du_berserker.png",
   "stats": {
    "force": 10,
    "defense": -3
@@ -1699,7 +1699,7 @@ export const ITEMS_GEN = {
   "name": "Gantelets de Fureur",
   "kind": "mains",
   "rarity": "epic",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/gantelets_de_fureur.png",
   "stats": {
    "force": 9,
    "defense": 1
@@ -1716,7 +1716,7 @@ export const ITEMS_GEN = {
   "name": "Grèves du Défenseur",
   "kind": "jambes",
   "rarity": "epic",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/greves_du_defenseur.png",
   "stats": {
    "vie": 12,
    "defense": 2
@@ -1733,7 +1733,7 @@ export const ITEMS_GEN = {
   "name": "Lame du crépuscule",
   "kind": "arme",
   "rarity": "epic",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/lame_du_crepuscule.png",
   "stats": {
    "force": 12,
    "agilite": 7,
@@ -1755,7 +1755,7 @@ export const ITEMS_GEN = {
   "name": "Heaume du Juggernaut",
   "kind": "tete",
   "rarity": "epic",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/heaume_du_juggernaut.png",
   "stats": {
    "force": 8,
    "vie": 12,
@@ -1773,7 +1773,7 @@ export const ITEMS_GEN = {
   "name": "Hache de bourreau",
   "kind": "arme",
   "rarity": "epic",
-  "icon": "🗡️",
+  "icon": "assets/sprites/equipements/hache_de_bourreau.png",
   "stats": {
    "force": 20
   },
@@ -1793,7 +1793,7 @@ export const ITEMS_GEN = {
   "name": "Arc de chasseur d'ombres",
   "kind": "arme",
   "rarity": "epic",
-  "icon": "🏹",
+  "icon": "assets/sprites/equipements/arc_de_chasseur_d_ombres.png",
   "stats": {
    "agilite": 12,
    "force": 4,
@@ -1815,7 +1815,7 @@ export const ITEMS_GEN = {
   "name": "Bottes de l'Écho",
   "kind": "pieds",
   "rarity": "epic",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_de_l_echo.png",
   "stats": {
    "agilite": 8,
    "chance": 5
@@ -1832,7 +1832,7 @@ export const ITEMS_GEN = {
   "name": "Dagues de l'ombre dansante",
   "kind": "arme",
   "rarity": "epic",
-  "icon": "🏹",
+  "icon": "assets/sprites/equipements/dagues_de_l_ombre_dansante.png",
   "stats": {
    "agilite": 15,
    "chance": 5,
@@ -1854,7 +1854,7 @@ export const ITEMS_GEN = {
   "name": "Jambières de l'assassin",
   "kind": "jambes",
   "rarity": "epic",
-  "icon": "👖",
+  "icon": "assets/sprites/equipements/jambieres_de_l_assassin.png",
   "stats": {
    "agilite": 10,
    "force": 4
@@ -1871,7 +1871,7 @@ export const ITEMS_GEN = {
   "name": "Sandales ailées",
   "kind": "pieds",
   "rarity": "epic",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/sandales_ailees.png",
   "stats": {
    "agilite": 12,
    "defense": -2
@@ -1888,7 +1888,7 @@ export const ITEMS_GEN = {
   "name": "Arc long en if",
   "kind": "arme",
   "rarity": "epic",
-  "icon": "🏹",
+  "icon": "assets/sprites/equipements/arc_long_en_if.png",
   "stats": {
    "agilite": 18
   },
@@ -1908,7 +1908,7 @@ export const ITEMS_GEN = {
   "name": "Bottes de l'arpenteur silencieux",
   "kind": "pieds",
   "rarity": "epic",
-  "icon": "🥾",
+  "icon": "assets/sprites/equipements/bottes_de_l_arpenteur_silencieux.png",
   "stats": {
    "agilite": 10,
    "chance": 8
@@ -1940,7 +1940,7 @@ export const ITEMS_GEN = {
   "name": "Diadème de l'Archimage",
   "kind": "tete",
   "rarity": "epic",
-  "icon": "🪖",
+  "icon": "assets/sprites/equipements/diadème_de_l_archimage.png",
   "stats": {
    "intelligence": 15,
    "vie": -5
@@ -1957,7 +1957,7 @@ export const ITEMS_GEN = {
   "name": "Grimoire des arcanes",
   "kind": "arme",
   "rarity": "epic",
-  "icon": "🪄",
+  "icon": "assets/sprites/equipements/grimoire_des_arcanes.png",
   "stats": {
    "intelligence": 12,
    "vie": 6,
@@ -1979,7 +1979,7 @@ export const ITEMS_GEN = {
   "name": "Mantelet du stratège",
   "kind": "torse",
   "rarity": "epic",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/mantelet_du_stratege.png",
   "stats": {
    "intelligence": 10,
    "defense": 2
@@ -1996,7 +1996,7 @@ export const ITEMS_GEN = {
   "name": "Robe de l'érudit de guerre",
   "kind": "torse",
   "rarity": "epic",
-  "icon": "🦺",
+  "icon": "assets/sprites/equipements/robe_de_l_erudit_de_guerre.png",
   "stats": {
    "intelligence": 12,
    "defense": 4,
@@ -2014,7 +2014,7 @@ export const ITEMS_GEN = {
   "name": "Talisman de mana",
   "kind": "accessoire",
   "rarity": "epic",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/talisman_de_mana.png",
   "stats": {
    "intelligence": 10
   },
@@ -2030,7 +2030,7 @@ export const ITEMS_GEN = {
   "name": "Gant du savoir",
   "kind": "mains",
   "rarity": "epic",
-  "icon": "🧤",
+  "icon": "assets/sprites/equipements/gant_du_savoir.png",
   "stats": {
    "intelligence": 7,
    "vie": 4
@@ -3237,7 +3237,7 @@ export const ITEMS_GEN = {
   "name": "Pendentif Spectral",
   "kind": "accessoire",
   "rarity": "rare",
-  "icon": "💍",
+  "icon": "assets/sprites/equipements/pendentif_spectral.png",
   "stats": {
    "intelligence": 7
   },

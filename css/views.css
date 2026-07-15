@@ -142,6 +142,23 @@
 .tempo-wrap { margin-top: var(--sp-3); display: flex; flex-direction: column; gap: 8px; }
 .gaugeblock .gauge .fill { transition: width 80ms linear; }
 
+/* Buffs de Potion actifs en combat (Alchimiste) : icône + anneau "chrono" en
+   conic-gradient, se vide au fil du temps restant. --frac = % de baseMs restant. */
+.combat-buffs { display: flex; gap: 8px; }
+.buff-badge { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+.buff-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--gold) calc(var(--frac, 100) * 1%), rgba(255,255,255,0.12) 0);
+  transition: background 0.2s linear;
+}
+.buff-badge .buff-icon {
+  position: absolute; inset: 3px; border-radius: 50%;
+  object-fit: cover; background: var(--bg-inset); border: 1px solid var(--border-soft);
+}
+.buff-badge.low .buff-ring { background: conic-gradient(#e0405a calc(var(--frac, 100) * 1%), rgba(255,255,255,0.12) 0); }
+.buff-badge.low { animation: buff-pulse 0.8s ease-in-out infinite; }
+@keyframes buff-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
 .combat-log {
   margin-top: var(--sp-4);
   background: var(--bg-inset);

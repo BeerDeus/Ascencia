@@ -1,8 +1,11 @@
 // ===== Récits (Fragments d'Écho) — Acte I, adapté de "Lore Ascencia.txt" =====
-// Contenu volontairement limité à l'Acte I : le jeu ne propose actuellement que les
-// Zones 1-5 (voir config.js ZONES). Chaque fragment se débloque via une condition
-// vérifiable sur l'état courant et octroie un bonus permanent — même logique que
-// Maîtrise (game/codex.js) : bonus dérivés à la volée, jamais stockés.
+// Contenu volontairement limité à l'Acte I : les zones vont maintenant jusqu'à 20
+// (voir config.js ZONES) mais ces 7 fragments ne couvrent narrativement que le tout
+// début du jeu (Zones 1-5) — Tâche 7.4 de la Roadmap : étendre aux Actes suivants au
+// fur et à mesure que du contenu de zone plus tardif existe. Chaque fragment se
+// débloque via une condition vérifiable sur l'état courant et octroie un bonus
+// permanent — même logique que Maîtrise (game/codex.js) : bonus dérivés à la volée,
+// jamais stockés.
 import { state } from '../state.js';
 
 const totalKills = (wins) => Object.values(wins || {}).reduce((s, v) => s + v, 0);
@@ -32,7 +35,10 @@ export const LORE_FRAGMENTS = [
     chapter: 3,
     title: 'Le Forgeron Disparu',
     unlockLabel: 'Vaincre le Grand Gobelin Grognon',
-    check: (s) => (s.progress.unlocked || 1) >= 3,
+    // Décalé à >=4 le 2026-07-15 (réorg zones : boss_0 "Grand Gobelin Grognon" est
+    // maintenant exclusivement en Zone 3 "Camp de Gobelins", pas Zone 2 — voir
+    // config.js ZONES). unlocked>=4 = zone 3 (donc son boss) déjà vaincue.
+    check: (s) => (s.progress.unlocked || 1) >= 4,
     text: "Kaelen, le forgeron du village, a disparu — enlevé par une bande de gobelins. Vous le retrouvez au cœur de leur camp, non pas torturé, mais observé : les créatures, fascinées, tripotent ses outils comme si elles cherchaient à accorder un instrument. Une fois leur chef abattu et Kaelen libéré, celui-ci vous explique que ce manège a commencé après la découverte d'un étrange minerai dans une mine abandonnée.",
     reward: { flat: { force: 1 } }, rewardTxt: '+1 Force',
   },
@@ -40,8 +46,9 @@ export const LORE_FRAGMENTS = [
     id: 'ch4_mine_murmurante',
     chapter: 4,
     title: 'La Mine Murmurante',
-    unlockLabel: 'Atteindre les Mines de Pierre (Zone 5)',
-    check: (s) => (s.progress.unlocked || 1) >= 5,
+    unlockLabel: 'Atteindre les Mines de Pierre (Zone 6)',
+    // Décalé à >=6 le 2026-07-15 (Mines de Pierre est maintenant Zone 6, pas 5).
+    check: (s) => (s.progress.unlocked || 1) >= 6,
     text: "Poussé par la curiosité de Kaelen, vous vous enfoncez dans la Mine Murmurante. À l'intérieur, la pierre elle-même semble gémir. Plus vous progressez, plus l'air se charge d'une énergie ancienne, comme si quelque chose de très vieux et de très puissant montait la garde tout au fond des galeries.",
     reward: { flat: { defense: 1 } }, rewardTxt: '+1 Défense',
   },
@@ -50,7 +57,9 @@ export const LORE_FRAGMENTS = [
     chapter: 5,
     title: "Le Fragment d'Écho",
     unlockLabel: 'Vaincre le Dragonnet de Feu',
-    check: (s) => !!(s.progress.bossDefeated && s.progress.bossDefeated[5]),
+    // Décalé à [6] le 2026-07-15 (Dragonnet de Feu, boss_2, est maintenant le boss
+    // de la Zone 6, pas 5).
+    check: (s) => !!(s.progress.bossDefeated && s.progress.bossDefeated[6]),
     text: "Au plus profond de la mine, un gardien ancestral se dresse, entièrement corrompu par la Dissonance. Le combat est rude, mais à sa défaite, la créature s'effondre et révèle en son cœur un cristal pur : un Fragment d'Écho. À son contact, une vision vous submerge — celle d'une étoile se brisant dans un silence absolu.",
     reward: { flat: { intelligence: 1 } }, rewardTxt: '+1 Intelligence',
   },

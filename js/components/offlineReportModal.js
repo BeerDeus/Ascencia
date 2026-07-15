@@ -1,7 +1,7 @@
 // ===== Modale de reconnexion : résume ce qui s'est passé pendant l'absence. =====
 import { el } from '../utils/dom.js';
 
-const RES_LABEL = { metal: 'Métal', fragments: 'Fragments', or: 'Or', bois: 'Bois', tissu: 'Tissu' };
+const RES_LABEL = { metal: 'Métal', fragments: 'Fragments', or: 'Or', bois: 'Bois', tissu: 'Tissu', eclats_ascension: "Éclats d'Ascension" };
 
 function fmtDuration(ms) {
   const totalMin = Math.round(ms / 60000);
