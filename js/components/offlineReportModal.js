@@ -13,12 +13,12 @@ function fmtDuration(ms) {
 export function showOfflineReportModal(report) {
   const lines = [el('div.report-elapsed', { text: `Absent(e) pendant ${fmtDuration(report.elapsedMs)}.` })];
 
-  if (report.mining) {
-    const m = report.mining;
+  for (const g of report.gathering || []) {
+    const m = g.result;
     lines.push(el('div.report-line', {
-      text: `Minage (${m.nodeName}) : ${m.cycles} cycle${m.cycles > 1 ? 's' : ''} — +${m.resourceGained} ${RES_LABEL[m.resource] || m.resource}, +${m.xpGained} XP de Minage`,
+      text: `${g.label} (${m.nodeName}) : ${m.cycles} cycle${m.cycles > 1 ? 's' : ''} — +${m.resourceGained} ${RES_LABEL[m.resource] || m.resource}, +${m.xpGained} XP de ${g.label}`,
     }));
-    if (m.leveledTo) lines.push(el('div.report-line.report-highlight', { text: `Niveau de Minage ${m.leveledTo} atteint !` }));
+    if (m.leveledTo) lines.push(el('div.report-line.report-highlight', { text: `Niveau de ${g.label} ${m.leveledTo} atteint !` }));
   }
   if (report.hpGained > 0) lines.push(el('div.report-line', { text: `Vie régénérée : +${report.hpGained} PV` }));
   if (report.enduranceGained > 0) lines.push(el('div.report-line', { text: `Endurance régénérée : +${report.enduranceGained}` }));

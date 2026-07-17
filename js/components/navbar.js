@@ -2,7 +2,7 @@
 // Montées une seule fois puis patchées (classe .active) : évite le clear()+rebuild
 // à chaque setState, qui provoquait un flash visible sur toute la nav.
 import { el, iconNode } from '../utils/dom.js';
-import { MAIN_NAV, SUBNAV } from '../config.js';
+import { MAIN_NAV, SUBNAV, SUBNAV_PARENT } from '../config.js';
 import { hasNotification, hasAnyNotification } from '../game/notifications.js';
 
 let mainR = null;   // { root, buttons: {id: node}, badges: {id: node} }
@@ -43,8 +43,15 @@ export function renderSubNav(root, view, activeSub, onSub) {
   }
   root.style.display = 'flex';
   if (!subR || subR.root !== root || subR.view !== view) subR = buildSubNav(root, view, items, onSub);
-  for (const [id, btn] of Object.entries(subR.buttons)) btn.classList.toggle('active', id === activeSub);
-  for (const [id, badge] of Object.entries(subR.badges)) badge.classList.toggle('show', hasNotification(view, id));
+  // Sub "feuille" (ex: 'minage', regroupé sous l'onglet 'recolte' — voir config.js
+  // SUBNAV_PARENT) : on met en surbrillance/badge l'onglet parent à sa place, sinon
+  // aucun bouton ne matcherait un id qui n'apparaît plus dans SUBNAV[view].
+  const effectiveSub = SUBNAV_PARENT[activeSub] || activeSub;
+  for (const [id, btn] of Object.entries(subR.buttons)) btn.classList.toggle('active', id === effectiveSub);
+  for (const [id, badge] of Object.entries(subR.badges)) {
+    const childHasNotif = Object.entries(SUBNAV_PARENT).some(([child, parent]) => parent === id && hasNotification(view, child));
+    badge.classList.toggle('show', hasNotification(view, id) || childHasNotif);
+  }
 }
 
 function buildSubNav(root, view, items, onSub) {

@@ -4,6 +4,7 @@
 import { state, setState } from '../state.js';
 import { codexBonuses, masteryBonuses } from './codex.js';
 import { loreBonuses } from './lore.js';
+import { constellationBonuses } from './ascension.js';
 
 const r2 = (n) => Math.round(n * 100) / 100;
 
@@ -12,7 +13,13 @@ export const xpForLevel = (lvl) => Math.round(100 * Math.pow(1.15, lvl - 1));
 
 // Montée de niveau : points d'attribut à répartir (pas d'auto-distribution).
 export const ATTR_POINTS_PER_LEVEL = 3;
-const DEF_PER_10_LVL = 1; // Défense +1 tous les 10 niveaux (seule voie hors équipement)
+// Défense +1 tous les DEF_LVL_INTERVAL niveaux (seule voie hors équipement) — intervalle
+// resserré de 10 à 5 le 2026-07-17 (voir rapport_difficulte_zone10.md) : la Défense
+// (réduction PLATE) ne suivait pas du tout le `scale` LINÉAIRE des zones, elle restait
+// quasi figée toute la partie. Effet réel mais modeste seul (voir rapport §6, annexe) —
+// combiné aux autres correctifs (courbe de zone, rareté d'équipement), pas une solution isolée.
+const DEF_LVL_INTERVAL = 5;
+const DEF_PER_INTERVAL = 1;
 export const ALLOCATABLE = ['vie', 'force', 'agilite', 'chance', 'intelligence']; // pas 'defense'
 
 // ---- Attributs de base + attributs d'équipement (couche attributs) ----
@@ -27,7 +34,8 @@ export function effectiveAttributes(player = state.player) {
   const cx = codexBonuses().flat;
   const ms = masteryBonuses().flat;
   const lr = loreBonuses().flat;
-  for (const k of ATTR_KEYS) a[k] = (a[k] || 0) + (eq[k] || 0) + (cx[k] || 0) + (ms[k] || 0) + (lr[k] || 0);
+  const cs = constellationBonuses().flat;
+  for (const k of ATTR_KEYS) a[k] = (a[k] || 0) + (eq[k] || 0) + (cx[k] || 0) + (ms[k] || 0) + (lr[k] || 0) + (cs[k] || 0);
   return a;
 }
 
@@ -99,12 +107,36 @@ export function activePotionBuffs(player = state.player) {
 export function derive(player = state.player) {
   const a = effectiveAttributes(player);
   const out = baseStats(a, player.level || 1);
+  // Chance de note OFFENSIVE apportée par l'arme enchantée (game/items.js
+  // recomputeBonuses()/weaponNoteChance()) — flat sur une stat DÉRIVÉE (pas un
+  // ATTR_KEY, donc ignoré par effectiveAttributes() ci-dessus), ajouté avant le
+  // passage des % (Codex/Maîtrise/Constellations peuvent encore l'amplifier).
+  const eqFlat = (player.bonuses && player.bonuses.flat) || {};
+  if (eqFlat.chanceNote) out.chanceNote += eqFlat.chanceNote;
+  // ---- Stats secondaires d'Enchantement (Phase 9.3, 2026-07-17 — voir data/affixes.js
+  // SECONDARY_STATS) : les "_bonus" s'ajoutent à une stat dérivée EXISTANTE, déjà
+  // consommée telle quelle par game/combat.js (strike()/addXp()) — aucun autre
+  // changement nécessaire pour elles. Les 6 restantes n'ont pas d'équivalent existant,
+  // elles deviennent des clés dérivées à part, lues directement par combat.js.
+  if (eqFlat.crit_bonus)        out.crit        += eqFlat.crit_bonus;
+  if (eqFlat.critdmg_bonus)     out.critDmg     += eqFlat.critdmg_bonus;
+  if (eqFlat.perforation_bonus) out.penetration += eqFlat.perforation_bonus;
+  if (eqFlat.resistance_bonus)  out.resistance  += eqFlat.resistance_bonus;
+  if (eqFlat.xp_bonus)          out.bonusXp     += eqFlat.xp_bonus;
+  out.volVie           = eqFlat.vol_vie || 0;           // % dégâts infligés rendus en PV (combat.js playerHit)
+  out.etourdissement    = eqFlat.etourdissement || 0;     // % de chance d'étourdir l'ennemi au coup porté
+  out.resistAlteration = eqFlat.resist_alteration || 0;  // réduit la chance d'être étourdi au coup CRITIQUE encaissé
+  out.soinBonus         = eqFlat.soin_bonus || 0;          // % d'efficacité des soins reçus (conso/Symphonie)
+  out.epines            = eqFlat.epines || 0;              // dégâts renvoyés à l'ennemi au coup encaissé
+  out.regenCombat       = eqFlat.regen_combat || 0;        // PV/s pendant le combat (0 par défaut = comportement inchangé)
+  out.butinBonus        = eqFlat.butin_bonus || 0;         // % butin (or/ressources/chance de drop, voir monsters.js rollLoot)
   const pct = { ...((player.bonuses && player.bonuses.pct) || {}) };
-  const cxPct = codexBonuses().pct, msPct = masteryBonuses().pct, lrPct = loreBonuses().pct, ptPct = potionBonuses(player).pct;
+  const cxPct = codexBonuses().pct, msPct = masteryBonuses().pct, lrPct = loreBonuses().pct, ptPct = potionBonuses(player).pct, csPct = constellationBonuses().pct;
   for (const k of Object.keys(cxPct)) pct[k] = (pct[k] || 0) + cxPct[k];
   for (const k of Object.keys(msPct)) pct[k] = (pct[k] || 0) + msPct[k];
   for (const k of Object.keys(lrPct)) pct[k] = (pct[k] || 0) + lrPct[k];
   for (const k of Object.keys(ptPct)) pct[k] = (pct[k] || 0) + ptPct[k];
+  for (const k of Object.keys(csPct)) pct[k] = (pct[k] || 0) + csPct[k];
   for (const k of Object.keys(out)) if (pct[k]) out[k] *= (1 + pct[k] / 100); // bonus % (équipement + Codex + Maîtrise + Potions)
   out.maxHp = Math.round(out.maxHp);
   out.attaque = Math.round(out.attaque);
@@ -145,7 +177,7 @@ export function addXp(amount) {
       p.xp.cur -= p.xp.max;
       p.level += 1;
       p.attrPoints = (p.attrPoints || 0) + ATTR_POINTS_PER_LEVEL;
-      if (p.level % 10 === 0) p.attributes.defense += DEF_PER_10_LVL; // +1 Défense tous les 10 niv
+      if (p.level % DEF_LVL_INTERVAL === 0) p.attributes.defense += DEF_PER_INTERVAL; // +1 Défense tous les 5 niv
       p.xp.max = xpForLevel(p.level);
     }
     syncCombatHp(p); // recalage du max ; PAS de heal auto (aucune régén en combat)

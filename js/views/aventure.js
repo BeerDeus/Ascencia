@@ -6,6 +6,7 @@ import { rerender } from '../router.js';
 import { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ, setChangeHook } from '../game/combat.js';
 import { ITEMS } from '../game/items.js';
 import { makeMonster, makeBoss } from '../game/monsters.js';
+import { renderDonjon } from './donjon.js';
 
 // Sprite : image (placeholder / chemin) ou emoji.
 export function spriteImg(sprite) {
@@ -17,6 +18,7 @@ export function spriteImg(sprite) {
 export function renderAventure(root, sub = 'combat') {
   const view = el('div.view');
   if (sub === 'carte')     { view.append(placeholder('Carte', 'Vue carte des zones — Phase 5.')); root.append(view); return () => {}; }
+  if (sub === 'donjon')    { const donjonUpdate = renderDonjon(view); root.append(view); return donjonUpdate; }
 
   // ---- sub 'combat' : bascule Zone <-> Combat, avec mount persistant du combat ----
   // Le combat (bulles/pool/animations, voir game/combat.js) ne doit être monté

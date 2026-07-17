@@ -1,14 +1,26 @@
 // ===== Vue Village (Hub + Forge + Cuisine) =====
 import { el, iconNode } from '../utils/dom.js';
-import { VILLAGE, SUBNAV } from '../config.js';
+import { VILLAGE, SUBNAV, RECOLTE_CARDS } from '../config.js';
 import { menuCard, panel } from '../components/card.js';
+import { dropdown } from '../components/dropdown.js';
 import { navigateSub } from '../router.js';
 import { ITEMS, RECIPES, RESOURCE_KEYS, BUY_CATALOG, craft, canCraft, maxCraftable, invCount, buyItem, buyPrice, sellItem } from '../game/items.js';
-import { MINING_NODES, currentNode, getProgress, canMine, startMining, stopMining, creditPending, miningLevel, miningXp, xpForLevel } from '../game/mining.js';
+import { skillApi as miningSkill } from '../game/mining.js';
+import { skillApi as bucheronnageSkill } from '../game/bucheronnage.js';
+import { skillApi as tissageSkill } from '../game/tissage.js';
+import { skillApi as resonanceSkill } from '../game/resonance.js';
+import { xpForLevel } from '../game/gathering.js';
 import { list as primesList, claim as claimPrime } from '../game/primes.js';
+import { isRarityUnlocked, highestUnlockedRarity, unlockedRarities } from '../game/ascension.js';
+import { RARITY_ORDER } from '../data/constellations.js';
+import { showToast } from '../components/toast.js';
 import { state } from '../state.js';
 
-const VILLAGE_SUBS = new Set(SUBNAV.village.map((s) => s.id));
+// + RECOLTE_CARDS : les 4 métiers de récolte sont des cartes du Hub (quartier
+// "Récolteurs") mais des feuilles (pas des onglets directs, voir SUBNAV.village
+// et config.js SUBNAV_PARENT) — sans cet ajout, cliquer leur carte depuis le Hub
+// ne ferait rien (VILLAGE_SUBS.has() les raterait).
+const VILLAGE_SUBS = new Set([...SUBNAV.village.map((s) => s.id), ...RECOLTE_CARDS.map((c) => c.id)]);
 const OR_ICON = 'assets/sprites/objets/piece_or.png';
 const RES_ICON = {
   or: OR_ICON,
@@ -22,14 +34,33 @@ const STAT_ABR = { vie: 'Vie', force: 'For', agilite: 'Agi', chance: 'Cha', inte
 const POTION_STAT_LABEL = { attaque: 'Attaque', crit: 'Critique', esquive: 'Esquive' };
 // Libellés des filtres de tri (Forge/Cuisine) — clé = `kind` de l'item produit par la recette.
 const KIND_LABEL = {
-  tete: 'Tête', arme: 'Arme', torse: 'Torse', mains: 'Mains', jambes: 'Jambes', pieds: 'Pieds',
+  tete: 'Tête', arme: 'Arme', torse: 'Torse', mains: 'Mains', jambes: 'Jambes', ceinture: 'Ceinture', pieds: 'Pieds',
   accessoire: 'Accessoire', artefact: 'Artefact', conso: 'Soins', energie: 'Énergie', materiau: 'Matériaux', potion: 'Philtres',
 };
-const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'special'];
 const RARITY_LABEL = {
   common: 'Commun', uncommon: 'Peu commun', rare: 'Rare', epic: 'Épique',
   legendary: 'Légendaire', mythic: 'Mythique', special: 'Spécial',
 };
+const GEM_ICON = 'assets/sprites/ressources/gemme_verte.png'; // même icône que les nodes de rareté (Ascension)
+// Statut/desc de la carte Forge (hub Village) : remplace le placeholder statique
+// "Niveau 3 / Fabrication Rare" par la rareté RÉELLEMENT débloquée via l'Ascension
+// (voir game/ascension.js). Le hub ne se re-render qu'à la navigation (voir
+// renderVillage — "100% statique" une fois monté), donc calculé une fois au build.
+function forgeCardData(c) {
+  const owned = unlockedRarities();
+  const n = owned.size, total = RARITY_ORDER.length;
+  return { ...c, status: RARITY_LABEL[highestUnlockedRarity()], desc: `${n}/${total} raretés débloquées` };
+}
+// Statut dynamique des cartes Récolte (hub Village ET sub-hub Récolte, même source
+// RECOLTE_CARDS) : "Actif" si ce métier a un filon en cours (skill.isActive()), sinon
+// le "Disponible" statique du config. Un seul métier actif à la fois (voir
+// game/gathering.js REGISTRY/start()) — pas besoin de désactiver les autres cartes,
+// juste refléter lequel tourne. Demande explicite du 2026-07-17.
+const RECOLTE_SKILL = { minage: miningSkill, bucheronnage: bucheronnageSkill, tissage: tissageSkill, resonance: resonanceSkill };
+function recolteCardData(c) {
+  const skill = RECOLTE_SKILL[c.id];
+  return skill ? { ...c, status: skill.isActive() ? 'Actif' : c.status } : c;
+}
 // Stat dominante d'une pièce (plus haute valeur absolue dans `stats`) — 3ème filtre,
 // utile pour viser une build (Force/Guerrier, Agilité/Archer, Intelligence/Mage...).
 const STAT_FULL_LABEL = { vie: 'Vie', force: 'Force', agilite: 'Agilité', chance: 'Chance', intelligence: 'Intelligence', defense: 'Défense' };
@@ -40,45 +71,12 @@ function primaryStat(out) {
   return entries[0][0];
 }
 
-// ---- Dropdown custom (façon DA Ascencia) — un <select> natif ne peut pas être
-// stylé dans le thème sombre/or (menu déroulant = chrome du navigateur). Bouton +
-// panneau flottant, mêmes couleurs que le reste de l'UI. Un seul ouvert à la fois.
-let openDropdown = null;
-function dropdown(options, value, onChange) {
-  const labelFor = (v) => (options.find((o) => o.value === v) || {}).label || '';
-  const labelEl = el('span.dd-label', { text: labelFor(value) });
-  const btn = el('button.dd-btn', { onclick: (e) => { e.stopPropagation(); toggle(); } }, [
-    labelEl, el('span.dd-chevron', { text: '▾' }),
-  ]);
-  const panelEl = el('div.dd-panel');
-  panelEl.style.display = 'none';
-  const root = el('div.dd', {}, [btn, panelEl]);
-
-  function renderPanel() {
-    panelEl.replaceChildren(...options.map((o) => el('button.dd-item' + (o.value === value ? '.sel' : ''), {
-      text: o.label, onclick: (e) => { e.stopPropagation(); value = o.value; labelEl.textContent = o.label; close(); onChange(value); },
-    })));
-  }
-  function open() {
-    if (openDropdown && openDropdown !== closeFn) openDropdown();
-    renderPanel();
-    panelEl.style.display = '';
-    btn.classList.add('open');
-    openDropdown = closeFn;
-    document.addEventListener('click', onDocClick, true);
-  }
-  function close() {
-    panelEl.style.display = 'none';
-    btn.classList.remove('open');
-    if (openDropdown === closeFn) openDropdown = null;
-    document.removeEventListener('click', onDocClick, true);
-  }
-  function closeFn() { close(); }
-  function toggle() { panelEl.style.display === 'none' ? open() : close(); }
-  function onDocClick(e) { if (!root.contains(e.target)) close(); }
-
-  return { root, get: () => value };
-}
+// dropdown() : extrait vers components/dropdown.js le 2026-07-16 (réutilisé par
+// l'Enchanteur, voir views/capitale.js) — voir ce fichier pour l'implémentation.
+// options[].locked (optionnel) : rendu grisé, le clic déclenche onLockedClick(option)
+// au lieu de sélectionner l'option — voir le filtre Rareté de la Forge (renderCraft)
+// qui masque les paliers pas encore débloqués via l'Ascension, sauf le tout prochain
+// (visible mais verrouillé, pour donner un objectif sans tout spoiler).
 
 // Stepper de quantité (−/qty/+/Max) — réutilisé Forge/Cuisine (craft multiple) et
 // Marchand (achat multiple). getMax() est réévalué à chaque interaction (ressources/or
@@ -103,17 +101,22 @@ export function renderVillage(root, sub = 'hub') {
   if (sub === 'forge')      { const upd = renderCraft(view, 'forge',    'Forge du Forgeron', 'Forger'); root.append(view); return upd; }
   if (sub === 'cuisinier')  { const upd = renderCraft(view, 'cuisine',  'Cuisine',            'Cuisiner'); root.append(view); return upd; }
   if (sub === 'alchimiste') { const upd = renderCraft(view, 'alchimie', 'Alchimiste',         'Distiller'); root.append(view); return upd; }
-  if (sub === 'minage')    { const upd = renderMinage(view); root.append(view); return upd; }
+  if (sub === 'minage')       { const upd = renderGatherStation(view, miningSkill,       'Minage',       'Niveau de Minage',       'Miner'); root.append(view); return upd; }
+  if (sub === 'bucheronnage') { const upd = renderGatherStation(view, bucheronnageSkill, 'Bûcheronnage', 'Niveau de Bûcheronnage', 'Couper'); root.append(view); return upd; }
+  if (sub === 'tissage')      { const upd = renderGatherStation(view, tissageSkill,      'Tissage',      'Niveau de Tissage',      'Tisser'); root.append(view); return upd; }
+  if (sub === 'resonance')    { const upd = renderGatherStation(view, resonanceSkill,    'Résonance',    'Niveau de Résonance',    'Écouter'); root.append(view); return upd; }
   if (sub === 'marchand')  { const upd = renderMarchand(view); root.append(view); return upd; }
   if (sub === 'primes')    { const upd = renderPrimes(view); root.append(view); return upd; }
+  if (sub === 'recolte')   { renderRecolteHub(view); root.append(view); return () => {}; }
   if (sub !== 'hub')       { view.append(comingSoon(sub)); root.append(view); return () => {}; }
 
   for (const q of VILLAGE) {
-    const grid = el('div.card-grid', {}, q.cards.map((c) => menuCard(c, (d) => { if (VILLAGE_SUBS.has(d.id)) navigateSub(d.id); })));
+    const cards = q.cards.map((c) => c.id === 'forge' ? forgeCardData(c) : recolteCardData(c));
+    const grid = el('div.card-grid', {}, cards.map((c) => menuCard(c, (d) => { if (VILLAGE_SUBS.has(d.id)) navigateSub(d.id); })));
     view.append(panel(q.quartier, [grid]));
   }
   root.append(view);
-  return () => {}; // hub 100% statique (aucune donnée dynamique affichée)
+  return () => {}; // pas d'update() : recalculé à chaque navigation (voir router.js), rien à rafraîchir en direct pendant que l'écran reste monté
 }
 
 // ---------- Atelier de craft (Forge / Cuisine) — refs + update, pas de rebuild à chaque tick ----------
@@ -124,7 +127,12 @@ export function renderVillage(root, sub = 'hub') {
 // démarre sur la 1ère catégorie (pas "Tous") pour que l'écran reste court dès l'entrée ;
 // "Tous les types" reste choisissable pour qui veut la liste complète.
 function renderCraft(view, station, title, verb) {
-  view.append(el('h2.section-title', { text: title }));
+  if (station === 'forge') {
+    const badge = el('span.rarity-badge.rarity-' + highestUnlockedRarity(), { text: RARITY_LABEL[highestUnlockedRarity()] });
+    view.append(el('div.section-title-row', {}, [el('h2.section-title', { text: title }), badge]));
+  } else {
+    view.append(el('h2.section-title', { text: title }));
+  }
   const goldLine = el('div.craft-gold');
   view.append(goldLine);
 
@@ -190,9 +198,21 @@ function renderCraft(view, station, title, verb) {
       ).root);
     }
     if (rarities.length > 1) {
+      // Options visibles : les raretés débloquées + la toute prochaine (grisée, pas
+      // sélectionnable) — les paliers plus loin restent invisibles dans ce menu, pas
+      // de spoil au-delà de l'objectif immédiat (voir dropdown() ci-dessus).
+      const unlockedSet = unlockedRarities();
+      const visible = [];
+      for (const r of RARITY_ORDER) {
+        if (!rarities.includes(r)) continue;
+        const locked = !unlockedSet.has(r);
+        visible.push({ value: r, label: RARITY_LABEL[r] || r, locked });
+        if (locked) break;
+      }
       kids.push(dropdown(
-        [{ value: 'tous', label: 'Toutes raretés' }, ...rarities.map((r) => ({ value: r, label: RARITY_LABEL[r] || r }))],
+        [{ value: 'tous', label: 'Toutes raretés' }, ...visible],
         rarityFilter, (v) => { rarityFilter = v; applyFilters(); },
+        { onLockedClick: (o) => showToast(`${o.label} — déblocable dans l'Ascension`, { icon: GEM_ICON }) },
       ).root);
     }
     if (statFocuses.length > 1) {
@@ -206,7 +226,11 @@ function renderCraft(view, station, title, verb) {
   function applyFilters() {
     for (const row of rows) {
       const passKind = kindFilter === 'tous' || row.kind === kindFilter;
-      const passRarity = rarityFilter === 'tous' || row.rarity === rarityFilter;
+      // "Toutes raretés" ne doit montrer QUE les raretés débloquées (voir Ascension,
+      // game/ascension.js isRarityUnlocked) — sélectionner une rareté précise dans le
+      // dropdown reste possible seulement pour les raretés débloquées + la toute
+      // prochaine (visible grisée dans syncFilters, non sélectionnable).
+      const passRarity = rarityFilter === 'tous' ? (!row.rarity || isRarityUnlocked(row.rarity)) : row.rarity === rarityFilter;
       const passStat = statFilter === 'tous' || row.statFocus === statFilter;
       row.card.style.display = (passKind && passRarity && passStat) ? '' : 'none';
     }
@@ -214,16 +238,21 @@ function renderCraft(view, station, title, verb) {
 
   function syncRow(row) {
     const q = row.stepper.get();
-    const ok = canCraft(row.recipe, q);
+    // Gating de rareté (Ascension, voir game/ascension.js) : n'affecte que les items
+    // avec un `rarity` non débloqué (Forge) — no-op pour Cuisine/Alchimiste (out.rarity
+    // absent, isRarityUnlocked(undefined) === true).
+    const rarityLocked = row.rarity && !isRarityUnlocked(row.rarity);
+    const ok = !rarityLocked && canCraft(row.recipe, q);
     row.card.classList.toggle('disabled', !ok);
+    row.card.classList.toggle('locked', rarityLocked);
     row.craftBtn.disabled = !ok;
-    row.craftBtn.textContent = `${verb} ×${q}`;
-    row.costRow.replaceChildren(...Object.entries(row.recipe.cost).map(([k, v]) => {
+    row.craftBtn.textContent = rarityLocked ? 'Rareté verrouillée (Ascension)' : `${verb} ×${q}`;
+    row.costRow.replaceChildren(...(rarityLocked ? [] : Object.entries(row.recipe.cost).map(([k, v]) => {
       const need = v * q;
       if (RESOURCE_KEYS.includes(k)) return costChip(RES_ICON[k] || '•', need, state.resources[k] || 0);
       const it = ITEMS[k];
       return costChip(it ? it.icon : '•', need, invCount(k));
-    }));
+    })));
   }
 
   function update() {
@@ -378,27 +407,42 @@ function costChip(icon, need, have) {
   ]);
 }
 
-// ---------- Minage : filons à progression temporisée et PERSISTANTE (voir game/mining.js) ----------
-// La progression tient au temps écoulé (state.skills.mining.active.startedAt), pas à
+// ---------- Sub-hub "Récolte" : regroupe les 4 métiers sous un seul onglet subnav
+// (voir config.js RECOLTE_CARDS/SUBNAV_PARENT) pour ne pas faire déborder la barre. ----------
+function renderRecolteHub(view) {
+  view.append(el('h2.section-title', { text: 'Récolte' }));
+  const grid = el('div.card-grid', {}, RECOLTE_CARDS.map((c) => menuCard(recolteCardData(c), (d) => navigateSub(d.id))));
+  view.append(grid);
+}
+
+// ---------- Métiers de récolte (Minage/Bûcheronnage/Tissage/Résonance) : filons à
+// progression temporisée et PERSISTANTE (voir game/gathering.js) ----------
+// La progression tient au temps écoulé (state.skills[key].active.startedAt), pas à
 // un minuteur local : elle continue même si on quitte l'onglet, ferme l'app ou se
 // déconnecte (rattrapage au retour — voir game/offlineReport.js). La boucle rAF ici
 // ne sert qu'à l'affichage (barre fluide + crédit régulier pendant que l'onglet est
-// ouvert) ; elle s'arrête d'elle-même dès que la vue quitte le DOM.
-function renderMinage(view) {
-  view.append(el('h2.section-title', { text: 'Minage' }));
+// ouvert) ; elle s'arrête d'elle-même dès que la vue quitte le DOM. Un seul renderer
+// pour les 4 métiers (skill = skillApi exporté par mining.js/bucheronnage.js/tissage.js/
+// resonance.js, tous construits sur la même factory) plutôt que 4 copies quasi
+// identiques — `actionVerb` est le seul texte qui change sur le bouton d'un filon actif.
+function renderGatherStation(view, skill, title, levelLabel, actionVerb = 'Récolter') {
+  view.append(el('div.section-title-row', {}, [
+    el('button.btn-back', { text: '← Retour', onclick: () => navigateSub('recolte') }),
+    el('h2.section-title', { text: title }),
+  ]));
   const lvlBox = el('div.mining-level');
   view.append(lvlBox);
 
   const grid = el('div.mining-grid');
   view.append(grid);
 
-  const stopBtn = el('button.btn-stop.mining-stop', { text: "Arrêter le filon actif", onclick: () => stopMining() });
+  const stopBtn = el('button.btn-stop.mining-stop', { text: "Arrêter le filon actif", onclick: () => skill.stop() });
   view.append(stopBtn);
 
   const nodeRefs = {};
-  for (const node of MINING_NODES) {
+  for (const node of skill.NODES) {
     const bar = el('div.fill');
-    const btn = el('button.btn-craft', { onclick: () => { startMining(node.id); } });
+    const btn = el('button.btn-craft', { onclick: () => { skill.start(node.id); } });
     const card = el('div.craft-card.mining-card', {}, [
       el('div.craft-head', {}, [
         iconNode(node.icon, 'craft-icon'),
@@ -409,7 +453,7 @@ function renderMinage(view) {
       ]),
       el('div.mining-yield', {}, [
         iconNode(RES_ICON[node.resource] || node.icon, 'icon'),
-        el('span', { text: `+${node.amount} · +${node.xp} XP · ${Math.round(node.duration / 1000)}s` }),
+        el('span', { text: `+${node.amount} · +${node.xp} XP · ${fmtNodeDuration(node.duration)}` }),
       ]),
       el('div.mini-gauge', {}, [bar]),
       btn,
@@ -419,29 +463,29 @@ function renderMinage(view) {
   }
 
   function syncNodes() {
-    const active = currentNode();
-    const lvl = miningLevel(), xp = miningXp(), req = xpForLevel(lvl);
-    lvlBox.textContent = `Niveau de Minage ${lvl} — ${Math.floor(xp)} / ${req} XP`;
+    const active = skill.currentNode();
+    const lvl = skill.level(), xp = skill.xp(), req = xpForLevel(lvl);
+    lvlBox.textContent = `${levelLabel} ${lvl} — ${Math.floor(xp)} / ${req} XP`;
     stopBtn.style.display = active ? '' : 'none';
-    for (const node of MINING_NODES) {
+    for (const node of skill.NODES) {
       const r = nodeRefs[node.id];
-      const unlocked = canMine(node);
+      const unlocked = skill.canGather(node);
       const isActiveNode = !!active && active.id === node.id;
       r.card.classList.toggle('locked', !unlocked);
-      r.bar.style.width = (isActiveNode ? getProgress() : 0) + '%';
+      r.bar.style.width = (isActiveNode ? skill.getProgress() : 0) + '%';
       r.btn.disabled = unlocked ? null : 'true';
-      r.btn.textContent = !unlocked ? `Niveau ${node.levelReq} requis` : isActiveNode ? 'Miner (clic = coup de pioche)' : 'Miner';
+      r.btn.textContent = !unlocked ? `Niveau ${node.levelReq} requis` : isActiveNode ? `${actionVerb} (clic = accélère)` : actionVerb;
       r.btn.classList.toggle('active', isActiveNode);
     }
   }
 
   // Premier check différé via rAF : à cet instant `view` n'est pas encore attaché au
-  // DOM (root.append(view) n'est appelé qu'après le retour de renderMinage — voir
-  // renderVillage) ; un appel synchrone ferait échouer document.body.contains() et
-  // tuerait la boucle avant même le premier frame.
+  // DOM (root.append(view) n'est appelé qu'après le retour de renderGatherStation —
+  // voir renderVillage) ; un appel synchrone ferait échouer document.body.contains()
+  // et tuerait la boucle avant même le premier frame.
   function loop() {
     if (!document.body.contains(view)) return; // vue démontée → arrêt de la boucle visuelle
-    creditPending(); // encaisse les cycles pleins en direct pendant que l'onglet est ouvert
+    skill.creditPending(); // encaisse les cycles pleins en direct pendant que l'onglet est ouvert
     syncNodes();
     requestAnimationFrame(loop);
   }
@@ -449,6 +493,13 @@ function renderMinage(view) {
   requestAnimationFrame(loop);
 
   return syncNodes; // update() : re-sync immédiat sur setState (récompense/level-up)
+}
+
+// Affichage de la durée d'un filon : secondes en dessous d'une minute (Minage,
+// cycles courts), minutes au-dessus (Bûcheronnage/Tissage/Résonance, cycles longs
+// — voir leurs fichiers game/*.js pour le detail des taux réduits).
+function fmtNodeDuration(ms) {
+  return ms < 60000 ? `${Math.round(ms / 1000)}s` : `${Math.round(ms / 60000)}min`;
 }
 
 function comingSoon(id) {

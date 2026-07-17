@@ -220,7 +220,13 @@ function renderRecits(view) {
 
   let openId = null;
   let sig = null;
-  const computeSig = () => JSON.stringify(state.monsterWins) + '|' + state.progress.unlocked + '|' + JSON.stringify(state.progress.bossDefeated);
+  // MAJ 2026-07-17 (Actes II/III, voir game/lore.js ch10/ch11-13) : deux nouvelles
+  // conditions de déblocage n'étaient pas couvertes par cette signature (pièce
+  // enchantée, nombre d'Ascensions) — sans ça, un fragment nouvellement débloqué par
+  // l'un de ces deux événements ne rafraîchissait pas la liste tant qu'un kill/zone
+  // ne survenait pas ensuite.
+  const computeSig = () => JSON.stringify(state.monsterWins) + '|' + state.progress.unlocked + '|' + JSON.stringify(state.progress.bossDefeated)
+    + '|' + ((state.ascension && state.ascension.count) || 0) + '|' + JSON.stringify(state.player.equipment);
 
   function build() {
     sig = computeSig();

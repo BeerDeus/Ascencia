@@ -44,6 +44,13 @@
   --rarity-epic: #b45ad9;
   --rarity-legendary: #f0c25e;
   --rarity-mythic: #e0405a;
+  --rarity-special: #f4f4f8;
+
+  /* Branches Constellations (Ascension, Phase 6) — réutilisent la palette existante */
+  --branch-harmonie: var(--gold-bright);
+  --branch-dissonance: var(--dissonance);
+  --branch-resonance: var(--tempo);
+  --branch-echo: var(--res-echo);
 
   /* Typographie */
   --font-title: 'Cinzel', Georgia, 'Times New Roman', serif;

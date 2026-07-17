@@ -14,22 +14,32 @@ export const MAIN_NAV = [
 export const HOME_SUB = { village: 'hub' };
 
 // Sous-navigation contextuelle par vue.
+// Les 4 métiers de récolte (Minage/Bûcheronnage/Tissage/Résonance, voir game/gathering.js)
+// tiennent sous un seul onglet "Récolte" (sub === 'recolte', voir views/village.js) —
+// 4 tabs dédiés faisaient déborder la barre (5 groupes + Forge/Cuisinier/Alchimiste/
+// Marchand/Primes = 9, cassait le split gauche/droite autour du notch Aventure).
+// Ce sub-hub liste les 4 cartes (RECOLTE_CARDS ci-dessous) ; chaque carte navigue
+// directement vers son sub dédié ('minage'/'bucheronnage'/'tissage'/'resonance'),
+// qui reste géré comme avant par renderGatherStation — voir SUBNAV_PARENT pour le
+// rattachement (highlight/badge de l'onglet "Récolte" quand on est sur un de ces 4 subs).
 export const SUBNAV = {
   village: [
     { id: 'forge',      label: 'Forge',      icon: 'assets/sprites/icons/forge.png' },
     { id: 'cuisinier',  label: 'Cuisinier',  icon: 'assets/sprites/icons/cuisine.png' },
     { id: 'alchimiste', label: 'Alchimiste', icon: 'assets/sprites/potions/potion_violette.png' },
-    { id: 'minage',     label: 'Minage',     icon: 'assets/sprites/objets/pioche.png' },
+    { id: 'recolte',    label: 'Récolte',    icon: 'assets/sprites/objets/pioche.png' },
     { id: 'marchand',   label: 'Marchand',   icon: 'assets/sprites/objets/piece_or.png' },
     { id: 'primes',     label: 'Primes',     icon: 'assets/sprites/objets/parchemin_scelle.png' },
   ],
   profil: [
     { id: 'personnage', label: 'Personnage', icon: 'assets/sprites/portraits/default_avatar.png' },
     { id: 'equipement', label: 'Équipement', icon: 'assets/sprites/objets/sac_a_dos.png' },
+    { id: 'ascension',  label: 'Ascension',  icon: 'assets/sprites/icons/next_floor.png' },
   ],
   aventure: [
     { id: 'combat',  label: 'Combat',  icon: 'assets/sprites/icons/combat.png' },
     { id: 'carte',   label: 'Carte',   icon: 'assets/sprites/icons/carte.png' },
+    { id: 'donjon',  label: 'Brèche',  icon: 'assets/sprites/icons/dissonance.png' },
   ],
   codex: [
     { id: 'bestiaire', label: 'Bestiaire', icon: 'assets/sprites/icons/grimoire.png' },
@@ -37,6 +47,21 @@ export const SUBNAV = {
     { id: 'maitrise',  label: 'Maîtrise',  icon: 'assets/sprites/icons/maitrise.png' },
   ],
 };
+
+// sub (non listé dans SUBNAV, feuille) → id de l'onglet SUBNAV parent qu'il faut
+// mettre en surbrillance/badger à sa place — voir components/navbar.js renderSubNav().
+export const SUBNAV_PARENT = {
+  minage: 'recolte', bucheronnage: 'recolte', tissage: 'recolte', resonance: 'recolte',
+};
+
+// Cartes du sub-hub "Récolte" (voir views/village.js) — réutilisées telles quelles
+// pour le quartier Village > Hub (VILLAGE ci-dessous), une seule source de vérité.
+export const RECOLTE_CARDS = [
+  { id: 'minage',       title: 'Minage',       icon: 'assets/sprites/objets/pioche.png',                 status: 'Disponible', desc: 'Filons de minerai et de cristaux.' },
+  { id: 'bucheronnage', title: 'Bûcheronnage', icon: 'assets/sprites/equipements/hache_de_bucheron.png', status: 'Disponible', desc: 'Coupes de bois, lentes mais régulières.' },
+  { id: 'tissage',      title: 'Tissage',      icon: 'assets/sprites/equipements/gants_en_tissu.png',    status: 'Disponible', desc: 'Fibres et toiles, lentes mais régulières.' },
+  { id: 'resonance',    title: 'Résonance',    icon: 'assets/sprites/ressources/fragment.png',           status: 'Disponible', desc: 'Échos rares chargés de Dissonance.' },
+];
 
 // Attributs de base du joueur (vue Profil).
 // alloc:false → non attribuable manuellement (Défense : équipement / +1 tous les 10 niveaux).
@@ -178,17 +203,29 @@ export const STATS = [
 // Laissés volontairement : rampes intra-zone trash→élite des zones early (Z1/Z3/Z4,
 // un mob élite tanky par zone) et boss endgame Z18/20/21/22 ≈ top mob (ces boss sont
 // réutilisés comme mobs de la zone suivante, écart <15%, effet domino sinon).
+//
+// REVUE D'ÉQUILIBRAGE v3 2026-07-17 (voir rapport_difficulte_zone10.md) : simulation
+// chiffrée d'une progression normale (10x chaque monstre + boss, équipement commun/
+// Peu Commun + enchant, sans farm de triche) montrant que le mur de difficulté réel
+// arrivait dès la Zone 4-5, PAS à la Zone 10 comme supposé — le `scale` grimpait ×13
+// sur 10 zones (0.20→2.60) pendant que la Défense/Pénétration du joueur (formules en
+// √attribut, quasi non-allouables) ne suivait pas du tout ce rythme LINÉAIRE. Zones 5-10
+// compressées à 50% de leur delta au-delà de la Zone 4 (scale4 + (scale_old−scale4)×0.5)
+// pour ramener la Zone 10 à une marge de combat jouable (voir rapport, combiné au
+// déblocage anticipé du Peu Commun + Rare auto à l'Ascension + Défense/5 niveaux).
+// Zones 1-4 INCHANGÉES (déjà confortables). Ne pas re-resserrer sans rejouer la
+// simulation : le rapport contient le script Python pour ça.
 export const ZONES = [
   { id: 1,  name: 'Marécage de Gelée',      difficulty: 'Facile',        scale: 0.20,  monsters: ['slime_gelatineux', 'slime_vert_enerve', 'slime_bleu', 'slime_bleu_enerve', 'slime_corrosif'],                    boss: 'roi_slime' },
   { id: 2,  name: 'Cave aux Rats',          difficulty: 'Facile',        scale: 0.42,  monsters: ['rat_geant', 'reine_des_rats', 'rat_gris', 'rat_sauvage', 'rat_brun', 'gros_rat'],                                boss: 'rat_garou' },
   { id: 3,  name: 'Camp de Gobelins',       difficulty: 'Facile',        scale: 0.52,  monsters: ['gobelin_vulnerable', 'gobelin_recrue', 'gobelin_eclaireur', 'gobelin_frondeur', 'gobelin_chasseur', 'gobelin_champion'], boss: 'boss_0' },
   { id: 4,  name: 'Bois Sauvages',          difficulty: 'Modéré',        scale: 0.66,  monsters: ['loup_affame', 'loup_dissonant', 'araignee_geante', 'arbre_vivant', 'rat_infecte'],                              boss: 'boss_1' },
-  { id: 5,  name: 'Route des Bandits',      difficulty: 'Modéré',        scale: 0.95,  monsters: ['bandit', 'squelette_guerrier', 'chef_bandit', 'gobelin_assassin', 'gobelin_squelette', 'rat_voleur'],           boss: 'boss_1' },
-  { id: 6,  name: 'Mines de Pierre',        difficulty: 'Difficile',     scale: 1.08,  monsters: ['insecte_mineur', 'scorpion_des_sables', 'mini_golem_pierre', 'ver_terre', 'mini_golem', 'troglodyte'],          boss: 'boss_2' },
-  { id: 7,  name: 'Marais Empoisonné',      difficulty: 'Difficile',     scale: 1.28,  monsters: ['ver_de_racine', 'cultiste_zelote', 'harpie', 'otyugh', 'serpent_marais', 'sangsue_geante'],                    boss: 'geant' },
-  { id: 8,  name: 'Crypte des Oubliés',     difficulty: 'Difficile',     scale: 1.62,  monsters: ['necromancien_apprenti', 'spectre_gemissant', 'momie_gardienne', 'fantome', 'nuee_chauve_souris'],               boss: 'gardien_de_pierre_eterne' },
-  { id: 9,  name: 'Antre Gelée',            difficulty: 'Difficile',     scale: 1.90,  monsters: ['elementaire_eau', 'esprit_glacial', 'initie_de_l_ombre', 'elementaire_glace', 'salamandre_bleue'],              boss: 'djinn' },
-  { id: 10, name: 'Camp Orc',               difficulty: 'Difficile',     scale: 2.60,  monsters: ['orc_berserker', 'garde_automate', 'griffon', 'minotaure_jeune', 'moustique_geant'],                            boss: 'minotaure' },
+  { id: 5,  name: 'Route des Bandits',      difficulty: 'Modéré',        scale: 0.81,  monsters: ['bandit', 'squelette_guerrier', 'chef_bandit', 'gobelin_assassin', 'gobelin_squelette', 'rat_voleur'],           boss: 'boss_1' },
+  { id: 6,  name: 'Mines de Pierre',        difficulty: 'Difficile',     scale: 0.87,  monsters: ['insecte_mineur', 'scorpion_des_sables', 'mini_golem_pierre', 'ver_terre', 'mini_golem', 'troglodyte'],          boss: 'boss_2' },
+  { id: 7,  name: 'Marais Empoisonné',      difficulty: 'Difficile',     scale: 0.97,  monsters: ['ver_de_racine', 'cultiste_zelote', 'harpie', 'otyugh', 'serpent_marais', 'sangsue_geante'],                    boss: 'geant' },
+  { id: 8,  name: 'Crypte des Oubliés',     difficulty: 'Difficile',     scale: 1.14,  monsters: ['necromancien_apprenti', 'spectre_gemissant', 'momie_gardienne', 'fantome', 'nuee_chauve_souris'],               boss: 'gardien_de_pierre_eterne' },
+  { id: 9,  name: 'Antre Gelée',            difficulty: 'Difficile',     scale: 1.28,  monsters: ['elementaire_eau', 'esprit_glacial', 'initie_de_l_ombre', 'elementaire_glace', 'salamandre_bleue'],              boss: 'djinn' },
+  { id: 10, name: 'Camp Orc',               difficulty: 'Difficile',     scale: 1.63,  monsters: ['orc_berserker', 'garde_automate', 'griffon', 'minotaure_jeune', 'moustique_geant'],                            boss: 'minotaure' },
   { id: 11, name: 'Cité Engloutie',         difficulty: 'Très difficile',scale: 3.15,  monsters: ['profond_guerrier', 'assassin_de_l_ombre', 'elementaire_de_magma', 'basilic', 'araignee_variante', 'loup_alpha'], boss: 'chimere' },
   { id: 12, name: 'Sables Hurlants',        difficulty: 'Très difficile',scale: 3.80,  monsters: ['ver_des_sables', 'demon_mineur', 'araignee_geante_variante', 'reptilien'],                                     boss: 'boss_3' },
   { id: 13, name: 'Bastion en Ruines',      difficulty: 'Très difficile',scale: 4.55,  monsters: ['profond_champion', 'maitre_de_l_ombre', 'le_collecteur', 'automate', 'mimique_coffre'],                        boss: 'golem_pierre' },
@@ -206,21 +243,33 @@ export const ZONES = [
   { id: 25, name: 'Le Silence Absolu',      difficulty: 'Cauchemar',     scale: 36.50, monsters: ['dieu_fou', 'golem_sombre'],                                                                                     boss: 'juge_dissonant' },
 ];
 
+// ===== La Brèche Instable (donjon à étages, Acte IV du Lore — voir Lore Ascencia.txt) =====
+// Déblocage canon : 3 "résonateurs harmoniques" = habillage narratif des boss des
+// Zones 8/9/10 déjà vaincus (aucun nouveau système de quête — voir game/donjon.js
+// canEnterBreche()), puis un combat unique contre le Gardien Harmonique (réutilise
+// le boss 'archange', zone 15 — seul boss du catalogue à la fois thématiquement
+// "entité de pure harmonie" ET pourvu d'un vrai sprite — rescalé au niveau Zone 10
+// pour rester franchissable juste après la résolution de la quête ; voir donjon.js).
+export const RESONATOR_ZONES = [8, 9, 10];
+export const GARDIEN_HARMONIQUE_BOSS = 'archange';
+export const GARDIEN_HARMONIQUE_LABEL = 'Gardien Harmonique';
+
 // Quartiers du village (structure maquette).
 export const VILLAGE = [
   {
     quartier: 'Quartier des Artisans',
     cards: [
-      { id: 'forge',      title: 'Forge',      icon: 'assets/sprites/icons/forge.png',  status: 'Niveau 3',   desc: 'Fabrication Rare' },
+      // status/desc réécrits dynamiquement par views/village.js (rareté réellement
+      // débloquée via l'Ascension, voir game/ascension.js highestUnlockedRarity) —
+      // les valeurs ci-dessous ne sont qu'un filet si jamais l'override échoue.
+      { id: 'forge',      title: 'Forge',      icon: 'assets/sprites/icons/forge.png',  status: 'Commune',    desc: 'Fabrication.' },
       { id: 'cuisinier',  title: 'Cuisinier',  icon: 'assets/sprites/icons/cuisine.png', status: 'Disponible', desc: 'Plats de récupération.', full: true },
       { id: 'alchimiste', title: 'Alchimiste', icon: 'assets/sprites/potions/potion_violette.png', status: 'Disponible', desc: 'Philtres de combat.', full: true },
     ],
   },
   {
-    quartier: 'Quartier Minier',
-    cards: [
-      { id: 'minage', title: 'Minage', icon: 'assets/sprites/objets/pioche.png', status: 'Disponible', desc: 'Filons de minerai et de cristaux.', full: true },
-    ],
+    quartier: 'Quartier des Récolteurs',
+    cards: RECOLTE_CARDS,
   },
   {
     quartier: 'Quartier Commerçant',
@@ -240,4 +289,39 @@ export const SETTINGS = {
   enduranceMax: 20,
   enduranceRegenMs: 5 * 60 * 1000, // 1 pt / 5 min
   larryChance: 0.10,      // 10% d'instabilité de Larry (Phase 5)
+  // Ascension / Constellations (Phase 6) — voir game/ascension.js.
+  ascension: {
+    unlockZone: 5,           // zone minimale débloquée pour pouvoir Ascender — abaissé de
+    // 10 à 5 le 2026-07-17 (voir rapport_difficulte_zone10.md) : le mur de difficulté réel
+    // arrivait dès la Zone 4-5 en progression normale, la Zone 10 n'était pas atteignable
+    // du tout. `unlockZone` ne fait que rendre l'Ascension ÉLIGIBLE — rien n'empêche de
+    // continuer à jouer au-delà (Zone 6-8) pour accumuler plus de zonePoints avant
+    // d'Ascender : la formule (pointsBreakdown() ci-dessous) récompense d'ailleurs un seuil
+    // BAS, chaque zone au-delà du seuil comptant pour +1 point quel que soit ce seuil.
+    pointsPerZone: 1,        // points de Constellation par zone au-delà du seuil (formule extensible : + étage de donjon plus tard)
+    goldPerPoint: 10000,     // +1 point de Constellation par tranche d'or accumulé au moment d'Ascender
+    respecBaseEclats: 5,     // coût du 1er respec (arbre entier) — en Éclats d'Ascension, LA ressource premium (pas `fragments`, qui est une monnaie de craft courante)
+    respecGrowth: 1.5,       // multiplicateur de coût à chaque respec suivant
+    bagBase: 20,             // capacité de sac restaurée après reset (avant bonus Écho)
+  },
+  // La Brèche Instable (donjon à étages rejouable à l'infini — voir game/donjon.js).
+  // Profondeur = étage courant (0 = premier, on "descend" — jamais négatif en interne,
+  // le signe "-N étages" du Lore n'est qu'une convention d'affichage côté UI).
+  donjon: {
+    zoneEquivBase: 5,        // difficulté de l'étage 0 = Zone 5 (demande initiale : "difficulté zone 5")
+    floorsPerZoneStep: 5,    // +1 zone de difficulté équivalente tous les N étages (étage 25 = Zone 10)
+    checkpointInterval: 10,  // un checkpoint (sélectionnable à l'entrée) tous les N étages
+    gridBaseSize: 5,         // côté de la grille à l'étage 0 (5x5)
+    gridMaxSize: 13,         // plafond (au-delà, la DENSITÉ monte plutôt que la taille — DOM/pathing raisonnables)
+    gridGrowthFloors: 10,    // +1 case de côté tous les N étages
+    enemyBase: 4,            // nb de cases ennemi à l'étage 0
+    enemyPer: 3,              // +1 ennemi tous les N étages
+    eventRatio: 0.15,         // % des cases restantes (hors ennemis/boss/entrée) en case événement
+    lossPenaltyPct: 50,       // % du butin de la run perdu sur sortie forcée (défaite ou bouton Retour)
+    exitHpPct: 50,            // % PV max restaurés à la sortie de la Brèche (propre ou forcée)
+    // Extrapolation du scale au-delà de la Zone 25 (fin du tableau ZONES) : croissance
+    // géométrique dérivée de la pente réelle Z20→Z25, pour un donjon vraiment infini
+    // sans dépendre d'un tableau fini — voir game/donjon.js scaleForFloor().
+    scaleGrowthRate: 1.10,
+  },
 };

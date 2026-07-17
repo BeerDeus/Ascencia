@@ -1,11 +1,15 @@
-// ===== Récits (Fragments d'Écho) — Acte I, adapté de "Lore Ascencia.txt" =====
-// Contenu volontairement limité à l'Acte I : les zones vont maintenant jusqu'à 20
-// (voir config.js ZONES) mais ces 7 fragments ne couvrent narrativement que le tout
-// début du jeu (Zones 1-5) — Tâche 7.4 de la Roadmap : étendre aux Actes suivants au
-// fur et à mesure que du contenu de zone plus tardif existe. Chaque fragment se
-// débloque via une condition vérifiable sur l'état courant et octroie un bonus
-// permanent — même logique que Maîtrise (game/codex.js) : bonus dérivés à la volée,
-// jamais stockés.
+// ===== Récits (Fragments d'Écho) — Actes I à III (ouverture), adapté de "Lore Ascencia.txt" =====
+// MAJ 2026-07-17 (Tâche 7.4 Roadmap) : extension à l'Acte II (ch8-11, Pont-la-Croisée/
+// Silas l'Enchanteur/premier affrontement avec Larry) + ouverture de l'Acte III (ch12-13,
+// rituel d'Ascension + 2e Ascension) — ces deux Actes ne demandaient AUCUN nouveau
+// système, juste des conditions de déblocage sur de l'état déjà réel (zone, enchant
+// posé, ascension.count). La suite de l'Acte III (Gardien Harmonique, étages 70/80 de
+// la Brèche) et les Actes IV+ (résonateurs, donjon de la Brèche Instable) restent
+// bloqués tant qu'un système d'étages/donjon n'existe pas en jeu — pas de contenu
+// factice pour l'instant, on attend le vrai système (voir state.ascension.bestFloorAllTime,
+// déjà réservé). Chaque fragment se débloque via une condition vérifiable sur l'état
+// courant et octroie un bonus permanent — même logique que Maîtrise (game/codex.js) :
+// bonus dérivés à la volée, jamais stockés.
 import { state } from '../state.js';
 
 const totalKills = (wins) => Object.values(wins || {}).reduce((s, v) => s + v, 0);
@@ -80,6 +84,62 @@ export const LORE_FRAGMENTS = [
     check: (s) => totalKills(s.monsterWins) >= 1000,
     text: "Vous avez nettoyé chaque recoin des terres connues, vaincu chaque garde-frontière de la Dissonance. Et pourtant, dans le silence de votre victoire, un rire résonne — lent, sarcastique, familier d'une manière que vous ne saviez pas encore redouter. « Continue de les rassembler pour moi, veux-tu ? » murmure une voix dans l'ombre. « Ça rend les choses tellement plus... intéressantes. » La Dissonance n'est pas un accident. C'est un jeu. Et vous venez d'apprendre que vous en êtes le pion.",
     reward: { pct: { resDissonance: 2 } }, rewardTxt: '+2% Résist. Dissonance',
+  },
+  // ---- Acte II : la traque de Larry (Pont-la-Croisée / Capitale) ----
+  {
+    id: 'ch8_pont_la_croisee',
+    chapter: 8,
+    title: 'Pont-la-Croisée',
+    unlockLabel: 'Atteindre le Marais Empoisonné (Zone 7)',
+    check: (s) => (s.progress.unlocked || 1) >= 7,
+    text: "Le rire de Larry hante vos pas. Vous n'êtes plus un simple guérisseur : vous êtes un chasseur. Sa piste vous mène à Pont-la-Croisée, une cité bouillonnante où votre réputation vous précède déjà. Gaston, le cuisinier de l'auberge, vous apprend qu'un guerrier bien nourri affronte mieux les pires épreuves. La garde, reconnaissant votre valeur, instaure en votre honneur le premier Tableau des Primes.",
+    reward: { pct: { bonusOr: 1 } }, rewardTxt: "+1% Trouvaille d'or",
+  },
+  {
+    id: 'ch9_maitresse_chasseuse',
+    chapter: 9,
+    title: 'La Maîtresse Chasseuse',
+    unlockLabel: 'Atteindre la Crypte des Oubliés (Zone 8)',
+    check: (s) => (s.progress.unlocked || 1) >= 8,
+    text: "La Dissonance de Larry est plus intentionnelle qu'un simple chaos : il ne corrompt pas, il « améliore », créant des bêtes mutées. Pour comprendre son art impie, il vous faut un cœur de créature que seule la Maîtresse Chasseuse peut vous aider à trouver. Femme aussi sauvage que les bêtes qu'elle traque, elle ne respecte que la force — et ce n'est qu'après avoir prouvé votre talent qu'elle accepte enfin de commercer avec vous.",
+    reward: { flat: { chance: 1 } }, rewardTxt: '+1 Chance',
+  },
+  {
+    id: 'ch10_tour_de_silas',
+    chapter: 10,
+    title: 'La Tour de Silas',
+    unlockLabel: 'Enchanter une pièce d’équipement',
+    check: (s) => Object.values((s.player && s.player.equipment) || {}).some((e) => e && e.enchant),
+    text: "Le composant vous mène à la source de la magie de Larry : la tour de son ancien maître, Silas l'Enchanteur. Brisé par la trahison de son élève, Silas vous explique sa folie — Larry ne voit pas le monde comme brisé, mais comme une toile vierge à repeindre aux couleurs du chaos. Pour vous aider à le combattre, Silas vous enseigne les secrets de l'enchantement.",
+    reward: { pct: { crit: 1 } }, rewardTxt: '+1% Critique',
+  },
+  {
+    id: 'ch11_chef_doeuvre_larry',
+    chapter: 11,
+    title: "Le Chef-d'œuvre de Larry",
+    unlockLabel: 'Ascender pour la première fois',
+    check: (s) => ((s.ascension && s.ascension.count) || 0) >= 1,
+    text: "Vous coincez enfin Larry dans un de ses laboratoires cachés. Le combat est une farce : il esquive vos coups sans effort, retourne vos propres forces contre vous. « Tu joues encore la vieille mélodie, dit-il. Laisse-moi t'apprendre un nouveau rythme. » Il disparaît, laissant derrière lui une abomination de chair et de cristal qui vous laisse pour mort. Lysandra vous le confirme : tant que vous resterez dans les limites de cette vie, vous ne serez qu'un jouet pour lui. L'heure de l'Ascension est venue.",
+    reward: { pct: { resistance: 1 } }, rewardTxt: '+1% Résistance aux dégâts',
+  },
+  // ---- Acte III (ouverture) : la première Ascension ----
+  {
+    id: 'ch12_se_briser_pour_renaitre',
+    chapter: 12,
+    title: 'Se Briser pour Renaître',
+    unlockLabel: 'Ascender pour la première fois',
+    check: (s) => ((s.ascension && s.ascension.count) || 0) >= 1,
+    text: "Le choix était terrible : abandonner tout ce que vous aviez bâti pour une promesse de puissance future. Mais le sourire de Larry ne vous laissait pas d'autre option. Le rituel fut une dissolution — votre corps et votre esprit se dénouant fil par fil, votre histoire se dispersant comme de la poussière d'étoiles. Puis le vide. Et enfin, une nouvelle étincelle. Votre légende passée était désormais gravée dans le firmament : les Constellations étaient vôtres, un pouvoir que même Larry ne pouvait vous arracher.",
+    reward: { flat: { intelligence: 1 } }, rewardTxt: '+1 Intelligence',
+  },
+  {
+    id: 'ch13_juge_silencieux',
+    chapter: 13,
+    title: 'Le Juge Silencieux',
+    unlockLabel: 'Ascender une deuxième fois',
+    check: (s) => ((s.ascension && s.ascension.count) || 0) >= 2,
+    text: "Une telle lumière ne pouvait passer inaperçue. « Il sait, murmura Lysandra, le visage blême. Larry a senti ta renaissance, et il n'aime pas la concurrence. » L'ennemi qu'il envoya n'était pas une bête corrompue, mais un assassin de cristal noir et de silence, chargé d'éteindre votre étincelle avant qu'elle ne devienne un brasier. Quand il se brisa en un million d'éclats silencieux, vous aviez votre réponse : l'Ascension avait fonctionné. Le jeu avait changé.",
+    reward: { pct: { critDmg: 2 } }, rewardTxt: '+2% Dégâts Critiques',
   },
 ];
 

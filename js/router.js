@@ -9,6 +9,8 @@ import { renderAventure } from './views/aventure.js';
 import { renderCodex } from './views/codex.js';
 import { renderCapitale } from './views/capitale.js';
 import { isActive as combatActive } from './game/combat.js';
+import { isAscensionFullscreen } from './views/ascension.js';
+import { isDonjonFullscreen } from './views/donjon.js';
 
 const VIEWS = {
   village: renderVillage,
@@ -60,6 +62,12 @@ function render() {
 
   // Combat plein écran : masque header/subnav/mainnav (voir css/base.css #app.combat-mode).
   if (app) app.classList.toggle('combat-mode', view === 'aventure' && sub === 'combat' && combatActive());
+  // Constellations plein écran (Ascension) : même principe, voir css/base.css
+  // #app.constellation-mode + views/ascension.js isAscensionFullscreen().
+  if (app) app.classList.toggle('constellation-mode', view === 'profil' && sub === 'ascension' && isAscensionFullscreen());
+  // Brèche Instable plein écran (voir views/donjon.js isDonjonFullscreen()) — même
+  // principe que combat-mode/constellation-mode, masque tout le chrome (voir base.css).
+  if (app) app.classList.toggle('donjon-mode', view === 'aventure' && sub === 'donjon' && isDonjonFullscreen());
 
   renderSubNav(subnav, view, sub, navigateSub);
 

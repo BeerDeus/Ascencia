@@ -162,25 +162,40 @@ export function applyLarryAffix(monster, affix) {
 }
 
 // Butin à la victoire : ressources garanties + drops d'items + matériau de famille + or.
-export function rollLoot(monster) {
+// butinBonusPct : stat secondaire d'Enchantement (Phase 9.4) — scale à la fois la
+// chance de drop (items/matériau) ET les quantités (ressources/or), 0 par défaut =
+// comportement inchangé. Renvoie `gold` = l'or RÉELLEMENT crédité (post-bonus) : les
+// appelants doivent l'utiliser pour tout affichage (logs/toasts), jamais monster.gold
+// brut, sous peine d'afficher un montant différent de celui vraiment ajouté.
+export function rollLoot(monster, butinBonusPct = 0) {
+  const mult = 1 + (butinBonusPct || 0) / 100;
   const drops = [];
   for (const d of (monster._loot || [])) {
-    if (Math.random() <= d.chance) {
+    if (Math.random() <= Math.min(1, d.chance * mult)) {
       const n = d.min + Math.floor(Math.random() * (d.max - d.min + 1));
       if (n > 0) drops.push({ tid: d.tid, n });
     }
   }
-  if (monster._mat && Math.random() < 0.5) drops.push({ tid: monster._mat, n: 1 + Math.floor(Math.random() * 2) });
+  if (monster._mat && Math.random() < Math.min(1, 0.5 * mult)) drops.push({ tid: monster._mat, n: 1 + Math.floor(Math.random() * 2) });
 
   // Sac plein → l'objet dropé est perdu (tryAddItem renvoie false, aucune pile
   // n'est créée) ; empiler sur un stack déjà existant reste toujours possible.
   const lost = [];
+  const res = {};
+  let gold = 0;
   setState((s) => {
-    for (const [k, v] of Object.entries(monster._resLoot || {})) s.resources[k] = (s.resources[k] || 0) + v;
-    if (monster.gold) s.resources.or = (s.resources.or || 0) + monster.gold;
+    for (const [k, v] of Object.entries(monster._resLoot || {})) {
+      const scaled = Math.round(v * mult);
+      res[k] = scaled;
+      s.resources[k] = (s.resources[k] || 0) + scaled;
+    }
+    if (monster.gold) {
+      gold = Math.round(monster.gold * mult);
+      s.resources.or = (s.resources.or || 0) + gold;
+    }
     for (const d of drops) { if (!tryAddItem(s.inventory, d.tid, d.n, inventoryCapacity(s))) lost.push(d); }
   });
-  return { drops, res: monster._resLoot || {}, lost };
+  return { drops, res, gold, lost };
 }
 
 export const monstersApi = { ENEMIES, BOSSES, makeMonster, makeBoss, deriveEnemy, rollLoot, statRangeFor, LARRY_AFFIXES, rollLarryAffix, applyLarryAffix };

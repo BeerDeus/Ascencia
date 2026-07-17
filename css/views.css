@@ -152,7 +152,11 @@
   transition: background 0.2s linear;
 }
 .buff-badge .buff-icon {
-  position: absolute; inset: 3px; border-radius: 50%;
+  /* <img> est un élément remplacé : position:absolute + inset seuls ne le
+     contraignent PAS à la taille du cercle (il garde sa taille intrinsèque, d'où le
+     bug "affiché en gros, en dehors du cercle") — largeur/hauteur explicites
+     obligatoires ici, l'inset ne suffit qu'au POSITIONNEMENT. */
+  position: absolute; inset: 3px; width: 26px; height: 26px; border-radius: 50%;
   object-fit: cover; background: var(--bg-inset); border: 1px solid var(--border-soft);
 }
 .buff-badge.low .buff-ring { background: conic-gradient(#e0405a calc(var(--frac, 100) * 1%), rgba(255,255,255,0.12) 0); }
@@ -338,6 +342,7 @@
 }
 .dd-item:active { background: var(--bg-card-hover); }
 .dd-item.sel { color: var(--gold-bright); background: var(--bg-inset); }
+.dd-item.locked { opacity: 0.45; font-style: italic; }
 .craft-card {
   border: 1px solid var(--border-soft); border-radius: var(--radius);
   background: var(--bg-card); padding: var(--sp-3); margin-bottom: var(--sp-3);
@@ -419,6 +424,34 @@ img.mastery-track-icon { width: 28px; height: 28px; object-fit: contain; }
 .mining-level { font-size: 13px; color: var(--gold-bright); margin-bottom: var(--sp-3); }
 .mining-card.locked { opacity: 0.55; }
 .mining-yield { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
+
+/* ===== Enchanteur (Capitale) ===== */
+.btn-back {
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  border-radius: var(--radius-pill); border: 1px solid var(--border-soft);
+  background: var(--bg-inset); color: var(--gold);
+}
+.btn-back:active { border-color: var(--border-gold); }
+/* Sélecteur de note favorisée (dropdown, voir components/dropdown.js) — biaise
+   pickNote() en combat (game/combat.js), 2ème roll d'enchant, voir game/items.js. */
+.enchant-note-row {
+  display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
+  font-size: 13px; color: var(--text); margin-bottom: var(--sp-2);
+}
+.enchant-note-row .dd { flex: 0 0 110px; }
+.enchant-chance-lines { margin-bottom: var(--sp-3); }
+.enchant-chance-lines .craft-gold { margin-bottom: 2px; }
+/* Roll d'affixe affiché sur chaque pièce (nom + badge de rareté + bonus, voir
+   views/capitale.js enchantRow()) — remplace les anciens .enchant-dot (niveaux). */
+.enchant-affix { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.enchant-affix.empty { color: var(--text-muted); font-style: italic; }
+.enchant-affix-name { font-weight: 600; color: var(--gold-bright); }
+.enchant-affix-stats { color: var(--text-muted); }
+/* Stat secondaire (voir data/affixes.js SECONDARY_STATS) — pas encore lue par le
+   combat (prochaine tâche), teinte volontairement en sourdine pour le signaler. */
+.enchant-affix-secondary { color: var(--rarity-uncommon); font-style: italic; width: 100%; }
+.confirm-row { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+.confirm-row button { flex: 1; }
 
 /* ===== Symphonie : bulles, Mesure, Accords ===== */
 .bubble-layer { position: absolute; inset: 0; overflow: visible; pointer-events: none; z-index: 6; }
@@ -567,3 +600,179 @@ img.mastery-track-icon { width: 28px; height: 28px; object-fit: contain; }
 .mastery-tier .mt-reward { color: var(--text); font-weight: 600; text-align: right; }
 .mastery-tier.done .mt-label { color: var(--positive); }
 .mastery-tier.done .mt-reward { color: var(--gold-bright); }
+
+/* ===== Ascension / Constellations (Phase 6, views/ascension.js) ===== */
+/* Carte "Prochaine Ascension" — détail des sources de points (pointsBreakdown()). */
+.next-ascension-card { display: flex; flex-direction: column; gap: var(--sp-3); }
+.nac-head { display: flex; align-items: center; gap: var(--sp-3); }
+.nac-icon { width: 30px; height: 30px; object-fit: contain; filter: drop-shadow(0 0 8px var(--gold-glow)); }
+.nac-title { font-family: var(--font-title); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-dim); }
+.nac-total { font-family: var(--font-title); font-size: 16px; color: var(--gold-bright); }
+.pb-list { display: flex; flex-direction: column; gap: 6px; }
+.pb-row {
+  display: flex; align-items: center; gap: var(--sp-2); font-size: 12px; color: var(--text-muted);
+  padding-top: 6px; border-top: 1px dashed var(--border-soft);
+}
+.pb-row:first-child { border-top: none; padding-top: 0; }
+.pb-row .icon { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
+.pb-row span:nth-child(2) { flex: 1; }
+.pb-val { color: var(--gold-bright); font-weight: 700; }
+
+.btn-secondary {
+  display: block; width: 100%; margin-top: var(--sp-3); padding: 10px; font-size: 13px; font-weight: 600;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-soft); background: var(--bg-card); color: var(--text-muted); text-align: center;
+}
+
+/* Plein écran (voir views/ascension.js setFullscreen() + router.js/base.css
+   #app.constellation-mode) : position:absolute + inset:0 pour ignorer complètement
+   la chaîne de hauteurs de l'ancêtre .view-root (overflow:auto, hauteur flex) plutôt
+   que de dépendre d'un height:100% en cascade. absolute (pas fixed) car #app est déjà
+   position:relative — se cale donc sur la colonne mobile centrée (--max-w), pas sur
+   toute la fenêtre du navigateur en desktop. */
+.constellation-fullscreen {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; flex-direction: column;
+  background: var(--bg-app);
+}
+.constellation-hud {
+  display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-soft); background: var(--bg-section);
+}
+.hud-points { font-family: var(--font-title); color: var(--gold-bright); font-size: 14px; letter-spacing: 0.5px; }
+.hud-points .value { color: var(--gold-bright); font-weight: 700; }
+.hud-actions { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; }
+.hud-btn {
+  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  border-radius: var(--radius-pill); border: 1px solid var(--border-soft); background: var(--bg-card); color: var(--text-muted);
+}
+.hud-btn:disabled { opacity: 0.5; }
+.hud-btn.hud-close { border-color: var(--negative); color: var(--negative); }
+
+/* Viewport pannable au doigt (pointer events, voir ascension.js makeViewport()) —
+   touch-action:none indispensable pour que le drag ne rentre pas en conflit avec le
+   scroll natif sur mobile. flex:1 : occupe tout l'espace restant sous le HUD. */
+.constellation-viewport {
+  position: relative; overflow: hidden; touch-action: none; flex: 1;
+  background: radial-gradient(circle at 50% 85%, var(--bg-card) 0%, var(--bg-app) 75%);
+}
+.constellation-canvas { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+
+.cn-line { position: absolute; height: 2px; background: var(--border-gold); transform-origin: 0 50%; pointer-events: none; }
+
+.cn-star {
+  position: absolute; width: 40px; height: 40px; margin: -20px 0 0 -20px; /* centré sur pos.x/pos.y */
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--border-soft); background: var(--bg-card); box-shadow: var(--shadow-card);
+}
+.cn-star-icon { width: 20px; height: 20px; object-fit: contain; }
+.cn-star.locked { opacity: 0.4; }
+.cn-star.available { border-color: var(--gold); box-shadow: 0 0 12px var(--gold-glow); }
+.cn-star.maxed { border-color: var(--positive); box-shadow: 0 0 10px rgba(107,191,89,0.4); }
+.cn-star.kind-start { border-color: var(--gold-bright); width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+.cn-star.kind-capstone { border-color: var(--rarity-special); width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+.cn-star.kind-rarity { border-color: var(--rarity-rare); }
+.cn-star.kind-major { border-width: 3px; }
+/* Brouillard : contenu non révélé (voir isRevealed() dans ascension.js) — icône
+   générique + estompé, la structure/position reste visible mais pas ce qu'il contient. */
+.cn-star.mystery { background: var(--bg-inset); opacity: 0.6; filter: grayscale(0.6); }
+
+/* Modale de détail d'un node (tap sur une étoile) — réutilise .modal-overlay/.modal-box */
+.cn-level { font-size: 11px; color: var(--text-muted); }
+.cn-req { font-size: 11px; color: var(--negative); }
+.cn-status-txt { font-size: 12px; color: var(--positive); font-weight: 600; }
+
+/* ===== Brèche Instable (donjon à étages, views/donjon.js) ===== */
+.active-pick { border-color: var(--gold) !important; color: var(--gold-bright) !important; }
+
+/* Plein écran : même pattern que .constellation-fullscreen (position:absolute + inset:0,
+   voir commentaire là-bas) — actif via #app.donjon-mode (router.js/base.css). */
+.donjon-fullscreen {
+  position: absolute; inset: 0; z-index: 40;
+  display: flex; flex-direction: column;
+  background: var(--bg-app);
+}
+.donjon-hud {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border-soft); background: var(--bg-section);
+  flex-shrink: 0;
+}
+.donjon-hud-row { display: flex; align-items: center; gap: var(--sp-3); font-size: 12px; }
+.donjon-hud-row .hud-points { flex: 1; font-family: var(--font-title); color: var(--gold-bright); font-size: 13px; letter-spacing: 0.5px; }
+.donjon-hpbar { height: 14px; }
+
+.donjon-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Viewport fixe (fenêtre visible) — le labyrinthe est bien plus grand que ça, la
+   "caméra" bouge le canvas EN DESSOUS (transform:translate, voir .donjon-canvas et
+   views/donjon.js mountGrid()) plutôt que de faire défiler le viewport lui-même. */
+.donjon-viewport {
+  position: relative; flex: 1; min-height: 0; overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, var(--bg-card) 0%, var(--bg-app) 75%);
+}
+/* Canvas = grille de cases en position absolue dans le viewport, recentrée sur le
+   joueur à chaque déplacement (transform posé en JS) — la transition fait le "suivi"
+   de caméra fluide plutôt qu'un saut sec d'une case à l'autre. */
+.donjon-canvas {
+  position: absolute; top: 0; left: 0; display: grid; gap: 0;
+  transition: transform 180ms ease;
+}
+.donjon-cell {
+  position: relative; box-sizing: border-box;
+  background: var(--bg-inset);
+  display: grid; place-items: center;
+  opacity: 0.5;
+}
+/* Bordures = murs du labyrinthe (voir game/donjon.js carveMaze()/wallStyle()) —
+   posées en style inline par case (voir views/donjon.js), transparentes là où le
+   passage est ouvert : c'est ça qui dessine les corridors, pas un simple quadrillage. */
+.donjon-cell.reachable { opacity: 1; cursor: pointer; }
+.donjon-cell.entry { opacity: 0.85; }
+.donjon-cell.enemy.reachable { box-shadow: inset 0 0 0 2px var(--negative); }
+.donjon-cell.event.reachable { box-shadow: inset 0 0 0 2px var(--tempo); }
+.donjon-cell.boss { opacity: 1; box-shadow: inset 0 0 0 2px var(--dissonance), 0 0 10px var(--dissonance); }
+.donjon-cell.stairs { opacity: 1; box-shadow: inset 0 0 0 2px var(--gold), 0 0 10px var(--gold-glow); }
+/* Brouillard de guerre (voir game/donjon.js revealAround(), views/donjon.js
+   buildCellContent()) — case jamais adjacente au joueur : contenu masqué par un "?",
+   classe CSS générique (jamais .enemy/.boss/.event/.stairs, sinon leurs halos
+   trahiraient le contenu à travers le brouillard). */
+.donjon-cell.fog { opacity: 0.45; }
+.donjon-fog-mark {
+  font-family: var(--font-title); font-size: 15px; color: var(--text-faint);
+  opacity: 0.7;
+}
+.donjon-cell .sprite-img { width: 30px; height: 30px; object-fit: contain; }
+.donjon-cell-icon { width: 20px; height: 20px; object-fit: contain; opacity: 0.85; }
+.donjon-player-dot {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--gold-bright); box-shadow: 0 0 10px var(--gold-bright);
+  bottom: 4px; left: 50%; transform: translateX(-50%); z-index: 2;
+}
+.donjon-cell.player { opacity: 1; background: var(--bg-card-hover); }
+
+.donjon-dpad {
+  flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 44px); grid-auto-rows: 44px;
+  gap: 4px; justify-content: center; padding: var(--sp-3) 0 calc(var(--sp-3) + env(safe-area-inset-bottom));
+}
+.donjon-dpad-btn {
+  border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+  background: var(--bg-card); color: var(--gold-bright); font-size: 16px;
+}
+.donjon-dpad-btn:active { transform: scale(0.95); }
+.donjon-dpad-btn:disabled { opacity: 0.25; }
+.donjon-dpad-center { background: var(--bg-inset); border-radius: var(--radius-sm); }
+
+/* Badge de rareté (Forge — hub Village + section-title, voir views/village.js) */
+.section-title-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.section-title-row .section-title { margin-bottom: 0; }
+.rarity-badge {
+  padding: 3px 10px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700;
+  border: 1px solid var(--border-soft); background: var(--bg-inset); color: #1a1a1a;
+}
+.rarity-badge.rarity-common { background: var(--rarity-common); }
+.rarity-badge.rarity-uncommon { background: var(--rarity-uncommon); }
+.rarity-badge.rarity-rare { background: var(--rarity-rare); }
+.rarity-badge.rarity-epic { background: var(--rarity-epic); }
+.rarity-badge.rarity-legendary { background: var(--rarity-legendary); }
+.rarity-badge.rarity-mythic { background: var(--rarity-mythic); color: var(--text); }
+.rarity-badge.rarity-special { background: var(--rarity-special); }

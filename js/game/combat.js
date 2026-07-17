@@ -5,13 +5,13 @@ import { el, clear, clamp, iconNode } from '../utils/dom.js';
 import { state, setState } from '../state.js';
 import { SETTINGS, ZONES } from '../config.js';
 import { derive, addXp, activePotionBuffs } from './player.js';
-import { ITEMS, equippedSymphonyIds } from './items.js';
+import { ITEMS, equippedSymphonyIds, noteOnHitChance } from './items.js';
 import { rollLoot, makeMonster, rollLarryAffix, applyLarryAffix } from './monsters.js';
 import { NOTES, accordById, noteById, noteByLabel, pushNote, accordMatches, accordProgress, MESURE_SIZE } from './symphony.js';
 import { hasEndurance, spend as spendEndurance } from './endurance.js';
 import { incrementMetric } from './primes.js';
 import { PREMIUM_TIER_KILLS, ECLATS_PER_KILL } from './codex.js';
-import { isMining, stopMining } from './mining.js';
+import { stopAllGathering } from './gathering.js';
 import { showToast } from '../components/toast.js';
 
 // Icônes + libellés des ressources vrac pour les toasts de loot (mêmes chemins que
@@ -32,6 +32,15 @@ const BUFF_LOW_MS = 30_000; // seuil d'alerte (anneau rouge pulsant) — derniè
 const TEMPO_RATE  = 42;    // points de Tempo / seconde à vitesse 1 (jauge = 100)
 const RELAUNCH_MS = 1200;  // délai avant relance en auto-battle
 const LOG_MAX     = 40;
+// ---- Stats secondaires d'Enchantement (Phase 9.4, câblage effet réel 2026-07-16) ----
+// STUN_MS : durée de pause du remplissage de Tempo (joueur OU ennemi) quand étourdi.
+// BASE_ENEMY_STUN_CHANCE : chance de base (%) qu'un coup CRITIQUE ennemi étourdisse le
+// joueur — réduite par la Résistance aux Altérations (resist_alteration, jamais sous 0).
+// Aucune des deux ne préexistait : design nouveau pour donner un effet à `etourdissement`
+// (offensif, coup PORTÉ, pas besoin d'un crit) et `resistAlteration` (défensif, ne
+// réagit qu'aux crits ENCAISSÉS — cf. data/affixes.js SECONDARY_STATS).
+const STUN_MS = 1500;
+const BASE_ENEMY_STUN_CHANCE = 20;
 export const WIN_REQ = SETTINGS.autoBattleWins;
 
 let rt = null; // état runtime du combat en cours (null = aucun)
@@ -49,13 +58,26 @@ export const current   = () => rt;
 let onChange = null;
 export function setChangeHook(fn) { onChange = fn; }
 
+// Hooks Brèche Instable (voir game/donjon.js) : combat.js ne connaît RIEN de donjon.js
+// (pas d'import — évite un cycle donjon.js <-> combat.js, donjon.js important déjà
+// start()/stop() d'ici). donjon.js s'enregistre via setDonjonHooks() et start() prend
+// `donjon:true` pour les combats déclenchés depuis une case de la grille : onWin/onLoss
+// appellent alors ces hooks au lieu (onWin) ou en plus (onLoss) du comportement zone
+// normal — voir onWin()/onLoss() ci-dessous.
+let donjonHooks = null;
+export function setDonjonHooks(hooks) { donjonHooks = hooks; }
+
 // ---- Démarrage / relance ----
-export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}) {
-  // Toute autre activité interrompt le minage en cours (crédite d'abord les cycles
-  // pleins déjà écoulés, comme le bouton "Arrêter le filon" — voir game/mining.js
-  // stopMining()). Pattern à reproduire pour toute future activité exclusive
-  // (donjons...) : appeler stopMining() en entrée de son propre start().
-  if (isMining()) stopMining();
+// extraPct : buffs/malus TEMPORAIRES de la run en cours (Pacte du Diable — voir
+// data/donjon_events.js), appliqués une seule fois sur les stats dérivées de CE combat,
+// jamais persistés sur state.player (rt est un runtime hors-state, voir en-tête fichier).
+export function start(monster, { auto = false, isBoss = false, zoneId = 1, donjon = false, extraPct = null } = {}) {
+  // Lancer un combat interrompt tout métier de récolte en cours (crédite d'abord les
+  // cycles pleins déjà écoulés, comme le bouton "Arrêter le filon" — voir
+  // game/gathering.js stopAllGathering(), généralisé aux 4 métiers le 2026-07-17
+  // (ne couvrait que le Minage auparavant). Pattern à reproduire pour toute future
+  // activité exclusive (donjons...).
+  stopAllGathering();
   // Instabilité de Larry : roll à CHAQUE lancement (initial ou relance auto-battle),
   // jamais sur les boss — voir game/monsters.js LARRY_AFFIXES. `monster` est toujours
   // une instance fraîche (makeMonster/makeBoss), donc pas de risque de double-affixe.
@@ -65,15 +87,20 @@ export function start(monster, { auto = false, isBoss = false, zoneId = 1 } = {}
   }
   stopLoop();
   const p = derive(state.player);
+  // Pacte du Diable (Brèche Instable) : multiplie/réduit une stat dérivée pour CE
+  // combat uniquement (p est une copie fraîche de derive(), jamais l'objet persisté).
+  if (extraPct) for (const [k, v] of Object.entries(extraPct)) if (p[k] != null) p[k] = Math.max(1, Math.round(p[k] * (1 + v / 100)));
   // Vie persistante : reprend le pool PV sauvegardé (pas de pleine régén à chaque combat).
   const pHp = rt && rt.active && rt.pHp > 0 ? Math.min(rt.pHp, p.maxHp) : Math.min(state.player.combatHp.cur, p.maxHp);
   state.mesure.length = 0; // Mesure fraîche à chaque combat
   // Chaque lancement d'auto-battle (initial ou relance) consomme 1 pt d'Endurance ;
   // à sec, le combat démarre en mode manuel (le mode s'arrête faute d'Endurance).
+  // Jamais d'auto-battle en Brèche (pas demandé, et relaunch() ne sait pas régénérer
+  // une case de grille) — donjon.js n'appelle jamais start() avec auto:true.
   const wantsAuto = auto && !isBoss;
   const autoGranted = wantsAuto && spendEndurance(1);
   rt = {
-    active: true, auto: autoGranted, isBoss, zoneId,
+    active: true, auto: autoGranted, isBoss, zoneId, donjon,
     enemy: { ...monster }, enemyId: monster.id,
     eMax: monster.hp, eHp: monster.hp,
     pMax: p.maxHp, pHp,
@@ -113,9 +140,14 @@ function loop() {
   if (dt > 0.25) dt = 0.25; // clamp (onglet inactif)
   if (rt.phase !== 'fighting') { paint(); return; }
 
-  rt.pTempo += TEMPO_RATE * rt.pStats.vitesse * dt;
-  rt.eTempo += TEMPO_RATE * rt.enemy.tempo * dt;
-  // Pas de régénération de PV en combat (les soins passent par les consommables — Cuisine, Phase 5).
+  // Étourdissement : suspend le remplissage du Tempo du camp touché tant que
+  // pStunUntil/eStunUntil n'est pas dépassé (posé par playerHit/enemyHit ci-dessous).
+  if (!rt.pStunUntil || t >= rt.pStunUntil) rt.pTempo += TEMPO_RATE * rt.pStats.vitesse * dt;
+  if (!rt.eStunUntil || t >= rt.eStunUntil) rt.eTempo += TEMPO_RATE * rt.enemy.tempo * dt;
+  // Pas de régénération de PV en combat par défaut (les soins passent par les consommables
+  // — Cuisine, Phase 5) — SAUF Régénération en Combat (stat secondaire d'Enchantement,
+  // 0 par défaut = comportement inchangé).
+  if (rt.pStats.regenCombat > 0 && rt.pHp < rt.pMax) rt.pHp = Math.min(rt.pMax, rt.pHp + rt.pStats.regenCombat * dt);
 
   while (rt.pTempo >= 100 && rt.phase === 'fighting') { rt.pTempo -= 100; playerHit(); }
   while (rt.eTempo >= 100 && rt.phase === 'fighting') { rt.eTempo -= 100; enemyHit(); }
@@ -145,8 +177,19 @@ function playerHit() {
   if (r.miss) { spawnMaybe(false); return pushLog(`Vous manquez ${e.name}.`); }
   rt.eHp -= r.dmg;
   pushLog(`Vous infligez ${r.dmg}${r.crit ? ' (CRIT)' : ''} à ${e.name}.`);
+  // Vol de Vie (stat secondaire d'Enchantement) : % des dégâts infligés rendus en PV.
+  if (s.volVie > 0) {
+    const heal = Math.round(r.dmg * s.volVie / 100);
+    if (heal > 0) { rt.pHp = Math.min(rt.pMax, rt.pHp + heal); pushLog(`Vol de Vie : +${heal} PV.`); }
+  }
   spawnMaybe(r.crit); // chance de bulle (garantie sur un critique)
-  if (rt.eHp <= 0) { rt.eHp = 0; onWin(); }
+  if (rt.eHp <= 0) { rt.eHp = 0; onWin(); return; }
+  // Étourdissement (stat secondaire d'Enchantement) : chance d'étourdir l'ennemi à
+  // chaque coup PORTÉ (pas besoin d'un critique, contrairement au subi — voir enemyHit).
+  if (s.etourdissement > 0 && Math.random() * 100 < s.etourdissement) {
+    rt.eStunUntil = now() + STUN_MS;
+    pushLog(`${e.name} est étourdi !`);
+  }
 }
 
 // ---- Symphonie : bulles de notes (object pooling) ----
@@ -163,7 +206,14 @@ function weaponNoteId() {
   return n ? n.id : null;
 }
 function pickNote() {
-  // biais léger vers la note de l'arme équipée, sinon aléatoire
+  // Note favorisée (Enchanteur, voir game/items.js getChosenNote/setChosenNote) : 50%
+  // de sortir telle quelle — priorité sur le biais arme ci-dessous, réponse utilisateur
+  // du 2026-07-16 ("dans 50% des cas ce sera la note sélectionnée"). S'applique aux
+  // bulles offensives (coups portés) ET défensives (coups encaissés) : même fonction,
+  // même mécanique de tirage pour les deux déclencheurs (spawnMaybe/spawnOnHitTaken).
+  const chosen = state.player.chosenNote;
+  if (chosen && Math.random() < 0.5) return chosen;
+  // sinon, biais existant vers la note de l'arme équipée, sinon aléatoire
   if (rt.weaponNote && Math.random() < 0.4) return rt.weaponNote;
   return NOTES[Math.floor(Math.random() * NOTES.length)].id;
 }
@@ -242,9 +292,19 @@ export function debugTestAccord(accordId) {
   for (const noteId of a.pattern) debugPushNote(noteId);
   return castAccord(accordId);
 }
+
+// ---- Debug console (test de progression de zones, ex: pour valider l'Ascension sans
+// farm) ---- Ascencia.debugSetZone(10) débloque + sélectionne directement la zone 10 ;
+// Ascencia.debugUnlockAllZones() va jusqu'à la dernière zone existante (ZONES.length).
+export function debugSetZone(n) {
+  const id = Math.max(1, Math.min(ZONES.length, Math.round(n)));
+  setState((s) => { s.progress.unlocked = id; s.progress.selected = id; });
+  return id;
+}
+export function debugUnlockAllZones() { return debugSetZone(ZONES.length); }
 function applyAccord(acc) {
   const e = acc.effect;
-  if (e.type === 'heal') { const h = Math.round(rt.pMax * e.frac); rt.pHp = Math.min(rt.pMax, rt.pHp + h); pushLog(`${acc.name} : +${h} PV.`); }
+  if (e.type === 'heal') { const h = Math.round(rt.pMax * e.frac * (1 + (rt.pStats.soinBonus || 0) / 100)); rt.pHp = Math.min(rt.pMax, rt.pHp + h); pushLog(`${acc.name} : +${h} PV.`); }
   else if (e.type === 'damage') { const dmg = Math.max(1, Math.round(rt.pStats.attaque * e.mult)); rt.eHp -= dmg; pushLog(`${acc.name} : ${dmg} dégâts !`); if (rt.eHp <= 0) { rt.eHp = 0; onWin(); return; } }
   else if (e.type === 'buff') { rt.atkMult = { mult: e.mult, until: now() + e.ms }; pushLog(`${acc.name} : Attaque ×${e.mult} (${e.ms / 1000}s).`); }
   else if (e.type === 'tempoEnemy') { rt.eTempo = 0; pushLog(`${acc.name} : Tempo ennemi réinitialisé.`); }
@@ -285,7 +345,35 @@ function enemyHit() {
   if (r.miss) return pushLog(`${e.name} vous manque.`);
   rt.pHp -= r.dmg;
   pushLog(`${e.name} vous inflige ${r.dmg}${r.crit ? ' (CRIT)' : ''}.`);
+  spawnOnHitTaken(); // Enchanteur (Capitale) : chance de note à chaque coup ENCAISSÉ
+  // Épines (stat secondaire d'Enchantement) : dégâts fixes renvoyés à l'ennemi à
+  // CHAQUE coup encaissé (hors miss) — indépendant du Vol de Vie/dégâts normaux.
+  if (s.epines > 0) {
+    rt.eHp -= s.epines;
+    pushLog(`Vos épines renvoient ${s.epines} dégâts à ${e.name}.`);
+    if (rt.eHp <= 0) { rt.eHp = 0; onWin(); return; }
+  }
+  // Résistance aux Altérations (stat secondaire d'Enchantement) : réduit la chance
+  // d'être étourdi quand l'ennemi porte un coup CRITIQUE — jamais sur un coup normal.
+  if (r.crit) {
+    const stunChance = Math.max(0, BASE_ENEMY_STUN_CHANCE - (s.resistAlteration || 0));
+    if (Math.random() * 100 < stunChance) {
+      rt.pStunUntil = now() + STUN_MS;
+      pushLog('Vous êtes étourdi !');
+    }
+  }
   if (rt.pHp <= 0) { rt.pHp = 0; onLoss(); }
+}
+
+// Chance de bulle de note à chaque coup encaissé — indépendante de spawnMaybe()
+// (déclenchée par les coups PORTÉS, chanceNote) : vient de l'Enchantement (voir
+// game/items.js noteOnHitChance(), amplifié par player.equipment[slot].enchant).
+// 0% par défaut (aucune pièce enchantée) — pas de coût perf/appel setState, un simple
+// lookup dérivé à la volée sur l'équipement courant.
+function spawnOnHitTaken() {
+  if (!rt.refs.bubbleLayer) return;
+  const chance = noteOnHitChance();
+  if (chance > 0 && Math.random() * 100 < chance) spawnBubble();
 }
 
 // ---- Issues ----
@@ -293,7 +381,12 @@ function onWin() {
   rt.phase = 'won';
   stopLoop();
   const e = rt.enemy, zoneId = rt.zoneId, isBoss = rt.isBoss;
-  pushLog(`${e.name} vaincu ! +${e.xp} XP, +${e.gold} or.`);
+  // Butin (stat secondaire d'Enchantement) : rollLoot() remonté ici (avant, en fin de
+  // fonction) pour disposer de `gold` (or réellement crédité, post-bonus) dès le 1er
+  // log — voir monsters.js rollLoot(). Toujours utiliser `gold`, jamais e.gold, pour
+  // tout affichage désormais.
+  const { drops, res, gold, lost } = rollLoot(e, rt.pStats.butinBonus);
+  pushLog(`${e.name} vaincu ! +${e.xp} XP, +${gold} or.`);
   const willAuto = rt.auto && !isBoss && rt.pHp > 0;
 
   if (!willAuto) rt.active = false; // retour aux zones au prochain rerender
@@ -311,7 +404,11 @@ function onWin() {
       eclatsGained = ECLATS_PER_KILL;
       s.resources.eclats_ascension = (s.resources.eclats_ascension || 0) + eclatsGained;
     }
-    if (isBoss) {
+    // Progression de zone : uniquement pour un vrai combat de zone (zoneId numérique
+    // 1-25). Les combats de la Brèche Instable passent un zoneId virtuel (voir
+    // game/donjon.js, ex: 'donjon:12') — écrire dedans serait inoffensif (clé
+    // surnuméraire dans bossDefeated) mais sémantiquement faux, donc explicitement exclu.
+    if (isBoss && typeof zoneId === 'number') {
       s.progress.bossDefeated[zoneId] = true;
       if (ZONES.some((z) => z.id === zoneId + 1)) s.progress.unlocked = Math.max(s.progress.unlocked, zoneId + 1);
     }
@@ -323,14 +420,13 @@ function onWin() {
   }
   // Primes (défis quotidiens, voir game/primes.js) : compteurs du jour.
   incrementMetric('kills', 1);
-  incrementMetric('gold', e.gold || 0);
+  incrementMetric('gold', gold || 0);
   if (isBoss) incrementMetric('bossKills', 1);
   if (e.larryAffix) incrementMetric('larryKills', 1);
-  const { drops, res, lost } = rollLoot(e); // ressources + items + or (game/monsters.js)
   const resTxt = Object.entries(res).map(([k, v]) => `${k} ×${v}`).join(', ');
-  if (resTxt || e.gold) pushLog(`+${e.gold} or${resTxt ? ', ' + resTxt : ''}`);
+  if (resTxt || gold) pushLog(`+${gold} or${resTxt ? ', ' + resTxt : ''}`);
   if (drops.length) pushLog('Butin : ' + drops.map((d) => `${ITEMS[d.tid] ? ITEMS[d.tid].name : d.tid} ×${d.n}`).join(', '));
-  announceLoot(e, res, drops, lost);
+  announceLoot(gold, res, drops, lost);
   addXp(e.xp); // gère le level-up (rerender)
 
   if (willAuto) {
@@ -339,13 +435,17 @@ function onWin() {
     rt.relaunchTimer = setTimeout(relaunch, RELAUNCH_MS);
     paint();
   }
+  // Brèche Instable : la case de grille correspondante doit être "consommée" (vidée
+  // si monstre régulier, transformée en escalier si boss) — géré par donjon.js, jamais
+  // ici (combat.js reste agnostique du contenu de la grille).
+  if (rt.donjon) donjonHooks && donjonHooks.onWin && donjonHooks.onWin({ enemyId: e.id, isBoss, zoneId });
 }
 
 // Toasts de loot (coin haut-droit, sous le header — voir components/toast.js) :
 // un toast par ressource/objet gagné, + un avertissement si le sac plein a fait
 // perdre un drop (lost, voir monsters.js rollLoot).
-function announceLoot(e, res, drops, lost) {
-  if (e.gold) showToast(`+${e.gold} Or`, { icon: RES_ICON.or });
+function announceLoot(gold, res, drops, lost) {
+  if (gold) showToast(`+${gold} Or`, { icon: RES_ICON.or });
   for (const [k, v] of Object.entries(res)) { if (v) showToast(`+${v} ${RES_LABEL[k] || k}`, { icon: RES_ICON[k] }); }
   for (const d of drops) {
     const it = ITEMS[d.tid];
@@ -358,6 +458,14 @@ function onLoss() {
   rt.phase = 'dead';
   stopLoop();
   rt.active = false;
+  // Brèche Instable : une défaite met fin à la RUN (pénalité de butin gérée par
+  // donjon.js), ce n'est PAS une "vie" perdue au sens zone normale — pas de -1
+  // hp-pill, pas de plafond 20% PV (donjon.js remet un pool de PV sûr à la sortie).
+  if (rt.donjon) {
+    pushLog('Vous êtes vaincu…');
+    donjonHooks && donjonHooks.onLoss && donjonHooks.onLoss();
+    return;
+  }
   pushLog('Vous êtes vaincu. Retour à la zone.');
   setState((s) => {
     // Défaite : PV partiels (20 %, pas de pleine régén) + 1 vie perdue (hp-pill du header).
@@ -384,7 +492,9 @@ export function consume() {
   if (!c || c.count <= 0) return;
   const it = ITEMS[c.tid];
   if (!it) return;
-  const heal = it.heal || 0;
+  // Efficacité des Soins (stat secondaire d'Enchantement) : bonus % sur le soin du
+  // consommable, comme pour la Symphonie (voir applyAccord ci-dessus, type 'heal').
+  const heal = Math.round((it.heal || 0) * (1 + (rt.pStats.soinBonus || 0) / 100));
   rt.pHp = Math.min(rt.pMax, rt.pHp + heal);
   rt.pTempo = 0;
   pushLog(`${it.name} : +${heal} PV (Tempo remis à 0).`);
@@ -555,4 +665,4 @@ function setSprite(node, sprite) {
   node.append(el('img.sprite-img', { src, alt: '' }));
 }
 
-export const combatApi = { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ, castAccord, debugPushNote, debugTestAccord, setChangeHook };
+export const combatApi = { isActive, current, start, stop, toggleAuto, consume, renderInto, WIN_REQ, castAccord, debugPushNote, debugTestAccord, debugSetZone, debugUnlockAllZones, setChangeHook, setDonjonHooks };

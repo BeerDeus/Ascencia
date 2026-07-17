@@ -5,10 +5,11 @@ import { state } from '../state.js';
 import { rerender } from '../router.js';
 import { panel } from '../components/card.js';
 import { gauge, setGauge } from '../components/gauge.js';
-import { derive, formatStat, allocate, activePotionBuffs } from '../game/player.js';
+import { derive, formatStat, allocate, activePotionBuffs, effectiveAttributes } from '../game/player.js';
 import { ITEMS, SLOTS, SLOT_ROWS, equip, unequip, useConsumable, drinkPotion, sellItem, invCount, inventoryCapacity, nextSlotCost, buyInventorySlot } from '../game/items.js';
 import { ACCORDS, noteById } from '../game/symphony.js';
 import { showInfoModal } from '../components/infoModal.js';
+import { renderAscension } from './ascension.js';
 
 const SUB_LABEL = { off: 'Offensif', def: 'Défensif' };
 
@@ -24,6 +25,7 @@ const STAT_LBL = {
 export function renderProfil(root, sub = 'personnage') {
   const view = el('div.view');
   if (sub === 'equipement') { const upd = renderEquipement(view); root.append(view); return upd; }
+  if (sub === 'ascension')  { const upd = renderAscension(view); root.append(view); return upd; }
 
   const update = renderPersonnage(view);
   root.append(view);
@@ -81,7 +83,7 @@ function renderPersonnage(view) {
     const trigger = el('button.stat-row-trigger', {
       onclick: () => showInfoModal({
         icon: a.icon, title: a.label,
-        value: `Valeur actuelle : ${state.player.attributes[a.key]}`,
+        value: `Valeur actuelle : ${Math.round((effectiveAttributes(state.player)[a.key] || 0) * 100) / 100} (dont ${state.player.attributes[a.key]} alloués)`,
         desc: a.desc, more: a.more,
       }),
     }, [iconNode(a.icon, 'icon'), el('span.label', { text: a.label + ' :' })]);
@@ -150,14 +152,26 @@ function renderPersonnage(view) {
     refs.xpTxt.textContent = `${p.xp.cur} / ${p.xp.max} XP`;
     setGauge(refs.xpGauge, p.xp.cur, p.xp.max);
   }
+  // BUG corrigé 2026-07-17 : cette section affichait p.attributes[key] (le total de
+  // points ALLOUÉS uniquement) — les bonus plats d'équipement/Codex/Maîtrise/Récits
+  // ET DES CONSTELLATIONS (voir game/ascension.js constellationBonuses().flat,
+  // appliqués dans effectiveAttributes()) n'y apparaissaient jamais, alors qu'ils sont
+  // bien pris en compte dans les stats dérivées plus bas. Un joueur investissant un
+  // point de Constellation dans un nœud "+1 Force" ne voyait donc AUCUN changement
+  // ici, d'où le signalement "les points ne sont pas appliqués au personnage" — ils
+  // l'étaient (Attaque/Score de Puissance bougeaient déjà), juste pas visibles ici.
   function syncAttrs() {
     const p = state.player;
+    const eff = effectiveAttributes(p);
     const pts = p.attrPoints || 0;
     refs.attrPointsEl.textContent = pts > 0 ? `Points à répartir : ${pts}` : '';
     refs.attrPointsEl.style.display = pts > 0 ? '' : 'none';
     for (const a of ATTRIBUTES) {
       const r = refs.attrRows[a.key];
-      r.value.textContent = p.attributes[a.key];
+      const base = p.attributes[a.key] || 0;
+      const total = Math.round((eff[a.key] || 0) * 100) / 100;
+      const bonus = Math.round((total - base) * 100) / 100;
+      r.value.textContent = bonus > 0 ? `${total} (+${bonus})` : String(total);
       if (r.plus) r.plus.style.display = pts > 0 ? '' : 'none';
     }
   }

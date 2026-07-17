@@ -54,6 +54,28 @@ ul { list-style: none; }
   padding: 0;
 }
 
+/* ===== Constellations plein écran (Ascension) ===== */
+/* #app.constellation-mode : actif tant que la vue Constellations est ouverte en plein
+   écran (voir views/ascension.js isAscensionFullscreen()/setFullscreen(), router.js).
+   Même principe que .combat-mode ; .constellation-fullscreen est en position:fixed
+   (voir views.css) donc ce bloc n'a qu'à masquer le chrome derrière. */
+#app.constellation-mode #game-header,
+#app.constellation-mode #subnav,
+#app.constellation-mode #mainnav {
+  display: none !important;
+}
+
+/* ===== Brèche Instable plein écran (donjon à étages) ===== */
+/* #app.donjon-mode : actif tant qu'une run est en cours en plein écran (voir
+   views/donjon.js isDonjonFullscreen(), router.js). Même principe que .combat-mode/
+   .constellation-mode — masque tout le chrome, le bouton "Retour" du HUD (avec
+   confirmation, perte de 50% du butin) devient le SEUL chemin de sortie. */
+#app.donjon-mode #game-header,
+#app.donjon-mode #subnav,
+#app.donjon-mode #mainnav {
+  display: none !important;
+}
+
 /* Titres serif dorés en capitales (style maquette) */
 .section-title {
   font-family: var(--font-title);
