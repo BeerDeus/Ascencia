@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { guard } from '../lib/guard';
   import { G, ui, act, toast } from '../lib/game.svelte';
   import * as E from '../game/engine';
   import { adsLeft, noAds } from '../game/shop';
@@ -17,7 +18,7 @@
   async function triple() { show((await rewarded(G.s, 'messager')) ? act(g => E.claimMessenger(g, 3)) : act(g => E.claimMessenger(g, 1))); }
 </script>
 
-<div class="veil">
+<div class="veil" use:guard>
   <div class="letter">
     <img class="seal" src={gfx('obj/lettre')} alt="" />
     <p class="book">« Un petit quelque chose pour la route. Ne le dépense pas en potions douteuses chez Alaric. »</p>

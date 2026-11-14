@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { guard } from '../lib/guard';
   import { G, ui, toast } from '../lib/game.svelte';
   import { billingReady, purchase } from '../lib/billing';
   import { grantPack } from '../game/shop';
@@ -12,7 +13,7 @@
   }
 </script>
 
-<div class="veil">
+<div class="veil" use:guard>
   <div class="box frame">
     <div class="label">Offre unique</div>
     <img src={gfx(p.icon)} alt="" />

@@ -1,11 +1,12 @@
 <script lang="ts">
+  import { guard } from '../lib/guard';
   import { ui, G, useCloud, keepLocal } from '../lib/game.svelte';
   import { fmt, fmtTime } from '../game/format';
   const c = $derived(ui.conflict!);
   const when = (t: number) => new Date(t).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
 </script>
 
-<div class="veil">
+<div class="veil" use:guard>
   <div class="box frame">
     <h3 class="gothic">Deux sauvegardes</h3>
     <p class="book">La sauvegarde en ligne est plus récente que celle de cet appareil. Laquelle garder ?</p>

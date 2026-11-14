@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { guard } from '../lib/guard';
   import { ui, chooseClass, G } from '../lib/game.svelte';
   import { CLASSES } from '../game/data/heroes';
   import { masteryLevel } from '../game/formulas';
@@ -8,7 +9,7 @@
   const asc = $derived(ui.classPicker === 'ascension');
 </script>
 
-<div class="veil">
+<div class="veil" use:guard>
   <div class="sheet frame">
     <h2 class="gothic">{asc ? 'Renaître en…' : 'Choisis ta voie'}</h2>
     {#if asc}<p class="sub">+{E.ascensionGain(G.s)} Éclats. La classe peut changer à chaque Ascension.</p>{/if}

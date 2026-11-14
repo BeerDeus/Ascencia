@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { guard } from '../lib/guard';
   import { G, ui, act, toast } from '../lib/game.svelte';
   import * as E from '../game/engine';
   import { CALENDAR, GEM_ICON } from '../game/data/shop';
@@ -10,7 +11,7 @@
   function claim() { const r = act(E.claimCalendar); if (r) { sfxGold(); toast(r, 'gold'); } ui.calendar = false; }
 </script>
 
-<div class="veil">
+<div class="veil" use:guard>
   <div class="box frame">
     <div class="gothic h">Présents du jour</div>
     <p class="book">Gaston a laissé un panier à ta porte. Reviens chaque jour : le septième est le meilleur.</p>

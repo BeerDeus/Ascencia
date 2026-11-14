@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { guard } from '../lib/guard';
   import { ui, G } from '../lib/game.svelte';
   import { fmt, fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';
@@ -21,7 +22,7 @@
   }
 </script>
 
-<div class="veil">
+<div class="veil" use:guard>
   <div class="letter">
     <img class="seal" src={gfx('obj/lettre')} alt="" />
     <p class="book">Pendant ton absence — {fmtTime(r.seconds)} — Kaelen et les autres ont tenu la ligne.
