@@ -191,13 +191,13 @@ function spawnBoss(s: GameState): Monster {
       r.bossTime = 15;
       return { sprite: sb.sprite, name: sb.name, kind: 'boss', hp: Infinity, maxHp: Infinity, story: sb.id };
     }
-    const hp = F.bossHp(r.floor) * sb.hpMult * bossHpMult(s);
+    const hp = F.bossFloorHp(r.floor) * bossHpMult(s);
     const locked = sb.id === 'porte_noyau' && s.resonance.count === 0;
     if (locked) log(s, 'fail', 'La Porte du Noyau est scellée de l’intérieur. Vos coups glissent sur elle sans laisser de trace.');
     return { sprite: sb.sprite, name: sb.name, kind: 'boss', hp, maxHp: hp, story: sb.id, locked };
   }
   const sprite = 'mobs/' + pick(actFor(r.floor).bosses);
-  const hp = F.bossHp(r.floor) * bossHpMult(s);
+  const hp = F.bossFloorHp(r.floor) * bossHpMult(s);
   return { sprite, name: monsterName(sprite), kind: 'boss', hp, maxHp: hp };
 }
 
@@ -755,7 +755,7 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
   if (somnambule) {
     while (left > 0 && floors < 2000) {
       const f = r.floor, sb = storyBossAt(f);
-      const bHp = F.bossHp(f) * (sb?.hpMult ?? 1) * bossHpMult(s);
+      const bHp = F.bossFloorHp(f) * bossHpMult(s);
       const bDmg = dmg * (f === SEUIL_HARMONIQUE.floor ? certitude(s) : 1);
       if (bHp / bDmg > st.bossTime || (sb?.id === 'chef_doeuvre' && s.ascensions === 0 && !s.ascensionUnlocked)) break;
       const t = F.MOBS_PER_FLOOR * (F.mobHp(f) / dmg + 0.4) + bHp / bDmg;

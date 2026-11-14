@@ -1,6 +1,7 @@
 // Formules d’économie (réglages : tuning.ts ; méthode : docs/EQUILIBRAGE.md)
 import { MILESTONES } from './data/heroes';
 import { T } from './tuning';
+import { STORY_BOSSES } from './data/world';
 
 export const MOBS_PER_FLOOR = 10;
 export const HERO_COST_BASE = 5;
@@ -15,6 +16,13 @@ export function bossHp(floor: number): number {
 }
 export function mobGold(floor: number): number {
   return Math.max(1, mobHp(floor) * T.goldRatio);
+}
+/** PV d'un boss avant bonus : jamais moins que le dernier boss d'histoire franchi (pas de creux après un cap). */
+export function bossFloorHp(floor: number): number {
+  const sb = STORY_BOSSES.find(b => b.floor === floor);
+  let hp = bossHp(floor) * (sb?.hpMult ?? 1);
+  for (const b of STORY_BOSSES) if (b.floor < floor) hp = Math.max(hp, bossHp(b.floor) * b.hpMult);
+  return hp;
 }
 export function bossGold(floor: number): number {
   return bossHp(floor) * T.goldRatio * 1.5;

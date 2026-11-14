@@ -1,11 +1,8 @@
-/* Chiffres plus lisibles (2, 5, 8) : Jersey 15 pour 0–9, Pixelify Sans pour le reste */
-@font-face {
-  font-family: 'Chiffres';
-  src: url('../node_modules/@fontsource/jersey-15/files/jersey-15-latin-400-normal.woff2') format('woff2');
-  unicode-range: U+0030-0039;
-  size-adjust: 120%;
-  font-display: swap;
-}
+/* Chiffres en Silkscreen (2, 5, 8 lisibles), lettres en Pixelify Sans */
+@font-face { font-family: 'Chiffres'; font-weight: 400 600; font-display: swap; unicode-range: U+0030-0039; size-adjust: 90%;
+  src: url('../node_modules/@fontsource/silkscreen/files/silkscreen-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Chiffres'; font-weight: 700 900; font-display: swap; unicode-range: U+0030-0039; size-adjust: 90%;
+  src: url('../node_modules/@fontsource/silkscreen/files/silkscreen-latin-700-normal.woff2') format('woff2'); }
 /* Ascencia — direction « grimoire en pixel » :
    pierre sombre, parchemin, encre ; cadres pixel à biseaux durs ; pas de dégradés néon. */
 :root {
