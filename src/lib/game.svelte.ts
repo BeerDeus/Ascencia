@@ -23,8 +23,8 @@ export const ui = $state({
   tab: 'compagnons' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
   heroTab: 'heros' as 'heros' | 'sac' | 'hf',
   ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
-  atelier: 'alchimie' as 'alchimie' | 'forge',
-  fiefTab: 'village' as 'village' | 'jardin' | 'alchimie' | 'expeditions' | 'coffre' | 'metiers',
+  atelier: 'cuisine' as 'cuisine' | 'alchimie' | 'forge',
+  fiefTab: 'village' as 'village' | 'jardin' | 'ateliers' | 'expeditions' | 'coffre' | 'metiers',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
   offline: null as OfflineReport | null,

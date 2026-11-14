@@ -9,7 +9,7 @@
 </div>
 <style>
   .sub { flex: none; display: flex; gap: 2px; padding: 2px; background: var(--ink-0); }
-  button { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px 4px; font-size: 12.5px; font-weight: 700; line-height: 1.1;
+  button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; padding: 6px 2px; font-size: 12px; font-weight: 700; line-height: 1.1;
     color: var(--text-3); background: var(--stone-1); box-shadow: inset 0 -2px 0 var(--lo); }
   button.on { color: var(--text); background: var(--stone-3); box-shadow: inset 0 2px 0 var(--hi); }
   button.locked { opacity: .45; }

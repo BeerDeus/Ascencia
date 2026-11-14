@@ -20,9 +20,11 @@
   import Tuto from './ui/Tuto.svelte';
   import SpellModal from './ui/SpellModal.svelte';
   import JobsPanel from './ui/JobsPanel.svelte';
+  import CuisinePanel from './ui/CuisinePanel.svelte';
   import JobModal from './ui/JobModal.svelte';
   import InfoModal from './ui/InfoModal.svelte';
-  const FIEF_LABELS = { village: 'Village', coffre: 'Coffre', jardin: 'Jardin', expeditions: 'Expéd.', alchimie: 'Ateliers', metiers: 'Métiers' } as const;
+  const FIEF_LABELS = { village: 'Village', metiers: 'Métiers', jardin: 'Jardin', expeditions: 'Expéd.', ateliers: 'Ateliers', coffre: 'Coffre' } as const;
+  const lockAt = (id: keyof typeof FIEF_TABS) => (fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}`);
   const fiefTabs = $derived((Object.keys(FIEF_LABELS) as (keyof typeof FIEF_LABELS)[]).map(id => ({ id, label: FIEF_LABELS[id],
     locked: fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}` })));
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
@@ -67,9 +69,9 @@
         {#if fiefUnlocked(G.s)}<SubTabs name="fief" bind:value={ui.fiefTab} tabs={fiefTabs} />{/if}
         {#if !fiefUnlocked(G.s) || ui.fiefTab === 'village' || !fiefTabOpen(G.s, ui.fiefTab)}<FiefPanel />
         {:else if ui.fiefTab === 'jardin'}<GardenPanel />
-        {:else if ui.fiefTab === 'alchimie'}
-          <SubTabs name="atelier" bind:value={ui.atelier} tabs={[{ id: 'alchimie', label: 'Alchimie (Alaric)' }, { id: 'forge', label: 'Forge (Kaelen)', locked: fiefTabOpen(G.s, 'forge') ? undefined : `étage ${FIEF_TABS.forge}` }]} />
-          {#if ui.atelier === 'forge' && fiefTabOpen(G.s, 'forge')}<ForgePanel />{:else}<AlchemyPanel />{/if}
+        {:else if ui.fiefTab === 'ateliers'}
+          <SubTabs name="atelier" bind:value={ui.atelier} tabs={[{ id: 'cuisine', label: 'Cuisine' }, { id: 'alchimie', label: 'Alchimie', locked: lockAt('alchimie') }, { id: 'forge', label: 'Forge', locked: lockAt('forge') }]} />
+          {#if ui.atelier === 'forge' && fiefTabOpen(G.s, 'forge')}<ForgePanel />{:else if ui.atelier === 'alchimie' && fiefTabOpen(G.s, 'alchimie')}<AlchemyPanel />{:else}<CuisinePanel />{/if}
         {:else if ui.fiefTab === 'expeditions'}<ExpeditionsPanel />
         {:else if ui.fiefTab === 'metiers'}<JobsPanel />
         {:else}<ChestPanel />{/if}

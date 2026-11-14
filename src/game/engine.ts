@@ -259,7 +259,7 @@ function kill(s: GameState) {
       log(s, 'story', `Pièce du Compas Stellaire (${Object.values(s.anchors.compass).filter(Boolean).length}/3)`);
       if (Rz.destinyDone(s)) story(s, 'ancre:destinee');
     }
-    if (I.lootUnlocked(s) && (m.story || rnd() < 0.4 * lootMult(s))) drop(s, m.story ? 2 : 0, m.story ? 1 : 0);
+    if (I.lootUnlocked(s) && (m.story || rnd() < 0.5 * lootMult(s))) drop(s, m.story ? 2 : 0, m.story ? 1 : 0);
     advanceFloor(s);
     return;
   }
@@ -274,7 +274,7 @@ function kill(s: GameState) {
   }
   addGold(s, gold);
   emit({ type: 'kill', monster: m, gold });
-  if (m.kind === 'mob' && I.lootUnlocked(s) && rnd() < 0.012 * lootMult(s)) drop(s);
+  if (m.kind === 'mob' && I.lootUnlocked(s) && rnd() < 0.03 * lootMult(s)) drop(s);
   r.wave++;
   if (r.farming) {
     if (r.wave >= F.MOBS_PER_FLOOR) {
@@ -306,7 +306,7 @@ function resourceDrop(s: GameState, m: Monster) {
 const lootMult = (s: GameState) => (1 + arc(s, 'loot')) * (Sh.blessing(s, 'butin') ? 2 : 1);
 
 function drop(s: GameState, minRarity = 0, bonus = 0) {
-  const rar = Math.min(5, I.rollRarity(s.run.floor, rnd, minRarity) + (rnd() < 0.5 ? bonus : 0));
+  const rar = Math.min(5, I.rollRarity(s.run.floor, rnd, minRarity) + (rnd() < 0.25 ? bonus : 0));
   const it = I.makeItem(s, s.run.floor, rar, rnd);
   const lost = I.addItem(s, it);
   Fi.count(s, 'loot'); s.stats.items++; s.stats.bestRarity = Math.max(s.stats.bestRarity, it.rarity);

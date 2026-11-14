@@ -16,6 +16,7 @@
   const n = $derived(Gd.gridSize(s));
   const cells = $derived(Array.from({ length: n * n }, (_, k) => (k % n) + Math.floor(k / n) * 6));
   const sea = $derived(SEASONS[Gd.season(now)]);
+  const seasonLeft = $derived.by(() => { const t = Gd.seasonEndsIn(now) / 1000, d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600); return d ? `${d} j ${h} h` : fmtTime(t); });
   let sel = $state<number | null>(null);           // fiche d'une parcelle (appui long)
   let mode = $state<'planter' | 'acheter'>('planter');
   let seed = $state<string | null>(null);          // graine sélectionnée
@@ -69,13 +70,12 @@
     <img class="sea" src={gfx(sea.sprite)} alt="" />
     <div class="mi">
       <div class="gothic h" style="color:{sea.color}">{sea.name}</div>
-      <span>Fin de saison dans {fmtTime(Gd.seasonEndsIn(now) / 1000)}</span>
-      <span>Le combat continue en arrière-plan (dégâts automatiques).</span>
+      <span>encore {seasonLeft}</span>
     </div>
     <div class="acts">
-      <button class="btn blood" onclick={() => (ui.tab = 'compagnons')}><img src={gfx('icons/combat')} alt="" />Combat</button>
-      <button class="btn" onclick={harvestAll}>Tout récolter</button>
-      <button class="btn stone" onclick={() => (herbier = true)}>Herbier {s.garden.known.length}/{PLANTS.length}</button>
+      <button class="btn" onclick={harvestAll}>Récolter</button>
+      <button class="btn stone" onclick={() => (herbier = true)}>Herbier<small>{s.garden.known.length}/{PLANTS.length}</small></button>
+      <button class="btn blood" onclick={() => (ui.tab = 'compagnons')} aria-label="Retour au combat"><img src={gfx('icons/combat')} alt="" /></button>
     </div>
   </div>
 
@@ -196,16 +196,20 @@
 {/if}
 
 <style>
-  .body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-  .top { display: flex; align-items: center; gap: 8px; padding: 6px 8px; }
-  .sea { width: 44px; height: 44px; }
-  .h { font-size: 28px; line-height: .9; }
+  .body { flex: 1; padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 4px 6px; }
+  .top .mi { min-width: 120px; }
+  .sea { width: 30px; height: 30px; }
+  .h { font-size: 24px; line-height: .9; }
   .mi { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 12px; color: var(--text-3); }
   .mi b { font-size: 14px; color: var(--text); }
-  .acts { display: flex; flex-direction: column; gap: 4px; }
-  .acts .btn { font-size: 11.5px; padding: 5px 7px; gap: 3px; }
-  .acts .btn img { width: 14px; height: 14px; }
-  .grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 4px; padding: 6px; background: #3a2a1c; border: 2px solid var(--ink-0);
+  .acts { display: flex; gap: 4px; flex: none; }
+  .acts .btn { font-size: 11.5px; padding: 6px 7px; gap: 3px; }
+  .acts .btn img { width: 16px; height: 16px; }
+  .acts .btn small { font-size: 10px; opacity: .8; }
+  .top .mi span { white-space: nowrap; }
+  /* la grille garde de la place pour les graines sous elle, même sur petit écran */
+  .grid { width: min(100%, max(230px, calc(100dvh - 400px))); margin: 0 auto; display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 4px; padding: 6px; background: #3a2a1c; border: 2px solid var(--ink-0);
     box-shadow: inset 0 0 0 2px #5a412a; }
   .cell { position: relative; aspect-ratio: 1; display: grid; place-items: center; background: #5b4029; border: 2px solid #2b1d12;
     box-shadow: inset 2px 2px 0 rgba(0,0,0,.35), inset -2px -2px 0 rgba(255,220,170,.08); }

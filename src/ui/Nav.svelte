@@ -9,9 +9,9 @@
   const s = $derived(G.s);
   const tabs = $derived([
     { id: 'chronique', label: 'Chronique', icon: 'icons/grimoire', dot: false },
-    { id: 'heros', label: 'Héros', icon: 'classes/' + (s.classId ?? 'guerrier'), dot: E.heroCostN(s, 1) <= s.run.gold || claimable(s).length > 0 },
+    { id: 'heros', label: 'Héros', icon: 'classes/' + (s.classId ?? 'guerrier'), dot: claimable(s).length > 0 },
     { id: 'compagnons', label: 'Alliés', icon: 'icons/standard',
-      dot: s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
+      dot: E.heroCostN(s, 1) <= s.run.gold || s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
     { id: 'fief', label: 'Fief', icon: 'icons/village', locked: !fiefUnlocked(s),
       dot: fiefUnlocked(s) && (chestReady(s) || s.daily?.bounties.some(b => !b.claimed && s.daily.c[b.c] >= b.target)
         || s.garden.plots.some(p => mature(p)) || s.expeditions.some(isDone)) },

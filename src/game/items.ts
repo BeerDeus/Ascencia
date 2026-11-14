@@ -18,8 +18,9 @@ export function affixValue(stat: StatId, ilvl: number, rarity: number, roll: num
 export const effective = (it: Item, v: number) => v * (1 + 0.12 * it.plus);
 
 export function rollRarity(floor: number, rnd: () => number, min = 0): number {
-  const luck = Math.min(0.8, floor / 300);
-  const w = [62, 24, 9.5, 3.6, 0.8, 0.1].map((x, i) => x * (1 + luck * i * 1.6));
+  // hautes raretés plus rares (16/11) : le butin courant sert surtout à faire du métal
+  const luck = Math.min(0.6, floor / 300);
+  const w = [70, 22, 6, 1.6, 0.3, 0.04].map((x, i) => x * (1 + luck * i));
   let t = rnd() * w.reduce((a, b) => a + b, 0), r = 0;
   for (; r < w.length - 1; r++) { if ((t -= w[r]) < 0) break; }
   return Math.max(min, r);

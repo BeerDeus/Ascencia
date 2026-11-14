@@ -2,9 +2,8 @@
   import { G, ui } from '../lib/game.svelte';
   import { longpress } from '../lib/guard';
   import { resInfo } from '../game/resinfo';
-  import { RESOURCES, JOBS, type JobId } from '../game/data/resources';
+  import { RESOURCES } from '../game/data/resources';
   import { PLANT_BY_ID } from '../game/data/garden';
-  import { level } from '../game/jobs';
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
   const s = $derived(G.s);
@@ -18,14 +17,6 @@
 </script>
 
 <div class="scroll body">
-  <section class="frame">
-    <div class="label">Métiers</div>
-    <div class="jobs">
-      {#each Object.keys(JOBS) as j}
-        <button class="j slot" onclick={() => (ui.job = j as JobId)}><img src={gfx(JOBS[j as JobId].npc)} alt="" /><b>{JOBS[j as JobId].name}</b><span>niv. {level(s, j as JobId)}</span></button>
-      {/each}
-    </div>
-  </section>
   {#each Object.entries(groups) as [g, ids]}
     <div class="label">{g}</div>
     <div class="grid">
@@ -37,12 +28,6 @@
 
 <style>
   .body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-  section { padding: 8px; }
-  .jobs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px; }
-  .j { display: flex; flex-direction: column; align-items: center; padding: 3px 0; background: var(--stone-2); font-size: 10px; text-align: center; }
-  .j img { width: 28px; height: 36px; object-fit: contain; object-position: top; }
-  .j b { font-size: 10px; line-height: 1.1; }
-  .j span { color: var(--gold); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 4px; }
   .c { position: relative; display: flex; flex-direction: column; align-items: center; padding: 4px 2px; background: var(--stone-2); }
   .c img { width: 32px; height: 32px; object-fit: contain; }
