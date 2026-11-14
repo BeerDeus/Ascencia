@@ -4,6 +4,8 @@ import { COMPANIONS, PARTITIONS, MILESTONE_TITLES, MILESTONES } from './data/her
 import { actFor, monsterName, storyBossAt, SEUIL_HARMONIQUE } from './data/world';
 import { STAR_BY_ID, starCost } from './data/constellations';
 import { fmt } from './format';
+import * as I from './items';
+import { RARITIES } from './data/items';
 import { SCENE_BY_ID, LARRY_QUIPS, LARRY_ON, KILL_LINES, BOSS_LINES } from './data/story';
 
 export const SAVE_VERSION = 1;
@@ -31,7 +33,7 @@ export function newGame(): GameState {
     constellations: {}, seenStory: [], chronicle: [],
     settings: { sound: true, haptics: true, notation: 'lettres', autoAdvance: true },
     stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0 },
-    nextLarryAt: 600,
+    nextLarryAt: 600, metal: 0, itemSeq: 0, heritage: null,
   };
   s.run = newRun(s, 1);
   return s;
@@ -44,7 +46,7 @@ export function newRun(s: GameState, startFloor: number): RunState {
     monster: null as unknown as Monster, bossTime: 0, bossAttackIn: 0, parryUntil: 0,
     ferveur: 0, lastTapAt: -10, crescendoUntil: 0,
     cooldowns: PARTITIONS.map(() => 0), activeUntil: PARTITIONS.map(() => 0),
-    tapsTotal: 0, scriptedDefeat: false,
+    tapsTotal: 0, scriptedDefeat: false, inventory: [], equipped: {},
   };
   s.run = run;
   run.mana = stats(s).manaMax;
@@ -77,11 +79,12 @@ export function companionsDps(s: GameState): number {
 
 export function stats(s: GameState): Stats {
   const r = s.run, c = s.classId;
+  const g = I.gearTotals(s);
   const power = (1 + star(s, 'grimoire_puissance')) * (c === 'mage' ? 1.5 : 1);
   let global = F.legendeMult(s.legende) * masteryBonus(s);
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
-  const comp = r ? companionsDps(s) : 0;
-  let tapMult = (1 + star(s, 'glaive_frappe')) * (c === 'guerrier' ? 1.5 : 1);
+  const comp = r ? companionsDps(s) * (1 + g.comp) : 0;
+  let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (c === 'guerrier' ? 1.5 : 1);
   if (r && active(s, 'crescendo')) tapMult *= 1 + 2 * power;
   if (r && s.time < r.crescendoUntil) tapMult *= 2;
   const share = 0.03 + star(s, 'meute_frappe');
@@ -89,12 +92,12 @@ export function stats(s: GameState): Stats {
   const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < SEUIL_HARMONIQUE.legende;
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
-    critChance: Math.min(0.75, 0.02 + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
-    critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (c === 'archer' ? 1.5 : 1),
-    goldMult: 1 + star(s, 'bourse_or'),
-    manaMax: 100 + star(s, 'grimoire_mana') + (c === 'mage' ? 50 : 0),
+    critChance: Math.min(0.75, 0.02 + g.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
+    critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (c === 'archer' ? 1.5 : 1),
+    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or),
+    manaMax: Math.round(100 + g.mana + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100) * (c === 'mage' ? 2 : 1),
-    bossTime: F.BOSS_TIME + star(s, 'sentier_volonte'),
+    bossTime: Math.round((F.BOSS_TIME + star(s, 'sentier_volonte') + g.volonte) * 10) / 10,
     autoTaps: (c === 'archer' ? 2 + Math.floor((r?.heroLevel ?? 0) / 100) : 0) + (r && active(s, 'staccato') ? 10 * power : 0),
   };
 }
@@ -194,12 +197,14 @@ function kill(s: GameState) {
     log(s, 'boss', pick(BOSS_LINES).replace('{m}', m.name) + ` (+${fmt(gold)} or)`);
     emit({ type: 'kill', monster: m, gold });
     if (m.story) story(s, `kill:${m.story}`);
+    if (I.lootUnlocked(s) && (m.story || rnd() < 0.4)) drop(s, m.story ? 2 : 0, m.story ? 1 : 0);
     advanceFloor(s);
     return;
   }
   let gold = F.mobGold(r.floor) * st.goldMult;
   if (m.kind === 'golden') {
     gold *= 20; s.stats.goldenKills++;
+    if (I.lootUnlocked(s) && rnd() < 0.3) drop(s, 1);
     log(s, 'gold', `Le Gobelin doré lâche sa bourse : +${fmt(gold)} or !`);
     larry(s, LARRY_ON.golden, 0.4);
   } else if (rnd() < 0.18) {
@@ -207,6 +212,7 @@ function kill(s: GameState) {
   }
   addGold(s, gold);
   emit({ type: 'kill', monster: m, gold });
+  if (m.kind === 'mob' && I.lootUnlocked(s) && rnd() < 0.012) drop(s);
   r.wave++;
   if (r.farming) {
     if (r.wave >= F.MOBS_PER_FLOOR) {
@@ -220,6 +226,15 @@ function kill(s: GameState) {
   } else {
     r.monster = spawnMob(s);
   }
+}
+
+function drop(s: GameState, minRarity = 0, bonus = 0) {
+  const rar = Math.min(5, I.rollRarity(s.run.floor, rnd, minRarity) + (rnd() < 0.5 ? bonus : 0));
+  const it = I.makeItem(s, s.run.floor, rar, rnd);
+  const lost = I.addItem(s, it);
+  emit({ type: 'loot', item: it });
+  log(s, rar >= 3 ? 'crit' : 'loot', `Butin : ${it.name} [${RARITIES[rar].name}]`);
+  if (lost) log(s, 'info', `Sac plein : ${lost.name} recyclé en métal.`);
 }
 
 function addGold(s: GameState, g: number) { s.run.gold += g; s.stats.goldEarned += g; }
@@ -403,7 +418,10 @@ export function ascend(s: GameState, classId: ClassId): number {
   const gain = ascensionGain(s);
   s.eclats += gain; s.legende += gain; s.ascensions++;
   s.classId = classId;
+  const keep = s.run.inventory.find(i => i.id === s.heritage);
   newRun(s, startFloor(s));
+  if (keep) { s.run.inventory.push(keep); s.run.equipped[keep.slot] = keep.id; }
+  else s.heritage = null;
   log(s, 'story', `✦ Ascension n°${s.ascensions} : +${gain} Éclats. Votre légende pèse désormais ${s.legende}.`);
   if (s.ascensions === 1) story(s, 'ascension:1');
   else larry(s, LARRY_ON.ascension, 0.5);
@@ -479,6 +497,7 @@ function migrate(raw: any): GameState {
   const s: GameState = { ...base, ...raw, settings: { ...base.settings, ...raw.settings }, stats: { ...base.stats, ...raw.stats } };
   // compagnons ajoutés après coup
   while (s.run.companions.length < COMPANIONS.length) s.run.companions.push(0);
+  s.run.inventory ??= []; s.run.equipped ??= {};
   while (s.run.cooldowns.length < PARTITIONS.length) { s.run.cooldowns.push(0); s.run.activeUntil.push(0); }
   s.version = SAVE_VERSION;
   return s;

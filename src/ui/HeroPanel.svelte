@@ -19,72 +19,68 @@
 
 <div class="scroll body">
   {#if cls}
-    <div class="card">
-      <img class="px portrait" src={gfx(cls.portrait)} alt="" />
+    <div class="card frame">
+      <img class="portrait" src={gfx(cls.portrait)} alt="" />
       <div class="info">
-        <div class="cname title"><img class="px" src={gfx(cls.icon)} alt="" />{cls.name}</div>
-        <div class="style">{cls.style}</div>
+        <div class="cname gothic">{cls.name}</div>
+        <div class="label">{cls.style}</div>
         <ul>{#each cls.perks as p}<li>{p}</li>{/each}</ul>
       </div>
     </div>
   {/if}
 
-  <div class="row up">
+  <div class="up frame">
     <div>
-      <div class="label">Frappe · niveau <b class="num">{s.run.heroLevel}</b></div>
-      <div class="val num">{N(st.tap)} <small>dégâts / coup</small></div>
+      <div class="label">Frappe · niveau {s.run.heroLevel}</div>
+      <div class="val">{N(st.tap)} <small>par coup</small></div>
     </div>
     <div class="right">
       <BuyMult />
-      <button class="btn" disabled={cost > s.run.gold} onclick={buy}>+{n} · <span class="num">{N(cost)}</span></button>
+      <button class="btn" disabled={cost > s.run.gold} onclick={buy}>+{n} · {N(cost)}</button>
     </div>
   </div>
 
   <div class="grid">
-    <div><span>DPS Compagnons</span><b class="num">{N(st.dps)}</b></div>
-    <div><span>Critique</span><b class="num">{(st.critChance * 100).toFixed(0)} % · ×{st.critMult.toFixed(1)}</b></div>
-    <div><span>Bonus d’or</span><b class="num">×{st.goldMult.toFixed(2)}</b></div>
-    <div><span>Volonté (boss)</span><b class="num">{st.bossTime} s</b></div>
-    <div><span>Légende</span><b class="num">{N(s.legende)} · ×{N(1 + 0.05 * s.legende)}</b></div>
-    <div><span>Record</span><b class="num">Étage {s.bestFloor}</b></div>
+    <div class="slot"><span class="label">DPS alliés</span><b>{N(st.dps)}</b></div>
+    <div class="slot"><span class="label">Critique</span><b>{(st.critChance * 100).toFixed(1)} % · ×{st.critMult.toFixed(1)}</b></div>
+    <div class="slot"><span class="label">Or</span><b>×{st.goldMult.toFixed(2)}</b></div>
+    <div class="slot"><span class="label">Volonté</span><b>{st.bossTime} s</b></div>
+    <div class="slot"><span class="label">Légende</span><b>{N(s.legende)} (×{N(1 + 0.05 * s.legende)})</b></div>
+    <div class="slot"><span class="label">Record</span><b>Étage {s.bestFloor}</b></div>
   </div>
 
-  <div class="sub title">Maîtrises</div>
-  <div class="mast">
-    {#each CLASSES as c}
-      {@const lv = masteryLevel(s.mastery[c.id])}
-      {@const next = 20 * (lv + 1) ** 2}
-      <div class="m">
-        <img class="px" src={gfx(c.icon)} alt="" />
-        <div class="mi"><span>{c.name} · niv. <b class="num">{lv}</b></span>
-          <div class="bar"><i style="width:{(s.mastery[c.id] - 20 * lv ** 2) / (next - 20 * lv ** 2) * 100}%; background: var(--violet)"></i></div></div>
-      </div>
-    {/each}
-  </div>
-  <p class="note">Chaque niveau de Maîtrise donne +2 % de dégâts, quelle que soit la classe jouée.</p>
+  <div class="label sub">Maîtrises — +2 % de dégâts par niveau</div>
+  {#each CLASSES as c}
+    {@const lv = masteryLevel(s.mastery[c.id])}
+    {@const lo = 20 * lv ** 2}
+    {@const hi = 20 * (lv + 1) ** 2}
+    <div class="m">
+      <img src={gfx(c.icon)} alt="" />
+      <span class="mn">{c.name}</span>
+      <div class="bar"><i style="width:{((s.mastery[c.id] - lo) / (hi - lo)) * 100}%"></i></div>
+      <span class="ml">niv. {lv}</span>
+    </div>
+  {/each}
 </div>
 
 <style>
-  .body { flex: 1; padding: 12px; }
-  .card { display: flex; gap: 12px; background: var(--panel); border-radius: 14px; padding: 10px; box-shadow: inset 0 0 0 1px var(--line); }
-  .portrait { width: 74px; height: 96px; object-fit: contain; }
-  .cname { display: flex; align-items: center; gap: 6px; font-size: 18px; color: var(--gold); }
-  .cname img { width: 24px; height: 24px; }
-  .style { font-size: 12px; color: var(--ink-3); }
-  ul { margin: 6px 0 0; padding-left: 16px; font-size: 12.5px; color: var(--ink-2); }
-  .row.up { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 12px 0; background: var(--panel); border-radius: 14px; padding: 10px 12px; box-shadow: inset 0 0 0 1px var(--line); }
-  .label { font-size: 12px; color: var(--ink-3); }
-  .val { font-size: 22px; font-weight: 700; color: var(--ink); }
-  .val small { font-size: 11px; color: var(--ink-3); font-family: var(--font-body); }
-  .right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .card { display: flex; gap: 10px; padding: 8px; }
+  .portrait { width: 70px; height: 92px; object-fit: contain; }
+  .cname { font-size: 30px; line-height: 1; color: var(--gold); }
+  ul { margin: 4px 0 0; padding-left: 14px; font-size: 13px; color: var(--text-2); }
+  .up { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; }
+  .val { font-size: 22px; font-weight: 700; }
+  .val small { font-size: 12px; color: var(--text-3); font-weight: 500; }
+  .right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .grid div { background: var(--panel); border-radius: 10px; padding: 7px 10px; display: flex; flex-direction: column; }
-  .grid span { font-size: 11px; color: var(--ink-3); }
+  .grid .slot { padding: 5px 8px; display: flex; flex-direction: column; background: var(--stone-2); }
   .grid b { font-size: 14px; }
-  .sub { margin: 14px 0 6px; font-size: 13px; color: var(--ink-3); }
-  .mast { display: flex; flex-direction: column; gap: 6px; }
-  .m { display: flex; gap: 8px; align-items: center; }
-  .m img { width: 28px; height: 28px; }
-  .mi { flex: 1; font-size: 12.5px; }
-  .note { font-size: 11.5px; color: var(--ink-3); }
+  .sub { margin-top: 4px; }
+  .m { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .m img { width: 24px; height: 24px; }
+  .mn { width: 64px; }
+  .m .bar { flex: 1; height: 8px; }
+  .m .bar > i { background: var(--arcane); }
+  .ml { width: 46px; text-align: right; color: var(--text-2); }
 </style>

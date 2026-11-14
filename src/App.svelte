@@ -8,6 +8,8 @@
   import HeroPanel from './ui/HeroPanel.svelte';
   import CompanionsPanel from './ui/CompanionsPanel.svelte';
   import AscensionPanel from './ui/AscensionPanel.svelte';
+  import EquipmentPanel from './ui/EquipmentPanel.svelte';
+  import CloudConflict from './ui/CloudConflict.svelte';
   import OptionsPanel from './ui/OptionsPanel.svelte';
   import Dialogue from './ui/Dialogue.svelte';
   import ClassPicker from './ui/ClassPicker.svelte';
@@ -25,6 +27,7 @@
       {#if ui.tab === 'chronique'}<Chronicle />
       {:else if ui.tab === 'heros'}<HeroPanel />
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
+      {:else if ui.tab === 'equipement'}<EquipmentPanel />
       {:else if ui.tab === 'ascension'}<AscensionPanel />
       {:else}<OptionsPanel />{/if}
     </section>
@@ -34,10 +37,11 @@
   {#if ui.ritual}<Ritual />
   {:else if ui.scenes.length}<Dialogue />
   {:else if ui.classPicker}<ClassPicker />
+  {:else if ui.conflict}<CloudConflict />
   {:else if ui.offline}<OfflineModal />{/if}
 {/if}
 
 <style>
   main { height: 100%; display: flex; flex-direction: column; padding-top: var(--safe-top); }
-  .panel { flex: 1 1 0; min-height: 0; background: var(--bg-2); border-top: 1px solid var(--line); position: relative; display: flex; flex-direction: column; }
+  .panel { flex: 1 1 0; min-height: 0; background: var(--night); position: relative; display: flex; flex-direction: column; }
 </style>

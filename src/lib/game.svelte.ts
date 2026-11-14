@@ -4,17 +4,20 @@ import type { OfflineReport } from '../game/engine';
 import { actFor } from '../game/data/world';
 import * as A from './audio';
 import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
+import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from './cloud.svelte';
+import { RARITIES } from '../game/data/items';
 
 export const G = $state<{ s: GameState }>({ s: E.newGame() });
 
 export const ui = $state({
   ready: false,
-  tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'ascension' | 'options',
+  tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'equipement' | 'ascension' | 'options',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
   offline: null as OfflineReport | null,
   classPicker: null as null | 'start' | 'ascension',
   ritual: 0,
+  conflict: null as CloudSave | null,
   toasts: [] as { id: number; text: string; kind: string }[],
 });
 
@@ -26,10 +29,11 @@ let toastId = 0;
 export function toast(text: string, kind = 'info') {
   const id = ++toastId;
   ui.toasts.push({ id, text, kind });
+  if (ui.toasts.length > 3) ui.toasts.shift();
   setTimeout(() => { const i = ui.toasts.findIndex(t => t.id === id); if (i >= 0) ui.toasts.splice(i, 1); }, 2600);
 }
 
-export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0;
+export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {
@@ -49,6 +53,7 @@ function handle(e: GameEvent) {
     case 'partition': A.sfxPartition(); break;
     case 'milestone': A.sfxUp(); toast(`Palier ${e.level} atteint !`, 'up'); break;
     case 'heavy': buzz('heavy'); break;
+    case 'loot': if (e.item.rarity >= 3) { toast(`${RARITIES[e.item.rarity].name} : ${e.item.name}`, e.item.rarity >= 4 ? 'crit' : 'up'); A.sfxUp(); } break;
     case 'story': ui.scenes.push(e.id); break;
   }
   if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') ui.tab = 'ascension';
@@ -70,8 +75,35 @@ export function act<T>(fn: (s: GameState) => T): T {
 let lastPersist = 0;
 export async function persist() {
   lastPersist = performance.now();
-  await storeSave(E.serialize(G.s));
+  const json = E.serialize(G.s);
+  await storeSave(json);
+  if (account.user && Date.now() - lastCloud > 120_000) cloudPush(json);
 }
+
+// ---------------------------------------------------------------- cloud
+let lastCloud = 0;
+const summary = () => ({ bestFloor: G.s.bestFloor, legende: G.s.legende, ascensions: G.s.ascensions, playSeconds: G.s.stats.playSeconds, lastSave: G.s.lastSave });
+export async function cloudPush(json = E.serialize(G.s)) {
+  lastCloud = Date.now();
+  try { await pushSave(json, summary()); } catch (e: any) { account.error = 'Synchro impossible : ' + (e?.code ?? e?.message ?? e); }
+}
+async function reconcile() {
+  try {
+    const cloud = await pullSave();
+    const local = G.s;
+    const fresh = local.bestFloor <= 1 && local.ascensions === 0;
+    if (!cloud) { await cloudPush(); return; }
+    if (fresh) { useCloud(cloud); return; }
+    if (cloud.lastSave > local.lastSave + 5000 && (cloud.bestFloor !== local.bestFloor || cloud.legende !== local.legende)) ui.conflict = cloud;
+    else await cloudPush();
+  } catch (e: any) { account.error = 'Synchro impossible : ' + (e?.code ?? e?.message ?? e); }
+}
+export function useCloud(c: CloudSave) {
+  const g = E.deserialize(c.data);
+  if (g) { G.s = g; ui.classPicker = g.classId ? null : 'start'; ui.scenes = []; applySettings(); storeSave(E.serialize(G.s)); }
+  ui.conflict = null;
+}
+export function keepLocal() { ui.conflict = null; cloudPush(); }
 
 function applySettings() {
   A.setSound(G.s.settings.sound);
@@ -114,10 +146,12 @@ export async function boot() {
     checkOffline();
   }
   onAppState(active => {
-    if (!active) { hiddenAt = Date.now(); persist(); }
+    if (!active) { hiddenAt = Date.now(); lastCloud = 0; persist(); }
     else if (hiddenAt && Date.now() - hiddenAt > 60_000) { G.s.lastSave = hiddenAt; checkOffline(); }
   });
   window.addEventListener('pagehide', () => persist());
+  onAuth(u => { if (u) reconcile(); });
+  initCloud();
   ui.ready = true;
   last = performance.now();
   requestAnimationFrame(frame);

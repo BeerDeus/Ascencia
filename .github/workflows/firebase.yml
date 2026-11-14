@@ -1,0 +1,33 @@
+# Déploie les règles et index Firestore à chaque modification sur main.
+# Nécessite le secret GitHub FIREBASE_SERVICE_ACCOUNT (clé JSON d'un compte de service).
+name: Firebase (règles Firestore)
+
+on:
+  push:
+    branches: [main]
+    paths: [firestore.rules, firestore.indexes.json, firebase.json, .github/workflows/firebase.yml]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Clé du compte de service
+        id: key
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then echo "::warning::Secret FIREBASE_SERVICE_ACCOUNT absent : règles non déployées"; echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+      - name: Déployer les règles
+        if: steps.key.outputs.ok == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx -y firebase-tools@15 deploy --only firestore:rules,firestore:indexes --project ascencia-app-off --non-interactive
+      - if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"

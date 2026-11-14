@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Ascencia — règles Firestore (déployées par .github/workflows/firebase.yml)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Sauvegarde cloud : 1 document par joueur, lisible/écrivable par lui seul.
+    match /saves/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validSave(request.resource.data);
+    }
+
+    function validSave(d) {
+      return d.keys().hasOnly(['data', 'updatedAt', 'version', 'bestFloor', 'legende', 'ascensions', 'playSeconds', 'lastSave'])
+        && d.data is string && d.data.size() > 0 && d.data.size() < 800000
+        && d.updatedAt == request.time
+        && d.version is int && d.version >= 1
+        && d.bestFloor is int && d.bestFloor >= 1
+        && d.legende is number && d.legende >= 0
+        && d.ascensions is int && d.ascensions >= 0
+        && d.playSeconds is number && d.playSeconds >= 0
+        && d.lastSave is int;
+    }
+
+    // Tout le reste est fermé par défaut.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,3 +1,5 @@
+import type { Slot, StatId } from './data/items';
+
 export type ClassId = 'guerrier' | 'archer' | 'mage';
 export type CompType = 'melee' | 'distance' | 'magie';
 export type MonsterKind = 'mob' | 'boss' | 'golden';
@@ -10,6 +12,17 @@ export interface Monster {
   maxHp: number;
   story?: string;       // id de boss scénarisé
   fleeAt?: number;      // temps de jeu où le monstre doré s'enfuit
+}
+
+export interface Item {
+  id: number;
+  slot: Slot;
+  base: string;          // sprite
+  name: string;
+  rarity: number;        // 0..5
+  ilvl: number;
+  plus: number;          // améliorations de Forge
+  affixes: { stat: StatId; v: number }[];
 }
 
 export interface RunState {
@@ -32,6 +45,8 @@ export interface RunState {
   activeUntil: number[];  // fin d'effet par Partition
   tapsTotal: number;
   scriptedDefeat: boolean;
+  inventory: Item[];
+  equipped: Partial<Record<Slot, number>>;
 }
 
 export interface Settings {
@@ -59,9 +74,12 @@ export interface GameState {
   settings: Settings;
   stats: { kills: number; bossKills: number; taps: number; goldEarned: number; playSeconds: number; goldenKills: number };
   nextLarryAt: number;
+  metal: number;
+  itemSeq: number;
+  heritage: number | null;   // id de l'objet conservé à l'Ascension
 }
 
-export type ChronicleKind = 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
+export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
 export interface ChronicleEntry { id: number; kind: ChronicleKind; text: string }
 
 export type GameEvent =
@@ -76,4 +94,5 @@ export type GameEvent =
   | { type: 'milestone'; comp: number; level: number }
   | { type: 'golden-escape' }
   | { type: 'story'; id: string }
-  | { type: 'heavy' };
+  | { type: 'heavy' }
+  | { type: 'loot'; item: Item };

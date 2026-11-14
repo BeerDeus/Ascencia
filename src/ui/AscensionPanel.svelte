@@ -16,29 +16,27 @@
   function buy(id: string) { if (act(g => E.buyStar(g, id))) sfxUp(); }
 </script>
 
-<div class="scroll body" style="background-image: linear-gradient(rgba(19,14,36,.82), rgba(19,14,36,.95)), url({gfx('bg/skill')})">
+<div class="scroll body" style="background-image: linear-gradient(rgba(22,19,28,.86), rgba(22,19,28,.94)), url({gfx('bg/skill')})">
   {#if !s.ascensionUnlocked}
     <div class="locked">
-      <img class="px" src={gfx('portraits/lysandra')} alt="" />
-      <p class="title">L’Ascension</p>
-      <p>« Un jour, cette vie atteindra ses limites. Ce jour-là, je t’apprendrai à renaître. »</p>
-      <p class="hint">Se débloque pendant l’Acte II (étage 50).</p>
+      <img src={gfx('portraits/lysandra')} alt="" />
+      <p class="book">« Un jour, cette vie atteindra ses limites. Ce jour-là, je t’apprendrai à renaître. »</p>
+      <span class="label">Se débloque pendant l’Acte II</span>
     </div>
   {:else}
-    <div class="asc">
-      <div class="gain">
-        <span>Ascensionner maintenant</span>
-        <b class="num">+{N(gain)} <img class="px" src={gfx('res/eclats_ascension')} alt="" /></b>
-        <small>Étage max de cette vie : {s.run.maxFloor} · prochain Éclat à l’étage {nextAt}</small>
-      </div>
-      <button class="btn violet big" disabled={!E.canAscend(s)} onclick={() => (ui.classPicker = 'ascension')}>
-        {E.canAscend(s) ? 'Ascension' : 'Atteindre l’étage 30'}
+    <div class="asc frame">
+      <div class="label">Ascensionner maintenant</div>
+      <div class="gain outline"><img src={gfx('res/eclats_ascension')} alt="" />+{N(gain)}</div>
+      <div class="small">Record de cette vie : étage {s.run.maxFloor} · prochain Éclat à l’étage {nextAt}</div>
+      <button class="btn go" disabled={!E.canAscend(s)} onclick={() => (ui.classPicker = 'ascension')}>
+        {E.canAscend(s) ? 'Entamer le rituel' : 'Atteindre l’étage 30'}
       </button>
-      <p class="warn">Vous perdez : étage, or, niveaux du héros et des compagnons. Vous gardez : Éclats, Légende, Constellations, Maîtrises.</p>
-      <div class="leg"><span>Légende</span><b class="num">{N(s.legende)}</b><span>Ascensions</span><b class="num">{s.ascensions}</b><span>Éclats</span><b class="num">{N(s.eclats)}</b></div>
+      <div class="small">Perdu : étage, or, niveaux, équipement (sauf Héritage). Gardé : Éclats, Légende, Constellations, Maîtrises, métal.</div>
+      <div class="kv">
+        <span>Légende <b>{N(s.legende)}</b></span><span>Ascensions <b>{s.ascensions}</b></span><span>Éclats <b>{N(s.eclats)}</b></span>
+      </div>
     </div>
 
-    <div class="title sub">Constellations</div>
     <div class="tabs">
       {#each branches as b}
         <button class:on={branch === b} style="--c:{BRANCHES[b].color}" onclick={() => (branch = b)}>{BRANCHES[b].name}</button>
@@ -50,16 +48,16 @@
         {@const maxed = lv >= node.max}
         {@const locked = !!node.requires && !(s.constellations[node.requires] > 0)}
         {@const cost = starCost(node, lv)}
-        <div class="star" class:lit={lv > 0} class:locked style="--c:{BRANCHES[branch].color}">
-          <div class="dot">✦</div>
+        <div class="star frame" class:lit={lv > 0} class:locked style="--c:{BRANCHES[branch].color}">
+          <div class="gem"><i></i></div>
           <div class="mid">
-            <div class="nm">{node.name} <span class="num">{lv}/{node.max}</span></div>
-            <div class="ef">{lv ? node.desc(lv * node.per) : '—'}{#if !maxed} → <b>{node.desc((lv + 1) * node.per)}</b>{/if}</div>
+            <div class="nm">{node.name} <span>{lv}/{node.max}</span></div>
+            <div class="ef">{lv ? node.desc(lv * node.per) : '—'}{#if !maxed} <em>→ {node.desc((lv + 1) * node.per)}</em>{/if}</div>
             {#if locked}<div class="req">Requiert : {STARS.find(x => x.id === node.requires)?.name}</div>{/if}
           </div>
           {#if !maxed}
-            <button class="btn" disabled={locked || cost > s.eclats} onclick={() => buy(node.id)}><span class="num">{N(cost)}</span></button>
-          {:else}<span class="max">MAX</span>{/if}
+            <button class="btn" disabled={locked || cost > s.eclats} onclick={() => buy(node.id)}>{N(cost)}<img src={gfx('res/eclats_ascension')} alt="" /></button>
+          {:else}<span class="max">Max</span>{/if}
         </div>
       {/each}
     </div>
@@ -67,35 +65,34 @@
 </div>
 
 <style>
-  .body { flex: 1; padding: 12px; background-size: cover; background-position: center; }
-  .locked { text-align: center; padding: 20px 10px; color: var(--ink-2); }
+  .body { flex: 1; padding: 8px; background-size: cover; background-position: center; display: flex; flex-direction: column; gap: 8px; }
+  .locked { text-align: center; padding: 16px; color: var(--text-2); }
   .locked img { height: 110px; }
-  .locked .title { font-size: 20px; color: var(--gold); margin: 6px 0; }
-  .hint { color: var(--ink-3); font-size: 12px; }
-  .asc { background: rgba(26,19,48,.85); border-radius: 16px; padding: 14px; box-shadow: inset 0 0 0 1px var(--line), 0 0 30px -10px var(--violet); text-align: center; }
-  .gain span { font-size: 12px; color: var(--ink-3); display: block; }
-  .gain b { font-size: 32px; color: #ff9a9a; display: inline-flex; align-items: center; gap: 6px; text-shadow: 0 0 18px rgba(255,90,110,.6); }
-  .gain b img { width: 30px; height: 30px; }
-  .gain small { display: block; font-size: 11px; color: var(--ink-3); }
-  .big { margin: 10px 0 6px; width: 100%; padding: 12px; font-size: 17px; font-family: var(--font-title); }
-  .warn { font-size: 11px; color: var(--ink-3); margin: 4px 0 8px; }
-  .leg { display: grid; grid-template-columns: auto auto auto auto auto auto; gap: 2px 6px; justify-content: center; align-items: baseline; font-size: 11px; color: var(--ink-3); }
-  .leg b { color: var(--ink); font-size: 14px; margin-right: 8px; }
-  .sub { margin: 16px 0 8px; font-size: 14px; color: var(--ink-2); }
-  .tabs { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 6px; }
-  .tabs button { flex: none; padding: 6px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; color: var(--ink-3); background: var(--panel); }
-  .tabs button.on { color: #120d22; background: var(--c); }
-  .stars { display: flex; flex-direction: column; gap: 6px; }
-  .star { display: flex; align-items: center; gap: 10px; background: rgba(26,19,48,.85); border-radius: 12px; padding: 8px 10px; box-shadow: inset 0 0 0 1px var(--line); }
-  .star.locked { opacity: .55; }
-  .dot { font-size: 22px; color: #4a3d70; width: 26px; text-align: center; }
-  .star.lit .dot { color: var(--c); text-shadow: 0 0 10px var(--c), 0 0 22px var(--c); animation: twinkle 2s infinite alternate; }
-  @keyframes twinkle { to { opacity: .7; transform: scale(.9); } }
+  .locked p { font-size: 16px; font-style: italic; }
+  .asc { padding: 10px; text-align: center; }
+  .gain { display: inline-flex; align-items: center; gap: 6px; font-size: 34px; font-weight: 700; color: #f08b80; margin: 2px 0; }
+  .gain img { width: 34px; height: 34px; }
+  .small { font-size: 11.5px; color: var(--text-3); }
+  .go { width: 100%; margin: 8px 0 6px; padding: 11px; font-size: 16px; }
+  .kv { display: flex; justify-content: center; gap: 14px; margin-top: 6px; font-size: 12px; color: var(--text-3); }
+  .kv b { color: var(--text); }
+  .tabs { display: flex; gap: 3px; overflow-x: auto; }
+  .tabs button { flex: none; padding: 6px 9px; font-size: 12px; font-weight: 700; color: var(--text-3); background: var(--stone-2); border: 2px solid var(--ink-0); }
+  .tabs button.on { color: var(--ink-0); background: var(--c); }
+  .stars { display: flex; flex-direction: column; gap: 5px; }
+  .star { display: flex; align-items: center; gap: 9px; padding: 7px 8px; }
+  .star.locked { opacity: .5; }
+  .gem { width: 22px; height: 22px; display: grid; place-items: center; flex: none; }
+  .gem i { width: 10px; height: 10px; background: var(--stone-4); transform: rotate(45deg); box-shadow: 0 0 0 2px var(--ink-0); }
+  .star.lit .gem i { background: var(--c); box-shadow: 0 0 0 2px var(--ink-0), 0 0 0 4px color-mix(in srgb, var(--c) 35%, transparent); animation: tw 1.6s steps(2) infinite; }
+  @keyframes tw { 50% { transform: rotate(45deg) scale(.8); } }
   .mid { flex: 1; min-width: 0; }
   .nm { font-weight: 700; font-size: 14px; }
-  .nm span { color: var(--ink-3); font-size: 12px; }
-  .ef { font-size: 12px; color: var(--ink-2); }
-  .ef b { color: var(--green); font-weight: 600; }
-  .req { font-size: 11px; color: var(--red); }
-  .max { font-size: 12px; color: var(--gold); font-weight: 700; }
+  .nm span { color: var(--text-3); font-size: 12px; font-weight: 500; }
+  .ef { font-size: 12.5px; color: var(--text-2); }
+  .ef em { font-style: normal; color: var(--moss); }
+  .req { font-size: 11px; color: var(--blood); }
+  .star .btn { font-size: 13px; padding: 6px 8px; gap: 3px; }
+  .star .btn img { width: 16px; height: 16px; }
+  .max { font-size: 12px; color: var(--gold); font-weight: 700; text-transform: uppercase; }
 </style>

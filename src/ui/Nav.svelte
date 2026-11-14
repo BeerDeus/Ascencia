@@ -1,34 +1,37 @@
 <script lang="ts">
   import { G, ui } from '../lib/game.svelte';
   import * as E from '../game/engine';
+  import { lootUnlocked } from '../game/items';
   import { gfx } from '../lib/gfx';
-  const tabs = [
-    { id: 'chronique', label: 'Chronique', icon: 'icons/grimoire' },
-    { id: 'heros', label: 'Héros', icon: 'icons/force' },
-    { id: 'compagnons', label: 'Compagnons', icon: 'icons/combat' },
-    { id: 'ascension', label: 'Ascension', icon: 'icons/harmonie' },
-    { id: 'options', label: 'Options', icon: 'icons/standard' },
-  ] as const;
-  const canAsc = $derived(E.canAscend(G.s));
-  const cheapComp = $derived(G.s.run.companions.some((_, i) => E.compUnlocked(G.s, i) && E.compCostN(G.s, i, 1) <= G.s.run.gold));
-  const cheapHero = $derived(E.heroCostN(G.s, 1) <= G.s.run.gold);
+  const s = $derived(G.s);
+  const tabs = $derived([
+    { id: 'chronique', label: 'Chronique', icon: 'icons/grimoire', dot: false },
+    { id: 'heros', label: 'Héros', icon: 'classes/' + (s.classId ?? 'guerrier'), dot: E.heroCostN(s, 1) <= s.run.gold },
+    { id: 'compagnons', label: 'Alliés', icon: 'icons/standard',
+      dot: s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
+    { id: 'equipement', label: 'Sac', icon: 'obj/sac_a_dos', dot: false, locked: !lootUnlocked(s) },
+    { id: 'ascension', label: 'Ascension', icon: 'icons/harmonie', dot: E.canAscend(s) },
+    { id: 'options', label: 'Options', icon: 'obj/cle', dot: false },
+  ] as { id: typeof ui.tab; label: string; icon: string; dot: boolean; locked?: boolean }[]);
 </script>
 
 <nav>
   {#each tabs as t}
-    <button class:on={ui.tab === t.id} onclick={() => (ui.tab = t.id)}>
-      <img class="px" src={gfx(t.icon)} alt="" />
+    <button class:on={ui.tab === t.id} class:locked={t.locked} onclick={() => (ui.tab = t.id)}>
+      <img src={gfx(t.icon)} alt="" />
       <span>{t.label}</span>
-      {#if (t.id === 'compagnons' && cheapComp) || (t.id === 'heros' && cheapHero) || (t.id === 'ascension' && canAsc)}<i class="dot"></i>{/if}
+      {#if t.dot}<i class="dot"></i>{/if}
     </button>
   {/each}
 </nav>
 
 <style>
-  nav { flex: none; display: flex; background: #0c0818; border-top: 1px solid var(--line); padding-bottom: var(--safe-bottom); }
-  button { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 0 6px; color: var(--ink-3); font-size: 10px; }
-  button img { width: 28px; height: 28px; filter: grayscale(.6) brightness(.8); transition: transform .15s; }
-  button.on { color: var(--gold); }
-  button.on img { filter: none; transform: translateY(-2px) scale(1.08); }
-  .dot { position: absolute; top: 4px; right: calc(50% - 20px); width: 9px; height: 9px; border-radius: 50%; background: var(--red); box-shadow: 0 0 6px var(--red); }
+  nav { flex: none; display: flex; gap: 2px; padding: 3px 3px calc(3px + var(--safe-bottom)); background: var(--ink-0); }
+  button { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 0 4px;
+    color: var(--text-3); font-size: 10.5px; background: var(--stone-1); box-shadow: inset 0 2px 0 var(--hi), inset 0 -2px 0 var(--lo); }
+  button img { width: 26px; height: 26px; filter: saturate(.3) brightness(.75); }
+  button.on { color: var(--parch-ink); background: var(--parch-2); box-shadow: inset 0 2px 0 var(--parch), inset 0 -2px 0 var(--parch-3); }
+  button.on img { filter: none; }
+  button.locked img { filter: grayscale(1) brightness(.4); }
+  .dot { position: absolute; top: 4px; right: calc(50% - 19px); width: 8px; height: 8px; background: var(--blood); box-shadow: 0 0 0 2px var(--ink-0); }
 </style>

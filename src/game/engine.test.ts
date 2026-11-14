@@ -6,6 +6,7 @@ import { COMPANIONS, PARTITIONS, CLASSES } from './data/heroes';
 import { SPEAKERS } from './data/story';
 import { mobHp, eclatsFor, geomMax, geomSum } from './formulas';
 import { fmt } from './format';
+import * as I from './items';
 
 const gfx = (k: string) => `public/gfx/${k}.webp`;
 
@@ -90,5 +91,26 @@ describe('moteur', () => {
     const rep = E.applyOffline(s, 3600)!;
     expect(rep.gold).toBeGreaterThan(0);
     expect(s.run.gold).toBeGreaterThan(g);
+  });
+
+  it('équipement : butin, bonus, Forge et Héritage', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 40;
+    E.newRun(s, 40);
+    const base = E.stats(s).tap;
+    const it = I.makeItem(s, 40, 3, Math.random, 'arme');
+    I.addItem(s, it);
+    expect(s.run.equipped.arme).toBe(it.id);
+    expect(E.stats(s).tap).toBeGreaterThan(base * 1.5);
+    s.metal = 1e6;
+    expect(I.upgrade(s, it.id)).toBe(true);
+    expect(it.plus).toBe(1);
+    const junk = I.makeItem(s, 40, 0, Math.random, 'tete'); I.addItem(s, junk);
+    const junk2 = I.makeItem(s, 40, 0, Math.random, 'tete'); I.addItem(s, junk2);
+    expect(I.recycle(s, junk2.id)).toBeGreaterThan(0);
+    I.setHeritage(s, it.id);
+    s.ascensionUnlocked = true; s.run.maxFloor = 60;
+    E.ascend(s, 'mage');
+    expect(s.run.inventory.map(i => i.id)).toEqual([it.id]);
+    expect(s.run.equipped.arme).toBe(it.id);
   });
 });

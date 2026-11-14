@@ -9,42 +9,40 @@
 </script>
 
 <div class="veil">
-  <div class="sheet">
-    <h2 class="title">{asc ? 'Renaître en…' : 'Choisis ta voie'}</h2>
-    {#if asc}<p class="sub">+{E.ascensionGain(G.s)} Éclats · tu pourras changer de classe à chaque Ascension.</p>{/if}
+  <div class="sheet frame">
+    <h2 class="gothic">{asc ? 'Renaître en…' : 'Choisis ta voie'}</h2>
+    {#if asc}<p class="sub">+{E.ascensionGain(G.s)} Éclats. La classe peut changer à chaque Ascension.</p>{/if}
     <div class="list">
       {#each CLASSES as c}
         <button class="c" class:on={sel === c.id} onclick={() => (sel = c.id)}>
-          <img class="px" src={gfx(c.portrait)} alt="" />
+          <img src={gfx(c.portrait)} alt="" />
           <div class="mid">
-            <div class="nm title"><img class="px" src={gfx(c.icon)} alt="" />{c.name}</div>
-            <div class="st">{c.style} · Maîtrise {masteryLevel(G.s.mastery[c.id])}</div>
+            <div class="nm"><img src={gfx(c.icon)} alt="" />{c.name}</div>
+            <div class="label">{c.style} · maîtrise {masteryLevel(G.s.mastery[c.id])}</div>
             <ul>{#each c.perks as p}<li>{p}</li>{/each}</ul>
           </div>
         </button>
       {/each}
     </div>
     <div class="row">
-      {#if asc}<button class="btn ghost" onclick={() => (ui.classPicker = null)}>Annuler</button>{/if}
-      <button class="btn violet go" onclick={() => chooseClass(sel)}>{asc ? 'Ascensionner' : 'Commencer'}</button>
+      {#if asc}<button class="btn stone" onclick={() => (ui.classPicker = null)}>Annuler</button>{/if}
+      <button class="btn go" onclick={() => chooseClass(sel)}>{asc ? 'Ascensionner' : 'Commencer'}</button>
     </div>
   </div>
 </div>
 
 <style>
-  .veil { position: fixed; inset: 0; z-index: 40; background: rgba(5,3,12,.85); display: flex; align-items: flex-end; justify-content: center; animation: fade .2s; }
-  @keyframes fade { from { opacity: 0; } }
-  .sheet { width: 100%; max-width: 560px; background: var(--bg-2); border-radius: 20px 20px 0 0; padding: 18px 14px calc(16px + var(--safe-bottom)); box-shadow: 0 -10px 40px rgba(0,0,0,.5); max-height: 92dvh; overflow-y: auto; }
-  h2 { margin: 0; text-align: center; color: var(--gold); font-size: 22px; }
-  .sub { text-align: center; font-size: 12px; color: var(--ink-3); margin: 4px 0 0; }
-  .list { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
-  .c { display: flex; gap: 10px; text-align: left; background: var(--panel); border-radius: 14px; padding: 8px; box-shadow: inset 0 0 0 1px var(--line); transition: transform .1s; }
-  .c.on { box-shadow: inset 0 0 0 2px var(--gold), 0 0 20px -6px var(--gold); transform: scale(1.01); }
-  .c > img { width: 64px; height: 84px; object-fit: contain; }
-  .nm { display: flex; align-items: center; gap: 6px; font-size: 17px; }
+  .veil { position: fixed; inset: 0; z-index: 40; background: rgba(8,6,12,.82); display: flex; align-items: flex-end; justify-content: center; }
+  .sheet { width: 100%; max-width: 560px; padding: 12px 10px calc(12px + var(--safe-bottom)); background: var(--stone-1); max-height: 94dvh; overflow-y: auto; clip-path: none; }
+  h2 { margin: 0; text-align: center; color: var(--parch); font-size: 38px; line-height: 1; }
+  .sub { text-align: center; font-size: 12px; color: var(--text-3); margin: 2px 0 0; }
+  .list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+  .c { display: flex; gap: 10px; text-align: left; padding: 6px; background: var(--stone-2); border: 2px solid var(--ink-0); box-shadow: inset 0 2px 0 var(--hi); }
+  .c.on { background: #3b3020; box-shadow: inset 0 0 0 2px var(--gold); }
+  .c > img { width: 60px; height: 80px; object-fit: contain; }
+  .nm { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 700; }
   .nm img { width: 22px; height: 22px; }
-  .st { font-size: 11px; color: var(--ink-3); }
-  ul { margin: 4px 0 0; padding-left: 16px; font-size: 12px; color: var(--ink-2); }
-  .row { display: flex; gap: 8px; }
-  .go { flex: 1; padding: 12px; font-size: 16px; font-family: var(--font-title); }
+  ul { margin: 3px 0 0; padding-left: 14px; font-size: 12.5px; color: var(--text-2); }
+  .row { display: flex; gap: 6px; }
+  .go { flex: 1; padding: 11px; font-size: 16px; }
 </style>
