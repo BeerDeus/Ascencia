@@ -26,6 +26,19 @@ jobs:
       - run: npm ci
       - run: npm run site
       - run: npm test
+      - name: Envoi FTP direct vers Hostinger (si configuré)
+        id: ftp
+        env:
+          HAS_FTP: ${{ secrets.FTP_SERVER != '' }}
+        run: echo "ok=$HAS_FTP" >> "$GITHUB_OUTPUT"
+      - if: steps.ftp.outputs.ok == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./site-dist/
+          server-dir: ${{ vars.FTP_DIR || './' }}
       - name: Publier dans la branche hostinger
         uses: peaceiris/actions-gh-pages@v4
         with:
