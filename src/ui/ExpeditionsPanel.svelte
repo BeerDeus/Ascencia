@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { G, act, toast } from '../lib/game.svelte';
+  import { G, act, toast, ui } from '../lib/game.svelte';
   import * as Ex from '../game/expeditions';
   import { ZONES, DURATIONS } from '../game/data/expeditions';
   import { resInfo } from '../game/resinfo';
@@ -41,7 +41,7 @@
     <div class="r frame" class:dim={!open}>
       <img src={gfx(z.icon)} alt="" />
       <div class="mi"><b>{z.name}</b><span>{z.desc}</span>
-        {#if open}<span class="loot">{#each Object.entries(loot.res) as [id, n]}<span><img src={gfx(resInfo(id).sprite)} alt="" />{n}</span>{/each}{#if loot.metal}<span><img src={gfx('res/metal')} alt="" />{loot.metal}</span>{/if}</span>{/if}
+        {#if open}<span class="loot">{#each Object.entries(loot.res) as [id, n]}<button class="lt" onclick={() => (ui.info = { kind: 'res', id })}><img src={gfx(resInfo(id).sprite)} alt="" />{n}</button>{/each}{#if loot.metal}<span><img src={gfx('res/metal')} alt="" />{loot.metal}</span>{/if}</span>{/if}
       </div>
       {#if open}<button class="btn sky" disabled={free <= 0} onclick={() => send(z.id)}>Envoyer</button>
       {:else}<span class="lk">Étage {z.floor}</span>{/if}
@@ -61,7 +61,7 @@
   .mi .bar { height: 7px; }
   .mi .bar > i { background: var(--sky); }
   .loot { display: flex; flex-wrap: wrap; gap: 6px; color: var(--moss); }
-  .loot span { display: inline-flex; align-items: center; gap: 2px; }
+  .loot .lt { display: inline-flex; align-items: center; gap: 2px; color: var(--moss); font-size: inherit; }
   .loot img { width: 16px; height: 16px; object-fit: contain; }
   .r .btn { font-size: 12px; padding: 6px 8px; }
   .dur { display: flex; gap: 2px; padding: 2px; background: var(--ink-0); align-self: flex-start; }

@@ -7,6 +7,8 @@
   import { gfx } from '../lib/gfx';
   import { sfxUp, sfxGold } from '../lib/audio';
   import JobBar from './JobBar.svelte';
+  import { longpress } from '../lib/guard';
+  import { level } from '../game/jobs';
 
   const s = $derived(G.s);
   let now = $state(Date.now());
@@ -14,7 +16,13 @@
   const n = $derived(Gd.gridSize(s));
   const cells = $derived(Array.from({ length: n * n }, (_, k) => (k % n) + Math.floor(k / n) * 6));
   const sea = $derived(SEASONS[Gd.season(now)]);
-  let sel = $state<number | null>(null);
+  let sel = $state<number | null>(null);           // fiche d'une parcelle (appui long)
+  let mode = $state<'planter' | 'acheter'>('planter');
+  let seed = $state<string | null>(null);          // graine sélectionnée
+  let seedInfo = $state<string | null>(null);      // fiche d'une graine (appui long)
+  const jl = $derived(level(s, 'jardinier'));
+  const owned = $derived(PLANTS.filter(x => x.id !== 'yggdrasil' && (x.tier === 1 || (s.garden.seeds[x.id] ?? 0) > 0)));
+  $effect(() => { if (!seed || !(s.garden.seeds[seed] > 0)) { const f = owned.find(x => (s.garden.seeds[x.id] ?? 0) > 0); if (f && !seed) seed = f.id; } });
   let herbier = $state(false);
   const plot = $derived(sel !== null ? s.garden.plots[sel] : null);
   const TRAIT = { geante: 'Géante ×2', doree: 'Dorée', lumineuse: 'Lumineuse ×2 XP' };
@@ -22,9 +30,23 @@
   function tap(i: number) {
     const p = s.garden.plots[i];
     if (p?.pest) { if (act(g => Gd.removePest(g, i))) { sfxUp(); toast('Nuisible chassé !', 'up'); } return; }
-    if (p && Gd.mature(p) && !p.dissonantSince && p.plant !== 'yggdrasil') { doHarvest(i); return; }
-    sel = i;
+    if (p) { if (Gd.mature(p) && !p.dissonantSince && p.plant !== 'yggdrasil') doHarvest(i); return; }
+    if (!seed) { toast('Choisissez d’abord une graine ci-dessous', 'info'); return; }
+    if (!(s.garden.seeds[seed] > 0)) { toast(`Plus de graines : ${PLANT_BY_ID[seed].name}${PLANT_BY_ID[seed].tier === 1 ? ' (mode Acheter)' : ''}`, 'info'); return; }
+    if (act(g => Gd.plant(g, i, seed!))) sfxUp();
   }
+  function seedTap(id: string) {
+    if (mode === 'acheter') {
+      if (PLANT_BY_ID[id].tier !== 1) { toast('Seules les graines communes s’achètent', 'info'); return; }
+      if (act(g => Gd.buySeed(g, id))) sfxUp(); else toast('Pas assez d’or', 'info');
+      return;
+    }
+    seed = id;
+  }
+  // ---- infos selon le niveau de Jardinier
+  const growMin = (id: string) => PLANT_BY_ID[id].minutes / (Gd.seasonMult(s, id) * (1 + jl * 0.005));
+  const yieldRange = (id: string) => { const b = 1 + (PLANT_BY_ID[id].season === Gd.season(now) ? 1 : 0) + Math.floor(jl / 25); return `${b} à ${b + 1}`; };
+  const crosses = (id: string) => MUTATIONS.filter(m => m.a === id || m.b === id);
   function doHarvest(i: number) {
     const r = act(g => E.gardenHarvest(g, i));
     if (!r) return;
@@ -33,7 +55,6 @@
     else toast(`+${r.qty} ${PLANT_BY_ID[r.plant].name}${r.seeds ? ` · +${r.seeds} graine${r.seeds > 1 ? 's' : ''}` : ''}${r.gems ? ` · +${r.gems} gemmes` : ''}`, 'gold');
     sel = null;
   }
-  function plantIt(id: string) { if (sel !== null && act(g => Gd.plant(g, sel!, id))) { sfxUp(); sel = null; } }
   function harvestAll() { const r = act(Gd.harvestAll); if (r.length) { sfxGold(); toast(`${r.length} récolte${r.length > 1 ? 's' : ''}`, 'gold'); } }
   const timeLeft = (i: number) => {
     const p = s.garden.plots[i]!, sp = Gd.growSpeed(s, i);
@@ -61,7 +82,7 @@
   <div class="grid" style="--n:{n}">
     {#each cells as i (i)}
       {@const p = s.garden.plots[i]}
-      <button class="cell" class:ripe={Gd.mature(p)} class:dis={!!p?.dissonantSince} class:sel={sel === i} onclick={() => tap(i)}>
+      <button class="cell" class:ripe={Gd.mature(p)} class:dis={!!p?.dissonantSince} class:sel={sel === i} onclick={() => tap(i)} use:longpress={() => (sel = i)}>
         {#if p}
           <img class="pl" src={gfx(plantSprite(p.plant, Gd.stage(p)))} alt="" />
           {#if !Gd.mature(p)}<span class="pg"><i style="width:{p.progress * 100}%"></i></span>{/if}
@@ -72,41 +93,78 @@
       </button>
     {/each}
   </div>
-  <p class="tip book">Deux plantes mûres voisines d’une parcelle vide peuvent y faire pousser une mutation. Touchez une plante mûre pour la récolter.</p>
-
-  <section class="frame"><JobBar job="jardinier" /></section>
-
-  <section class="frame">
-    <div class="label">Graines communes · {fmt(Gd.seedPrice(s), s.settings.notation)} or l’unité</div>
+  <section class="frame tools">
+    <div class="switch" role="tablist">
+      <button class:on={mode === 'planter'} onclick={() => (mode = 'planter')}><img src={gfx('res/plante_sauvage')} alt="" />Planter</button>
+      <button class:on={mode === 'acheter'} onclick={() => (mode = 'acheter')}><img src={gfx('obj/bourse_or')} alt="" />Acheter</button>
+    </div>
+    <div class="hint">
+      {#if mode === 'planter'}
+        {seed ? `Touchez une case vide pour planter : ${PLANT_BY_ID[seed].name}` : 'Choisissez une graine'} · appui long = infos
+      {:else}
+        Touchez une graine commune pour l’acheter · <b class="price">{fmt(Gd.seedPrice(s), s.settings.notation)} or</b> l’unité
+      {/if}
+    </div>
     <div class="seeds">
-      {#each Gd.commonPlants as c}
-        <button class="sd slot" disabled={Gd.seedPrice(s) > s.run.gold} onclick={() => act(g => Gd.buySeed(g, c.id)) && sfxUp()}>
-          <img src={gfx(plantSprite(c.id, 3))} alt="" /><b>{s.garden.seeds[c.id] ?? 0}</b><small>+1</small>
+      {#each (mode === 'acheter' ? Gd.commonPlants : owned) as c (c.id)}
+        {@const nb = s.garden.seeds[c.id] ?? 0}
+        <button class="sd slot" class:picked={mode === 'planter' && seed === c.id} class:none={mode === 'planter' && !nb}
+          class:poor={mode === 'acheter' && Gd.seedPrice(s) > s.run.gold} onclick={() => seedTap(c.id)} use:longpress={() => (seedInfo = c.id)}>
+          <img src={gfx(plantSprite(c.id, 3))} alt="" /><b>{nb}</b><small>{mode === 'acheter' ? '+1' : c.name}</small>
         </button>
       {/each}
     </div>
   </section>
+  <p class="tip book">Deux plantes mûres voisines d’une case vide peuvent y faire naître une mutation : laissez-lui de la place !</p>
+
+  <section class="frame"><JobBar job="jardinier" /></section>
 </div>
+
+{#if seedInfo}
+  {@const d = PLANT_BY_ID[seedInfo]}
+  <div class="veil" role="presentation">
+    <div class="herb frame info">
+      <div class="ph">
+        <img src={gfx(plantSprite(d.id, 3))} alt="" />
+        <div class="mi"><b>{known(d.id) ? d.name : '???'}</b><span>Rang {d.tier} · {s.garden.seeds[d.id] ?? 0} graine(s)</span></div>
+      </div>
+      <p class="tip book">{known(d.id) ? d.desc : hintFor(d.id)}</p>
+      <div class="facts">
+        <div><span>Temps de pousse</span><b>{fmtTime(growMin(d.id) * 60)}</b></div>
+        {#if jl >= 10}<div><span>Saison préférée</span><b style="color:{SEASONS[d.season].color}">{SEASONS[d.season].name}</b></div>{/if}
+        {#if jl >= 20}<div><span>Récolte attendue</span><b>{yieldRange(d.id)} · {d.tier * 15} XP</b></div>{/if}
+        {#if d.aura}<div><span>Effet de voisinage</span><b>{d.aura === 'mutation' ? 'Mutations +50 %' : 'Pousse +25 %'}</b></div>{/if}
+      </div>
+      {#if jl >= 30}
+        {#if crosses(d.id).length}
+          <div class="label">Croisements</div>
+          {#each crosses(d.id) as m}
+            {@const other = m.a === d.id ? m.b : m.a}
+            <div class="cross"><span>+ {known(other) ? PLANT_BY_ID[other].name : '???'}</span><b>→ {known(m.result) ? PLANT_BY_ID[m.result].name : '???'}</b></div>
+          {/each}
+        {/if}
+      {/if}
+      {#if jl < 30}<p class="lock">Plus d’infos aux niveaux {[10, 20, 30].filter(x => x > jl).join(', ')} de Jardinier.</p>{/if}
+      <button class="btn" onclick={() => (seedInfo = null)}>Fermer</button>
+    </div>
+  </div>
+{/if}
 
 {#if sel !== null}
   <div class="sheet frame">
     <button class="x" onclick={() => (sel = null)} aria-label="Fermer">✕</button>
     {#if !plot}
-      <div class="label">Planter</div>
-      <div class="pick">
-        {#each PLANTS.filter(x => (s.garden.seeds[x.id] ?? 0) > 0) as x}
-          <button class="sd slot" onclick={() => plantIt(x.id)}><img src={gfx(plantSprite(x.id, 3))} alt="" /><b>{s.garden.seeds[x.id]}</b><small>{x.name}</small></button>
-        {/each}
-        {#if !PLANTS.some(x => (s.garden.seeds[x.id] ?? 0) > 0)}<p class="tip">Aucune graine : achetez-en ci-dessous.</p>{/if}
-      </div>
+      <div class="label">Case vide</div>
       {@const m = Gd.mutationFor(s, sel)}
-      {#if m}<p class="tip">Mutation possible ici : <b>{known(m.result) ? PLANT_BY_ID[m.result].name : '???'}</b> ({Math.round(Math.min(0.95, m.chance) * 100)} %/h) — laissez la parcelle vide !</p>{/if}
+      {#if m}<p class="tip">Mutation possible ici : <b>{known(m.result) ? PLANT_BY_ID[m.result].name : '???'}</b>{#if jl >= 30} ({Math.round(Math.min(0.95, m.chance) * 100)} %/h){/if} — laissez-la vide !</p>
+      {:else}<p class="tip">Aucune mutation possible ici pour l’instant. Il faut deux plantes mûres voisines.</p>{/if}
     {:else}
       {@const d = PLANT_BY_ID[plot.plant]}
       <div class="ph">
         <img src={gfx(plantSprite(plot.plant, Gd.stage(plot)))} alt="" />
         <div class="mi"><b>{d.name}</b><span>Rang {d.tier} · saison : {SEASONS[d.season].name}{plot.trait ? ' · ' + TRAIT[plot.trait] : ''}</span>
-          <span>{Gd.mature(plot) ? 'Mûre' : `Mûre dans ${fmtTime(timeLeft(sel))}`}</span>
+          <span>{Gd.mature(plot) ? 'Mûre' : `Mûre dans ${fmtTime(timeLeft(sel))}`}{#if jl >= 10 && !Gd.mature(plot)} · vitesse ×{Gd.growSpeed(s, sel).toFixed(2)}{/if}</span>
+          {#if jl >= 20}<span>Récolte attendue : {yieldRange(plot.plant)}{plot.trait === 'geante' ? ' (×2)' : ''} · {d.tier * 15 * (plot.trait === 'lumineuse' ? 2 : 1)} XP</span>{/if}
           {#if plot.dissonantSince}<span class="dis-t">Dissonante : elle contamine ses voisines ! Récoltez-la ou soignez-la.</span>{/if}
         </div>
       </div>
@@ -167,6 +225,22 @@
   .empty { font-size: 18px; color: rgba(255,220,170,.25); }
   .tip { margin: 0; font-size: 12.5px; color: var(--text-3); }
   section { padding: 8px; }
+  .tools { display: flex; flex-direction: column; gap: 6px; }
+  .switch { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 2px; background: var(--ink-0); }
+  .switch button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px; font-weight: 700; font-size: 14px; color: var(--text-3); background: var(--stone-1); }
+  .switch button img { width: 20px; height: 20px; filter: grayscale(1) brightness(.6); }
+  .switch button.on { color: var(--parch-ink); background: var(--gold); box-shadow: inset 0 2px 0 var(--gold-hi); }
+  .switch button.on img { filter: none; }
+  .hint { font-size: 12px; color: var(--text-3); min-height: 15px; }
+  .price { color: var(--gold); }
+  .sd.picked { box-shadow: 0 0 0 2px var(--gold), 0 0 10px rgba(230,182,74,.6); background: #3d3423; }
+  .sd.none img { filter: grayscale(1) brightness(.55); }
+  .sd.poor { opacity: .5; }
+  .info { gap: 6px; }
+  .facts { display: flex; flex-direction: column; gap: 2px; }
+  .facts div, .cross { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; font-size: 13px; background: var(--stone-2); }
+  .facts b, .cross b { color: var(--gold); }
+  .lock { margin: 0; font-size: 12px; color: var(--ember); }
   .seeds, .pick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 4px; }
   .sd { position: relative; display: flex; flex-direction: column; align-items: center; padding: 3px 0; background: var(--stone-2); }
   .sd img { width: 34px; height: 34px; object-fit: contain; }

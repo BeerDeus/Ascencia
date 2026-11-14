@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { longpress } from '../lib/guard';
   import { G, act, toast } from '../lib/game.svelte';
   import * as I from '../game/items';
   import { invMax } from '../game/shop';
@@ -33,7 +34,7 @@
     <div class="doll" data-tuto="doll">
       {#each SLOTS as sl}
         {@const it = I.equippedIn(s, sl.id)}
-        <button class="cell slot" style="--r:{it ? RARITIES[it.rarity].color : 'transparent'}" class:filled={!!it} onclick={() => it && (selId = it.id)}>
+        <button class="cell slot" style="--r:{it ? RARITIES[it.rarity].color : 'transparent'}" class:filled={!!it} onclick={() => it && (selId = it.id)} use:longpress={() => it && (selId = it.id)}>
           {#if it}<img src={gfx(it.base)} alt="" />{#if it.plus}<b class="outline">+{it.plus}</b>{/if}{#if it.id === s.heritage}<i class="her">★</i>{/if}
           {:else}<span>{sl.name}</span>{/if}
         </button>
@@ -49,7 +50,7 @@
     <div class="label">Sac · {s.run.inventory.length}/{invMax(s)}</div>
     <div class="inv">
       {#each inv as it (it.id)}
-        <button class="cell slot" class:sel={selId === it.id} class:eq={I.isEquipped(s, it)} style="--r:{RARITIES[it.rarity].color}" onclick={() => (selId = it.id)}>
+        <button class="cell slot" class:sel={selId === it.id} class:eq={I.isEquipped(s, it)} style="--r:{RARITIES[it.rarity].color}" onclick={() => (selId = it.id)} use:longpress={() => (selId = it.id)}>
           <img src={gfx(it.base)} alt="" />
           {#if it.plus}<b class="outline">+{it.plus}</b>{/if}
           {#if better(it)}<i class="up">▲</i>{/if}

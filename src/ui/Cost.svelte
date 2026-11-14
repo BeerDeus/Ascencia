@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { G } from '../lib/game.svelte';
+  import { G, ui } from '../lib/game.svelte';
+  import { longpress } from '../lib/guard';
   import { resInfo } from '../game/resinfo';
   import { gfx } from '../lib/gfx';
   let { cost }: { cost: Record<string, number> } = $props();
@@ -7,7 +8,7 @@
 <span class="cost">
   {#each Object.entries(cost) as [id, n]}
     {@const have = G.s.res[id] ?? 0}
-    <span class="c" class:miss={have < n} title={resInfo(id).name}><img src={gfx(resInfo(id).sprite)} alt="" />{have}/{n}</span>
+    <span class="c" class:miss={have < n} title={resInfo(id).name} use:longpress={() => (ui.info = { kind: 'res', id })}><img src={gfx(resInfo(id).sprite)} alt="" />{have}/{n}</span>
   {/each}
 </span>
 <style>

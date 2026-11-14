@@ -19,7 +19,10 @@
   import { FIEF_TABS, fiefTabOpen } from './game/data/fief';
   import Tuto from './ui/Tuto.svelte';
   import SpellModal from './ui/SpellModal.svelte';
-  const FIEF_LABELS = { village: 'Village', coffre: 'Coffre', jardin: 'Jardin', expeditions: 'Expéd.', alchimie: 'Ateliers' } as const;
+  import JobsPanel from './ui/JobsPanel.svelte';
+  import JobModal from './ui/JobModal.svelte';
+  import InfoModal from './ui/InfoModal.svelte';
+  const FIEF_LABELS = { village: 'Village', coffre: 'Coffre', jardin: 'Jardin', expeditions: 'Expéd.', alchimie: 'Ateliers', metiers: 'Métiers' } as const;
   const fiefTabs = $derived((Object.keys(FIEF_LABELS) as (keyof typeof FIEF_LABELS)[]).map(id => ({ id, label: FIEF_LABELS[id],
     locked: fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}` })));
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
@@ -68,6 +71,7 @@
           <SubTabs name="atelier" bind:value={ui.atelier} tabs={[{ id: 'alchimie', label: 'Alchimie (Alaric)' }, { id: 'forge', label: 'Forge (Kaelen)', locked: fiefTabOpen(G.s, 'forge') ? undefined : `étage ${FIEF_TABS.forge}` }]} />
           {#if ui.atelier === 'forge' && fiefTabOpen(G.s, 'forge')}<ForgePanel />{:else}<AlchemyPanel />{/if}
         {:else if ui.fiefTab === 'expeditions'}<ExpeditionsPanel />
+        {:else if ui.fiefTab === 'metiers'}<JobsPanel />
         {:else}<ChestPanel />{/if}
       {:else if ui.tab === 'ascension'}
         {#if G.s.ascensions > 0}<SubTabs name="asc" bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel' }, { id: 'arcanes', label: 'Arcanes' }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance' }] : [])]} />{/if}
@@ -87,6 +91,8 @@
   {:else if ui.messenger}<MessengerModal />
   {:else if ui.calendar}<CalendarModal />
   {:else if ui.spell !== null}<SpellModal />
+  {:else if ui.job}<JobModal />
+  {:else if ui.info}<InfoModal />
   {:else if ui.offer}<OfferModal />{/if}
   {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}

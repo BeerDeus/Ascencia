@@ -24,7 +24,7 @@ export const ui = $state({
   heroTab: 'heros' as 'heros' | 'sac' | 'hf',
   ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
   atelier: 'alchimie' as 'alchimie' | 'forge',
-  fiefTab: 'village' as 'village' | 'jardin' | 'alchimie' | 'expeditions' | 'coffre',
+  fiefTab: 'village' as 'village' | 'jardin' | 'alchimie' | 'expeditions' | 'coffre' | 'metiers',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
   offline: null as OfflineReport | null,
@@ -38,6 +38,8 @@ export const ui = $state({
   messenger: false,
   spell: null as number | null, // fiche d'une Partition (appui long ou déblocage)
   spellNew: false,
+  job: null as null | import('../game/data/resources').JobId, // fiche d'un métier
+  info: null as null | { kind: 'res' | 'potion' | 'meal'; id: string }, // fiche d'un objet (appui long)
   toasts: [] as { id: number; text: string; kind: string }[],
 });
 
@@ -54,7 +56,7 @@ export function toast(text: string, kind = 'info') {
 }
 
 export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict
-  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null;
+  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null || ui.job !== null || ui.info !== null;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {

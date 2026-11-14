@@ -32,7 +32,7 @@ export const inGrid = (s: GameState, i: number) => i % 6 < gridSize(s) && Math.f
 export const mature = (p: Plot | null | undefined): boolean => !!p && p.progress >= 1;
 export const stage = (p: Plot) => (p.progress >= 1 ? 3 : p.progress >= 0.4 ? 2 : 1);
 
-function seasonMult(s: GameState, plant: string) {
+export function seasonMult(_s: GameState, plant: string) {
   const d = PLANT_BY_ID[plant], cur = season();
   if (d.season === cur) return 1.5;
   return Math.abs(d.season - cur) === 2 ? 0.6 : 1;

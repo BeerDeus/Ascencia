@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { G, act, toast } from '../lib/game.svelte';
+  import { G, act, toast, ui } from '../lib/game.svelte';
   import * as Cr from '../game/crafting';
   import { POTIONS } from '../game/data/crafting';
   import { level } from '../game/jobs';
@@ -22,7 +22,7 @@
     {@const own = s.potions[p.id] ?? 0}
     {@const left = Math.max(0, ((s.buffs[p.id] ?? 0) - now) / 1000)}
     <div class="r frame" class:dim={!ok} class:on={left > 0}>
-      <div class="ic slot"><img src={gfx(p.sprite)} alt="" />{#if own}<b class="outline">{own}</b>{/if}</div>
+      <button class="ic slot" onclick={() => (ui.info = { kind: 'potion', id: p.id })}><img src={gfx(p.sprite)} alt="" />{#if own}<b class="outline">{own}</b>{/if}</button>
       <div class="mi">
         <b>{p.name}</b>
         <span>{p.desc}{p.minutes ? ` · ${Math.round(Cr.potionMinutes(s, p.id))} min` : ''}{#if left > 0} · <em>actif {fmtTime(left)}</em>{/if}</span>

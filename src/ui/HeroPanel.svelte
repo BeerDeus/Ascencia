@@ -5,17 +5,12 @@
   import { masteryLevel } from '../game/formulas';
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
-  import BuyMult from './BuyMult.svelte';
-  import UpButton from './UpButton.svelte';
-  import { sfxUp } from '../lib/audio';
+  import { legendeMult } from '../game/formulas';
 
   const s = $derived(G.s);
   const st = $derived(E.stats(G.s));
   const cls = $derived(CLASSES.find(c => c.id === s.classId)!);
-  const n = $derived(ui.buyMult || Math.max(1, E.heroMax(s)));
-  const cost = $derived(E.heroCostN(s, n));
   const N = (x: number) => fmt(x, s.settings.notation);
-  function buy() { if (act(g => E.buyHero(g, n))) sfxUp(); }
 </script>
 
 <div class="scroll body">
@@ -35,10 +30,7 @@
       <div class="label">Frappe · niveau {s.run.heroLevel}</div>
       <div class="val">{N(st.tap)} <small>par coup</small></div>
     </div>
-    <div class="right">
-      <BuyMult />
-      <UpButton label={'+' + n + ' niv.'} cost={N(cost)} can={cost <= s.run.gold} onclick={buy} tuto="hero-up2" />
-    </div>
+    <button class="btn stone go-allies" onclick={() => (ui.tab = 'compagnons')}>Améliorer<small>dans Alliés</small></button>
   </div>
 
   <div class="grid">
@@ -47,7 +39,7 @@
     <div class="slot"><span class="label">Or</span><b>×{st.goldMult.toFixed(2)}</b></div>
     <div class="slot"><span class="label">Volonté</span><b>{st.bossTime} s</b></div>
     {#if st.autoTaps > 0}<div class="slot"><span class="label">Tirs automatiques</span><b>{st.autoTaps.toFixed(1)}/s · {N(st.autoTaps * st.tap)}/s</b></div>{/if}
-    <div class="slot"><span class="label">Légende</span><b>{N(s.legende)} (×{N(1 + 0.05 * s.legende)})</b></div>
+    <div class="slot"><span class="label">Légende</span><b>{N(s.legende)} (×{N(legendeMult(s.legende))})</b></div>
     <div class="slot"><span class="label">Record</span><b>Étage {s.bestFloor}</b></div>
   </div>
 
@@ -74,7 +66,6 @@
   .up { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; }
   .val { font-size: 22px; font-weight: 700; }
   .val small { font-size: 12px; color: var(--text-3); font-weight: 500; }
-  .right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .grid .slot { padding: 5px 8px; display: flex; flex-direction: column; background: var(--stone-2); }
   .grid b { font-size: 14px; }
@@ -85,4 +76,6 @@
   .m .bar { flex: 1; height: 8px; }
   .m .bar > i { background: var(--arcane); }
   .ml { width: 46px; text-align: right; color: var(--text-2); }
+  .go-allies { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 6px 10px; font-size: 13px; }
+  .go-allies small { font-size: 10px; font-weight: 400; color: var(--text-3); }
 </style>

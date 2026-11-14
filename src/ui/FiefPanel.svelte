@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { G, act, toast } from '../lib/game.svelte';
+  import { G, act, toast, ui } from '../lib/game.svelte';
   import * as Fi from '../game/fief';
   import * as E from '../game/engine';
   import { BOUNTY_TYPES } from '../game/data/fief';
@@ -78,7 +78,7 @@
       {#each MEALS as m}
         {@const unlocked = Cr.mealUnlocked(s, m)}
         <div class="meal" class:dim={!unlocked}>
-          <div class="ic slot"><img src={gfx(m.sprite)} alt="" /></div>
+          <button class="ic slot" onclick={() => (ui.info = { kind: 'meal', id: m.id })}><img src={gfx(m.sprite)} alt="" /></button>
           <div class="mi"><b>{m.name}</b><span>{m.desc} · {m.hours} h</span>{#if unlocked}<Cost cost={m.cost} />{/if}</div>
           {#if unlocked}<button class="btn" disabled={!Cr.canCook(s, m)} onclick={() => cook(m.id)}>Cuisiner</button>
           {:else}<span class="lk">Cuisinier {m.level}</span>{/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { G } from '../lib/game.svelte';
+  import { G, ui } from '../lib/game.svelte';
+  import { longpress } from '../lib/guard';
   import { resInfo } from '../game/resinfo';
   import { RESOURCES, JOBS, type JobId } from '../game/data/resources';
   import { PLANT_BY_ID } from '../game/data/garden';
@@ -21,14 +22,14 @@
     <div class="label">Métiers</div>
     <div class="jobs">
       {#each Object.keys(JOBS) as j}
-        <div class="j slot"><img src={gfx(JOBS[j as JobId].npc)} alt="" /><b>{JOBS[j as JobId].name}</b><span>niv. {level(s, j as JobId)}</span></div>
+        <button class="j slot" onclick={() => (ui.job = j as JobId)}><img src={gfx(JOBS[j as JobId].npc)} alt="" /><b>{JOBS[j as JobId].name}</b><span>niv. {level(s, j as JobId)}</span></button>
       {/each}
     </div>
   </section>
   {#each Object.entries(groups) as [g, ids]}
     <div class="label">{g}</div>
     <div class="grid">
-      {#each ids as id}<div class="c slot" title={resInfo(id).name}><img src={gfx(resInfo(id).sprite)} alt="" /><b class="outline">{fmt(s.res[id])}</b><small>{resInfo(id).name}</small></div>{/each}
+      {#each ids as id}<button class="c slot" title={resInfo(id).name} onclick={() => (ui.info = { kind: 'res', id })} use:longpress={() => (ui.info = { kind: 'res', id })}><img src={gfx(resInfo(id).sprite)} alt="" /><b class="outline">{fmt(s.res[id])}</b><small>{resInfo(id).name}</small></button>{/each}
     </div>
   {/each}
   {#if !Object.keys(groups).length}<p class="tip book">Le Coffre est vide. Les monstres, le Jardin et les expéditions le rempliront.</p>{/if}
