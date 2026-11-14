@@ -3,11 +3,12 @@
   import { G, ui, toast, act, persist } from '../lib/game.svelte';
   import { billingReady, purchase } from '../lib/billing.svelte';
   import * as E from '../game/engine';
+  import * as Sh from '../game/shop';
   import { AUBE_BY_ID } from '../game/data/packs';
   import { sfxGold } from '../lib/audio';
   import { gfx } from '../lib/gfx';
   const p = $derived(ui.offer!);
-  function close() { G.s.shop.offersSeen.push(p.id); ui.offer = null; }
+  function close() { Sh.dismissOffer(G.s, p.id, Date.now()); ui.offer = null; }
   async function buy() {
     if (!billingReady) { toast('Achats disponibles dans l’appli Play Store', 'info'); close(); return; }
     if (await purchase(p.id, `${p.name} (${p.price})`)) { act(g => E.grantPurchase(g, p.id)); persist(); sfxGold(); toast(`${p.name} reçu !`, 'crit'); }

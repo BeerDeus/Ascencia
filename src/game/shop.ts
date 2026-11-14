@@ -17,6 +17,7 @@ export interface ShopState {
   bagBonus: number;
   eclatsBoost?: boolean;   // Parchemin des Éclats en attente
   offersShownAt?: Record<string, number>;  // dernier affichage d'une offre (rappel max 1×/jour)
+  offerUntil?: Record<string, number>;     // offre refusée : reste « en vitrine » à côté du combat jusqu'à cette date
 }
 
 export const newShop = (): ShopState => ({
@@ -87,6 +88,18 @@ export function grantPack(s: GameState, id: string): boolean {
   return true;
 }
 
+export const OFFER_STANDS_MS = 3 * 86_400_000;
+/** Offre refusée : elle reste disponible 3 jours, en vitrine à côté du combat. */
+export function dismissOffer(s: GameState, id: string, nowMs: number) {
+  if (!s.shop.offersSeen.includes(id)) s.shop.offersSeen.push(id);
+  const u = (s.shop.offerUntil ??= {});
+  if (!s.shop.owned.includes(id) && !u[id]) u[id] = nowMs + OFFER_STANDS_MS;
+}
+/** Offres en vitrine (refusées, non achetées, pas expirées), la plus proche de l'expiration d'abord. */
+export function standingOffers(s: GameState, nowMs: number) {
+  const u = s.shop.offerUntil ?? {};
+  return PACKS.filter(p => u[p.id] > nowMs && !s.shop.owned.includes(p.id)).sort((a, b) => u[a.id] - u[b.id]);
+}
 /** Offre contextuelle à présenter (une seule fois), ex. le Pack du Fief à son déblocage. */
 /** Rappel « coup de pouce » quand le joueur bloque : un pack débloqué non acheté, pas montré depuis 24 h. */
 export function stuckOffer(s: GameState, fiefOpen: boolean, nowMs: number) {

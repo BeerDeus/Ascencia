@@ -800,6 +800,8 @@ function migrate(raw: any): GameState {
   s.forge ??= { sets: {} };
   s.vault ??= [];
   s.tuto ??= [];
+  // offres refusées avant la vitrine : elles y reviennent pour 3 jours
+  s.shop.offerUntil ??= Object.fromEntries(s.shop.offersSeen.filter(id => !s.shop.owned.includes(id)).map(id => [id, now() + Sh.OFFER_STANDS_MS]));
   // une seule instance par objet lié au compte (le Sac de la vie en cours pointe sur le coffre)
   s.run.inventory = s.run.inventory.map(it => (it.bound ? s.vault.find(v => v.id === it.id) ?? it : it));
   s.ending = Object.assign({ done: false, path: null, attempts: 0 }, s.ending);

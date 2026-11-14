@@ -5,6 +5,7 @@
   import { actFor, SEUIL_HARMONIQUE } from '../game/data/world';
   import { RARITIES } from '../game/data/items';
   import { fmt } from '../game/format';
+  import { standingOffers } from '../game/shop';
   import { T } from '../game/tuning';
   import { gfx } from '../lib/gfx';
   import { unlockAudio } from '../lib/audio';
@@ -19,6 +20,12 @@
   const hpPct = $derived(isFinite(m.maxHp) ? Math.max(0, m.hp / m.maxHp) * 100 : 100);
   const parryOpen = $derived(r.parryUntil > 0 && s.time <= r.parryUntil);
   const crescendo = $derived(s.time < r.crescendoUntil);
+  let clock = $state(Date.now());
+  onMount(() => { const t = setInterval(() => (clock = Date.now()), 1000); return () => clearInterval(t); });
+  const stand = $derived(standingOffers(G.s, clock)[0]);
+  const standLeft = $derived(stand ? Math.max(0, ((s.shop.offerUntil?.[stand.id] ?? 0) - clock) / 1000) : 0);
+  const left = (t: number) => { const d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), mn = Math.floor((t % 3600) / 60), sc = Math.floor(t % 60);
+    return d ? `${d}j ${h}h` : h ? `${h}h ${String(mn).padStart(2, '0')}` : `${mn}:${String(sc).padStart(2, '0')}`; };
   const goldenLeft = $derived(m.kind === 'golden' && m.fleeAt ? Math.max(0, m.fleeAt - s.time) : 0);
   const certitude = $derived(r.floor === SEUIL_HARMONIQUE.floor && m.kind === 'boss' && E.certitude(s) < 1);
   const N = (x: number) => fmt(x, s.settings.notation);
@@ -101,6 +108,14 @@
     {/key}
   </div>
 
+  {#if stand}
+    <button class="stand" class:urgent={standLeft < 6 * 3600} onpointerdown={stop(() => (ui.offer = stand))} aria-label="Offre : {stand.name}">
+      <span class="tag">Toujours là !</span>
+      <img src={gfx(stand.icon)} alt="" />
+      <span class="timer outline">{left(standLeft)}</span>
+    </button>
+  {/if}
+
   {#if s.messenger}
     <button class="messenger" onpointerdown={stop(() => (ui.messenger = true))} aria-label="Lettre de Lysandra"><img src={gfx('obj/lettre')} alt="" /></button>
   {/if}
@@ -166,6 +181,16 @@
   .pop.loot { font-size: 14px; }
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
+  .stand { position: absolute; top: 34px; right: 6px; z-index: 6; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: 3px 2px 2px; background: rgba(22,19,28,.82); border: 2px solid var(--gold); box-shadow: 0 0 0 2px var(--ink-0), 0 0 12px rgba(230,182,74,.55);
+    animation: standPulse 1.4s steps(4) infinite; }
+  .stand img { width: 42px; height: 42px; object-fit: contain; animation: standBob 1.4s steps(2) infinite; }
+  .stand .tag { font-size: 9px; font-weight: 700; color: var(--gold-hi); line-height: 1; white-space: nowrap; }
+  .stand .timer { font-size: 12px; font-weight: 700; color: #fff; line-height: 1; }
+  .stand.urgent { border-color: var(--blood); box-shadow: 0 0 0 2px var(--ink-0), 0 0 14px rgba(200,60,60,.7); }
+  .stand.urgent .timer { color: #ff8a7a; }
+  @keyframes standPulse { 50% { box-shadow: 0 0 0 2px var(--ink-0), 0 0 2px rgba(230,182,74,.3); } }
+  @keyframes standBob { 50% { transform: translateY(-2px); } }
   .messenger { position: absolute; top: 34%; left: -50px; z-index: 6; width: 46px; height: 46px; animation: fly 9s linear forwards; }
   .messenger img { width: 100%; height: 100%; filter: drop-shadow(0 0 0 #fff) drop-shadow(2px 2px 0 #000); animation: flap .3s steps(2) infinite; }
   @keyframes fly { 0% { left: -50px; top: 30%; } 25% { top: 22%; } 50% { top: 34%; } 75% { top: 24%; } 100% { left: calc(100% + 10px); top: 30%; } }
