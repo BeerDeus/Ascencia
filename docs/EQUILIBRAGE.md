@@ -107,6 +107,28 @@ Effet mesuré (Guerrier engagé, 2 tirages) :
 - Pack de l'Aube seul : **+8 à +9 étages le jour 1** (80/79 contre 71), écart nul vers J10–J14.
 - Tous les packs : +18 étages le jour 1, ~+35 au J10, **aucun écart au J30** (302 / 302).
 
+### Tests de vitesse par budget (16/11, 60 jours, Guerrier engagé, médiane de 3 tirages)
+Les bots réclament succès / calendrier / pubs à gemmes et entretiennent les bénédictions Guerre + Fortune.
+Résonance quand le record stagne (< 5 étages en 2 jours actifs).
+
+| Profil | Dépense | J1 | J7 | J14 | J30 | J60 | 300 | 350 | R1 |
+|---|---|---|---|---|---|---|---|---|---|
+| Gratuit | 0 € | 87 | 173 | 241 | 292 | 359 | j31 | j47 | j27 |
+| Aube seul | 0,99 € | 93 | 172 | 240 | 299 | 375 | j31 | j45 | j27 |
+| 20 € optimisé (4 packs d'étape) | 18,96 € | 107 | 246 | 286 | 302 | 391 | j17 | j40 | j23 |
+| 20 € en gemmes (bénédictions, parchemins) | 19,98 € | 96 | 198 | 223 | 273 | 352 | j41 | j59 | j35 |
+| Tout acheter | 102,89 € | 111 | 249 | 284 | 358 | 411 | j18 | j27 | j20 |
+
+Lecture :
+- **0,99 €** : petit coup de pouce les premières heures, puis bruit statistique. Bien pour un premier achat.
+- **20 € en packs d'étape** : la meilleure dépense ; ~2 semaines d'avance sur l'étage 300, l'écart retombe à ~+30 étages au J60.
+- **20 € en gemmes** : avance au J7 (+25), puis plus rien une fois les gemmes brûlées en bénédictions (temporaires) ;
+  dans la marge de bruit ensuite. Les gemmes valent surtout pour le confort (sauter la Graine-Cœur, parchemins).
+- **Baleine** : ~20 jours d'avance sur 350, mais le gratuit atteint tout le contenu (fin d'histoire comprise).
+- Correctifs du bot trouvés pendant ces tests : il gardait les pièces liées équipées à vie (panoplie), et résonnait dès les Ancres
+  finies (trop tôt, peu de Fragments) — ce qui faisait passer les payeurs derrière le gratuit.
+- Simulateur ~2× plus rapide (cache de `stats()` activé par le bot seulement) : 15 sims de 60 jours ≈ 10 min sur 4 cœurs.
+
 ## Points à surveiller
 - La 1re Ascension arrive vite (~12–25 min) : bon pour l'accroche, à confirmer en test réel.
 - Le joueur occasionnel progresse ~2× moins vite ; la Constellation *Somnambule* (montée hors-ligne) est son meilleur levier.
