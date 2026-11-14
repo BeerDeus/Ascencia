@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ascencia — RPG incrémental narratif</title>
+<meta name="description" content="Grimpe la Brèche, tombe, ascensionne, renais plus fort. Un RPG incrémental narratif en pixel-art, bientôt sur Android.">
+<meta name="theme-color" content="#0b0816">
+<meta property="og:title" content="Ascencia">
+<meta property="og:description" content="Le monde est une symphonie. Chaque frappe est une note.">
+<meta property="og:image" content="preview/gfx/logo.webp">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&display=swap">
+<style>
+:root{--bg:#0b0816;--bg2:#140e26;--line:#3a2d63;--ink:#efe9ff;--ink2:#b9acd9;--gold:#ffcf5a;--violet:#9b6bff}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.55}
+a{color:var(--gold)}
+.hero{min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 16px;
+ background:radial-gradient(ellipse at 50% 30%,#2a1a5c 0%,transparent 60%),linear-gradient(180deg,rgba(11,8,22,.2),var(--bg)),url(preview/gfx/bg/acte4.webp) center/cover}
+.logo{width:min(220px,56vw);filter:drop-shadow(0 0 40px rgba(155,107,255,.6));animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+h1{font-family:Cinzel,serif;font-size:clamp(40px,9vw,72px);margin:18px 0 4px;letter-spacing:.08em;text-shadow:0 0 30px rgba(255,207,90,.35)}
+.tag{font-family:Cinzel,serif;color:var(--ink2);font-size:clamp(15px,3.6vw,20px);margin:0 0 28px}
+.cta{display:inline-block;padding:14px 26px;border-radius:12px;background:linear-gradient(180deg,#ffd977,#f0a524);color:#2a1600;font-weight:700;text-decoration:none;box-shadow:0 3px 0 #9c5f0b}
+.soon{display:block;margin-top:12px;font-size:13px;color:var(--ink2)}
+section{max-width:960px;margin:0 auto;padding:56px 16px}
+h2{font-family:Cinzel,serif;text-align:center;font-size:28px;margin:0 0 28px;color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.card{background:var(--bg2);border-radius:16px;padding:18px;box-shadow:inset 0 0 0 1px var(--line)}
+.card img{width:56px;height:56px;image-rendering:pixelated}
+.card h3{margin:8px 0 4px;font-size:17px}.card p{margin:0;color:var(--ink2);font-size:14.5px}
+.lore{text-align:center;color:var(--ink2);font-size:17px;max-width:680px;margin:0 auto;font-style:italic}
+.mobs{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:24px}
+.mobs img{height:72px;image-rendering:pixelated;filter:drop-shadow(0 6px 8px rgba(0,0,0,.6))}
+footer{border-top:1px solid var(--line);padding:24px 16px;text-align:center;font-size:13px;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header class="hero">
+  <img class="logo" src="preview/gfx/logo.webp" alt="Logo Ascencia">
+  <h1>Ascencia</h1>
+  <p class="tag">Le monde est une symphonie. Chaque frappe est une note.</p>
+  <a class="cta" href="#jeu">Découvrir le jeu</a>
+  <span class="soon">Bientôt sur Google Play</span>
+</header>
+
+<section id="jeu">
+  <p class="lore">La Dissonance ronge le monde. Un marionnettiste au sourire carnassier, Larry, joue avec vous comme avec un jouet.
+  Pour l’affronter, il faudra tomber… et renaître. Encore. Et encore. Jusqu’à ce que votre légende plie la réalité.</p>
+  <div class="mobs"><img src="preview/gfx/mobs/loup_dissonant.webp" alt=""><img src="preview/gfx/mobs/golem_pierre.webp" alt=""><img src="preview/gfx/mobs/chimere.webp" alt=""><img src="preview/gfx/mobs/dragon_ancien.webp" alt=""><img src="preview/gfx/mobs/archange.webp" alt=""></div>
+</section>
+
+<section>
+  <h2>Grimper. Tomber. Ascensionner.</h2>
+  <div class="grid">
+    <div class="card"><img src="preview/gfx/icons/combat.webp" alt=""><h3>Frappez, en rythme</h3><p>Chaque coup joue une note. Enchaînez pour déclencher le Crescendo et voir les chiffres exploser.</p></div>
+    <div class="card"><img src="preview/gfx/icons/harmonie.webp" alt=""><h3>L’Ascension</h3><p>Au pied du mur, renaissez. Vos Éclats d’Ascension nourrissent les Constellations et rendent chaque vie plus puissante.</p></div>
+    <div class="card"><img src="preview/gfx/partitions/accord_parfait.webp" alt=""><h3>Partitions</h3><p>Trille Foudroyant, Staccato Vif, Accord Parfait… des compétences musicales pour briser les boss.</p></div>
+    <div class="card"><img src="preview/gfx/portraits/lysandra.webp" alt=""><h3>Compagnons</h3><p>Kaelen, Lysandra, Gaston, la Chasseuse… recrutez des alliés qui combattent même quand vous dormez.</p></div>
+    <div class="card"><img src="preview/gfx/icons/grimoire.webp" alt=""><h3>Une histoire en dix actes</h3><p>Un RPG textuel : dialogues courts, chronique de vos exploits, révélations à chaque renaissance.</p></div>
+    <div class="card"><img src="preview/gfx/res/eclats_ascension.webp" alt=""><h3>Quasi infini</h3><p>Seuils Harmoniques, Résonance, étages sans fin : il y a toujours un étage de plus.</p></div>
+  </div>
+</section>
+
+<footer>
+  © <span id="y"></span> Ascencia · <a href="politique-confidentialite.html">Politique de confidentialité</a>
+</footer>
+<script>document.getElementById('y').textContent=new Date().getFullYear()</script>
+</body>
+</html>

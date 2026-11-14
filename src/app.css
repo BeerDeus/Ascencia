@@ -1,0 +1,46 @@
+:root {
+  --bg: #0b0816;
+  --bg-2: #130e24;
+  --panel: #1a1330;
+  --panel-2: #231a40;
+  --line: #3a2d63;
+  --ink: #efe9ff;
+  --ink-2: #b9acd9;
+  --ink-3: #8a7cae;
+  --gold: #ffcf5a;
+  --gold-2: #ffb02e;
+  --violet: #9b6bff;
+  --cyan: #6fd8ff;
+  --red: #ff5a6e;
+  --green: #5fe0a0;
+  --crit: #ffdd55;
+  --font-title: 'Cinzel', Georgia, serif;
+  --font-num: 'Pixelify Sans', ui-monospace, monospace;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; overscroll-behavior: none; }
+body { user-select: none; -webkit-user-select: none; touch-action: manipulation; overflow: hidden; }
+#app { height: 100dvh; max-width: 560px; margin: 0 auto; position: relative; overflow: hidden; background: var(--bg); }
+img.px { image-rendering: pixelated; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+.num { font-family: var(--font-num); letter-spacing: .02em; }
+.title { font-family: var(--font-title); letter-spacing: .04em; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 12px; border-radius: 10px; font-weight: 700;
+  background: linear-gradient(180deg, #ffd977, #f0a524); color: #2a1600;
+  box-shadow: 0 2px 0 #9c5f0b, 0 6px 14px -6px rgba(255, 176, 46, .6);
+  transition: transform .06s, filter .15s;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 0 0 #9c5f0b; }
+.btn:disabled { filter: grayscale(1) brightness(.55); box-shadow: none; }
+.btn.violet { background: linear-gradient(180deg, #b892ff, #7a48f0); color: #fff; box-shadow: 0 2px 0 #4b2a9c, 0 6px 14px -6px rgba(155, 107, 255, .7); }
+.btn.ghost { background: var(--panel-2); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: inherit; transition: width .12s linear; }
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.scroll::-webkit-scrollbar { width: 0; }

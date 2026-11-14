@@ -1,0 +1,79 @@
+export type ClassId = 'guerrier' | 'archer' | 'mage';
+export type CompType = 'melee' | 'distance' | 'magie';
+export type MonsterKind = 'mob' | 'boss' | 'golden';
+
+export interface Monster {
+  sprite: string;       // ex. 'mobs/rat'
+  name: string;
+  kind: MonsterKind;
+  hp: number;
+  maxHp: number;
+  story?: string;       // id de boss scénarisé
+  fleeAt?: number;      // temps de jeu où le monstre doré s'enfuit
+}
+
+export interface RunState {
+  floor: number;
+  wave: number;           // 0..9 = monstres, 10 = boss
+  maxFloor: number;
+  gold: number;
+  heroLevel: number;
+  companions: number[];   // niveau par compagnon
+  mana: number;
+  farming: boolean;       // bloqué avant le boss
+  monster: Monster;
+  bossTime: number;       // Volonté restante (s)
+  bossAttackIn: number;   // s avant prochaine attaque spéciale
+  parryUntil: number;     // fenêtre de parade (temps de jeu)
+  ferveur: number;
+  lastTapAt: number;
+  crescendoUntil: number;
+  cooldowns: number[];    // fin de recharge par Partition (temps de jeu)
+  activeUntil: number[];  // fin d'effet par Partition
+  tapsTotal: number;
+  scriptedDefeat: boolean;
+}
+
+export interface Settings {
+  sound: boolean;
+  haptics: boolean;
+  notation: 'lettres' | 'scientifique';
+  autoAdvance: boolean;
+}
+
+export interface GameState {
+  version: number;
+  time: number;            // temps de jeu cumulé (s)
+  lastSave: number;        // Date.now()
+  classId: ClassId | null;
+  run: RunState;
+  eclats: number;          // monnaie dépensable
+  legende: number;         // Éclats gagnés depuis toujours
+  ascensions: number;
+  ascensionUnlocked: boolean;
+  bestFloor: number;
+  mastery: Record<ClassId, number>;
+  constellations: Record<string, number>;
+  seenStory: string[];
+  chronicle: ChronicleEntry[];
+  settings: Settings;
+  stats: { kills: number; bossKills: number; taps: number; goldEarned: number; playSeconds: number; goldenKills: number };
+  nextLarryAt: number;
+}
+
+export type ChronicleKind = 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
+export interface ChronicleEntry { id: number; kind: ChronicleKind; text: string }
+
+export type GameEvent =
+  | { type: 'hit'; amount: number; crit: boolean; tap: boolean }
+  | { type: 'kill'; monster: Monster; gold: number }
+  | { type: 'floor'; floor: number; skipped: number }
+  | { type: 'boss-attack' }
+  | { type: 'parry' }
+  | { type: 'boss-fail' }
+  | { type: 'crescendo' }
+  | { type: 'partition'; index: number }
+  | { type: 'milestone'; comp: number; level: number }
+  | { type: 'golden-escape' }
+  | { type: 'story'; id: string }
+  | { type: 'heavy' };

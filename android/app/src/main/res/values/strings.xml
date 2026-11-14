@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ascencia</string>
+    <string name="title_activity_main">Ascencia</string>
+    <string name="package_name">app.manaorbit.ascencia</string>
+    <string name="custom_url_scheme">app.manaorbit.ascencia</string>
+</resources>

@@ -1,0 +1,144 @@
+import * as E from '../game/engine';
+import type { GameEvent, GameState } from '../game/types';
+import type { OfflineReport } from '../game/engine';
+import { actFor } from '../game/data/world';
+import * as A from './audio';
+import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
+
+export const G = $state<{ s: GameState }>({ s: E.newGame() });
+
+export const ui = $state({
+  ready: false,
+  tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'ascension' | 'options',
+  buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
+  scenes: [] as string[],
+  offline: null as OfflineReport | null,
+  classPicker: null as null | 'start' | 'ascension',
+  ritual: 0,
+  toasts: [] as { id: number; text: string; kind: string }[],
+});
+
+type Listener = (e: GameEvent) => void;
+const listeners = new Set<Listener>();
+export function onGameEvent(fn: Listener) { listeners.add(fn); return () => listeners.delete(fn); }
+
+let toastId = 0;
+export function toast(text: string, kind = 'info') {
+  const id = ++toastId;
+  ui.toasts.push({ id, text, kind });
+  setTimeout(() => { const i = ui.toasts.findIndex(t => t.id === id); if (i >= 0) ui.toasts.splice(i, 1); }, 2600);
+}
+
+export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0;
+
+// ---------------------------------------------------------------- effets des événements
+function handle(e: GameEvent) {
+  const s = G.s;
+  switch (e.type) {
+    case 'hit': if (e.tap || e.crit) A.noteTap(e.crit); if (e.crit) buzz('light'); break;
+    case 'kill':
+      if (e.monster.kind === 'boss') { A.sfxBoss(); buzz('medium'); }
+      else if (e.monster.kind === 'golden') { A.sfxGold(); buzz('medium'); toast('Gobelin doré ! Or ×20', 'gold'); }
+      else A.sfxKill();
+      break;
+    case 'floor': A.setKey(actFor(e.floor).key); break;
+    case 'boss-attack': A.sfxAttack(); buzz('heavy'); break;
+    case 'parry': A.sfxParry(); buzz('medium'); break;
+    case 'boss-fail': A.sfxFail(); break;
+    case 'crescendo': A.sfxCrescendo(); buzz('heavy'); toast('CRESCENDO !', 'crit'); break;
+    case 'partition': A.sfxPartition(); break;
+    case 'milestone': A.sfxUp(); toast(`Palier ${e.level} atteint !`, 'up'); break;
+    case 'heavy': buzz('heavy'); break;
+    case 'story': ui.scenes.push(e.id); break;
+  }
+  if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') ui.tab = 'ascension';
+  void s;
+}
+
+function flush() {
+  for (const e of E.drainEvents()) { handle(e); listeners.forEach(l => l(e)); }
+}
+
+// ---------------------------------------------------------------- actions (passent par ici pour vider les événements)
+export function act<T>(fn: (s: GameState) => T): T {
+  const r = fn(G.s);
+  flush();
+  return r;
+}
+
+// ---------------------------------------------------------------- sauvegarde
+let lastPersist = 0;
+export async function persist() {
+  lastPersist = performance.now();
+  await storeSave(E.serialize(G.s));
+}
+
+function applySettings() {
+  A.setSound(G.s.settings.sound);
+  setHaptics(G.s.settings.haptics);
+  A.setKey(actFor(G.s.run.floor).key);
+}
+
+function checkOffline() {
+  const away = (Date.now() - G.s.lastSave) / 1000;
+  const rep = E.applyOffline(G.s, away);
+  if (rep && (rep.gold > 0 || rep.floors > 0)) ui.offline = rep;
+  G.s.lastSave = Date.now();
+  flush();
+}
+
+// ---------------------------------------------------------------- boucle
+const STEP = 0.1;
+let acc = 0, last = 0, hiddenAt = 0;
+function frame(now: number) {
+  const dt = Math.min(1, (now - last) / 1000);
+  last = now;
+  if (!paused()) {
+    acc += dt;
+    while (acc >= STEP) { E.tick(G.s, STEP); acc -= STEP; }
+    flush();
+  }
+  if (now - lastPersist > 10000) persist();
+  requestAnimationFrame(frame);
+}
+
+export async function boot() {
+  const saves = (await readSaves()).map(E.deserialize).filter((x): x is GameState => !!x);
+  saves.sort((a, b) => b.lastSave - a.lastSave);
+  if (saves[0]) G.s = saves[0];
+  applySettings();
+  if (!G.s.classId) {
+    if (!G.s.seenStory.includes('start')) { G.s.seenStory.push('start'); ui.scenes.push('start'); }
+    ui.classPicker = 'start';
+  } else {
+    checkOffline();
+  }
+  onAppState(active => {
+    if (!active) { hiddenAt = Date.now(); persist(); }
+    else if (hiddenAt && Date.now() - hiddenAt > 60_000) { G.s.lastSave = hiddenAt; checkOffline(); }
+  });
+  window.addEventListener('pagehide', () => persist());
+  ui.ready = true;
+  last = performance.now();
+  requestAnimationFrame(frame);
+}
+
+export function chooseClass(id: 'guerrier' | 'archer' | 'mage') {
+  const mode = ui.classPicker;
+  ui.classPicker = null;
+  if (mode === 'start') {
+    G.s.classId = id;
+    E.newRun(G.s, 1);
+    E.log(G.s, 'story', '— Acte I : L’Éveil —');
+  } else if (mode === 'ascension') {
+    ui.ritual = E.ascensionGain(G.s);
+    A.sfxAscend();
+    buzz('heavy');
+    E.ascend(G.s, id);
+    setTimeout(() => { ui.ritual = 0; flush(); }, 2800);
+  }
+  A.setKey(actFor(G.s.run.floor).key);
+  persist();
+}
+
+export function updateSettings() { applySettings(); persist(); }
