@@ -7,6 +7,9 @@
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
   import BuyMult from './BuyMult.svelte';
+  import UpButton from './UpButton.svelte';
+  import { CLASSES } from '../game/data/heroes';
+  import { frappeBase } from '../game/formulas';
   import { sfxUp } from '../lib/audio';
 
   const s = $derived(G.s);
@@ -16,11 +19,24 @@
   const mult = $derived(st.global * (1 + E.star(s, 'meute_dps')) * (1 + gearTotals(s).comp));
   const TYPE = { melee: 'Mêlée', distance: 'Distance', magie: 'Magie' };
   function count(i: number) { return ui.buyMult || Math.max(1, E.compMax(s, i)); }
+  const cls = $derived(CLASSES.find(c => c.id === s.classId));
+  const hn = $derived(ui.buyMult || Math.max(1, E.heroMax(s)));
+  const hcost = $derived(E.heroCostN(s, hn));
+  function buyHero() { if (act(g => E.buyHero(g, hn))) sfxUp(); }
   function buy(i: number) { if (act(g => E.buyComp(g, i, count(i)))) sfxUp(); }
 </script>
 
 <div class="top"><span class="label">Alliés · {N(st.dps)} DPS</span><BuyMult /></div>
 <div class="scroll list">
+  <div class="c frame hero">
+    <div class="pic slot"><img src={gfx(cls?.portrait ?? 'portraits/guerrier')} alt="" /></div>
+    <div class="mid">
+      <div class="nm">Frappe du héros&nbsp;<b>{s.run.heroLevel}</b></div>
+      <div class="tt">{cls?.name} · chaque coup</div>
+      <div class="dps">{N(st.tap)} par frappe → +{N(st.tap * (frappeBase(s.run.heroLevel + hn) / frappeBase(s.run.heroLevel) - 1))}</div>
+    </div>
+    <UpButton label={'+' + hn + ' niv.'} cost={N(hcost)} can={hcost <= s.run.gold} onclick={buyHero} />
+  </div>
   {#each visible as i (i)}
     {@const c = COMPANIONS[i]}
     {@const lv = s.run.companions[i]}
@@ -31,14 +47,12 @@
     <div class="c frame" class:hired={lv > 0}>
       <div class="pic slot"><img src={gfx(c.sprite)} alt="" /></div>
       <div class="mid">
-        <div class="nm">{c.name}{#if lv}<b> {lv}</b>{/if}</div>
+        <div class="nm">{c.name}{#if lv}&nbsp;<b>{lv}</b>{/if}</div>
         <div class="tt"><span class="t-{c.type}">{TYPE[c.type]}</span> · {c.title}</div>
         <div class="dps">{lv ? N(compDps(i, lv) * mult) + ' DPS' : '+' + N(compDps(i, 1) * mult) + ' DPS'}</div>
         {#if lv && nm}<div class="ms"><div class="bar"><i style="width:{((lv - prev) / (nm - prev)) * 100}%"></i></div><span>{nm} : ×{nm < 200 ? '2,5' : '3'}</span></div>{/if}
       </div>
-      <button class="btn" disabled={cost > s.run.gold} onclick={() => buy(i)}>
-        <span class="b1">{lv ? '+' + n : 'Recruter'}</span><span class="b2">{N(cost)}</span>
-      </button>
+      <UpButton label={lv ? '+' + n + ' niv.' : 'Recruter'} cost={N(cost)} can={cost <= s.run.gold} onclick={() => buy(i)} />
     </div>
   {/each}
   {#if visible.length < COMPANIONS.length}
@@ -63,7 +77,6 @@
   .ms .bar { flex: 1; height: 6px; border-width: 1px; }
   .ms .bar > i { background: var(--arcane); }
   .ms span { font-size: 10px; color: var(--text-3); }
-  .btn { flex-direction: column; gap: 1px; min-width: 82px; padding: 5px 6px; }
-  .b1 { font-size: 12px; } .b2 { font-size: 13px; }
+  .hero { background: #2a2333; box-shadow: inset 0 0 0 2px var(--gold-lo); }
   .ghost { opacity: .5; }
 </style>

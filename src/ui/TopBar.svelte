@@ -40,5 +40,14 @@
   .res .gem img { width: 20px; height: 20px; }
   .opt { width: 32px; height: 32px; display: grid; place-items: center; background: var(--stone-3); border: 2px solid var(--ink-0); box-shadow: inset 2px 2px 0 var(--hi), inset -2px -2px 0 var(--lo); }
   .opt.on { background: var(--parch-2); }
+  .floor { white-space: nowrap; }
+  @media (max-width: 390px) {
+    header { padding: 4px 6px; gap: 4px; }
+    .res { gap: 5px; }
+    .res span, .gem { font-size: 13px !important; }
+    .res img { width: 17px !important; height: 17px !important; }
+    .floor { font-size: 16px; }
+    .opt { width: 28px; height: 28px; }
+  }
   .res .opt img { width: 20px; height: 20px; }
 </style>

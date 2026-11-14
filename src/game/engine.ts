@@ -169,12 +169,12 @@ function spawnBoss(s: GameState): Monster {
 }
 
 // ---------------------------------------------------------------- dégâts
-export function damage(s: GameState, amount: number, crit = false, isTap = false) {
+export function damage(s: GameState, amount: number, crit = false, isTap = false, auto = false) {
   const m = s.run.monster;
   if (!m || m.hp <= 0) return;
   if (m.kind === 'boss' && s.run.floor === SEUIL_HARMONIQUE.floor) amount *= certitude(s); // la Certitude du Gardien absorbe les coups
   m.hp -= amount;
-  emit({ type: 'hit', amount, crit, tap: isTap });
+  emit({ type: 'hit', amount, crit, tap: isTap, auto });
   if (m.hp <= 0) kill(s);
 }
 
@@ -335,7 +335,7 @@ export function tick(s: GameState, dt: number) {
   if (st.autoTaps > 0) {
     const n = st.autoTaps * dt;
     const crit = rnd() < st.critChance;
-    damage(s, st.tap * n * (crit ? st.critMult : 1), crit, false);
+    damage(s, st.tap * n * (crit ? st.critMult : 1), crit, false, true);
   }
 
   const m = r.monster;

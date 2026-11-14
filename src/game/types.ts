@@ -92,7 +92,7 @@ export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story'
 export interface ChronicleEntry { id: number; kind: ChronicleKind; text: string }
 
 export type GameEvent =
-  | { type: 'hit'; amount: number; crit: boolean; tap: boolean }
+  | { type: 'hit'; amount: number; crit: boolean; tap: boolean; auto?: boolean }
   | { type: 'kill'; monster: Monster; gold: number }
   | { type: 'floor'; floor: number; skipped: number }
   | { type: 'boss-attack' }

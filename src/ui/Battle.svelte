@@ -29,7 +29,7 @@
   let sprite: HTMLImageElement | undefined = $state();
   let zone: HTMLDivElement;
   let lastPt = { x: 0.5, y: 0.45 };
-  let dpsAcc = 0;
+  let dpsAcc = 0, autoAcc = 0, autoCrit = false;
 
   function addPop(text: string, cls: string, x = lastPt.x, y = lastPt.y, color?: string) {
     const id = ++popId;
@@ -51,6 +51,7 @@
     const off = onGameEvent(e => {
       if (e.type === 'hit') {
         if (e.tap) { addPop(N(e.amount), e.crit ? 'crit' : 'tap'); knock(e.crit); }
+        else if (e.auto) { autoAcc += e.amount; if (e.crit) autoCrit = true; }
         else if (e.crit) { addPop(N(e.amount), 'crit', 0.5, 0.42); knock(true); }
         else dpsAcc += e.amount;
       } else if (e.type === 'kill') addPop('+' + N(e.gold), 'gold', 0.5, 0.52);
@@ -60,6 +61,7 @@
       else if (e.type === 'loot') addPop(e.item.name, 'loot', 0.5, 0.62, RARITIES[e.item.rarity].color);
     });
     const t = window.setInterval(() => {
+      if (autoAcc > 0) { addPop('➶ ' + N(autoAcc), autoCrit ? 'auto crit' : 'auto', 0.62, 0.48); knock(autoCrit); autoAcc = 0; autoCrit = false; }
       if (dpsAcc > 0) { addPop(N(dpsAcc), 'dps', 0.5 + (Math.random() - 0.5) * 0.45, 0.58); dpsAcc = 0; }
     }, 650);
     return () => { off(); clearInterval(t); };
@@ -114,12 +116,12 @@
     </div>
     <div class="bar hp"><i style="width:{hpPct}%"></i></div>
     {#if m.kind === 'boss'}
-      <div class="line sub"><span>Volonté</span><span>{Math.max(0, r.bossTime).toFixed(1)} s</span></div>
-      <div class="bar will"><i style="width:{Math.max(0, r.bossTime / st.bossTime) * 100}%"></i></div>
+      <div class="ferveur"><span class="lbl">Volonté {Math.max(0, r.bossTime).toFixed(1)} s</span>
+        <div class="bar will"><i style="width:{Math.max(0, r.bossTime / st.bossTime) * 100}%"></i></div></div>
       {#if certitude}<div class="seuil">Certitude du Gardien : {Math.round((1 - E.certitude(s)) * 100)} % de vos coups absorbés · Légende {Math.floor((s.legende / T.seuilLegende) * 100)} %</div>{/if}
     {:else if m.kind === 'golden'}
-      <div class="line sub"><span>Il s’enfuit !</span><span>{goldenLeft.toFixed(1)} s</span></div>
-      <div class="bar will golden"><i style="width:{(goldenLeft / 6) * 100}%"></i></div>
+      <div class="ferveur"><span class="lbl">Fuite {goldenLeft.toFixed(1)} s</span>
+        <div class="bar will golden"><i style="width:{(goldenLeft / 6) * 100}%"></i></div></div>
     {/if}
     <div class="ferveur" class:full={crescendo}>
       <span class="lbl">{crescendo ? 'Crescendo ×2' : 'Ferveur'}</span>
@@ -129,7 +131,7 @@
 </div>
 
 <style>
-  .battle { position: relative; flex: 0 0 45%; min-height: 260px; overflow: hidden; background-size: cover; background-repeat: no-repeat;
+  .battle { position: relative; flex: 0 0 34dvh; min-height: 215px; overflow: hidden; background-size: cover; background-repeat: no-repeat;
     transition: background-position .8s steps(8); touch-action: none; cursor: pointer; outline: none; border-bottom: 2px solid var(--ink-0); }
   .battle::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,10,16,.35), transparent 30%, transparent 55%, rgba(12,10,16,.6)); pointer-events: none; }
   .waves { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 3px; align-items: center; z-index: 2;
@@ -139,19 +141,21 @@
   .waves img { width: 18px; height: 18px; margin-left: 3px; filter: grayscale(1) brightness(.5); }
   .waves img.on { filter: none; animation: throb .6s steps(2) infinite; }
   @keyframes throb { 50% { transform: scale(1.2); } }
-  .challenge { position: absolute; top: 44px; right: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; }
-  .stage { position: absolute; inset: 30px 0 108px; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
+  .challenge { position: absolute; top: 38px; right: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; }
+  .stage { position: absolute; inset: 28px 0 76px; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
   .shadow { position: absolute; bottom: 2px; width: 120px; height: 16px; background: rgba(0,0,0,.45); border-radius: 50%; }
   .shadow.big { width: 170px; height: 20px; }
   .stage.crescendo .shadow { background: rgba(231,121,58,.5); box-shadow: 0 0 0 6px rgba(231,121,58,.2); }
-  .monster { position: relative; height: min(88%, 190px); max-width: 72%; object-fit: contain; object-position: bottom; animation: spawn .3s steps(4); }
-  .monster.boss { height: min(100%, 230px); }
+  .monster { position: relative; height: min(92%, 165px); max-width: 72%; object-fit: contain; object-position: bottom; animation: spawn .3s steps(4); }
+  .monster.boss { height: min(100%, 190px); }
   .monster.golden { filter: sepia(1) saturate(4) hue-rotate(-10deg) brightness(1.15); }
   @keyframes spawn { from { transform: translateY(24px); opacity: 0; } }
   .pop { position: absolute; transform: translate(-50%, -50%); pointer-events: none; font-weight: 700; font-size: 18px; color: #fff; animation: rise 1s steps(14) forwards; z-index: 4; white-space: nowrap; }
   .pop.crit { color: #ffe066; font-size: 27px; }
   .pop.gold { color: var(--gold); font-size: 15px; }
   .pop.dps { color: #cfc4e8; font-size: 13px; }
+  .pop.auto { color: #9fe07a; font-size: 15px; }
+  .pop.auto.crit { color: #d6ff7a; font-size: 22px; }
   .pop.word { color: var(--sky); font-size: 21px; }
   .pop.loot { font-size: 14px; }
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
@@ -165,20 +169,20 @@
     box-shadow: inset 2px 2px 0 #4f86bb, inset -2px -3px 0 #1b3a5a; clip-path: var(--notch); animation: blink .22s steps(2) infinite; }
   .parry img { width: 46px; height: 46px; }
   @keyframes blink { 50% { background: #3f78ad; } }
-  .hud { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 2; padding: 6px 8px 7px; pointer-events: none; background: rgba(33,28,40,.94); }
+  .hud { position: absolute; left: 6px; right: 6px; bottom: 6px; z-index: 2; padding: 4px 7px 5px; pointer-events: none; background: rgba(33,28,40,.94); }
   .line { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
   .line.sub { font-size: 11px; color: var(--text-3); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
   .name { font-weight: 700; color: var(--text); }
   .name.boss { color: #ff9b8f; }
   .name.golden { color: var(--gold); }
   .hpnum { font-size: 12px; color: var(--text-2); }
-  .hp { height: 12px; margin-top: 2px; }
+  .hp { height: 10px; margin-top: 1px; }
   .hp > i { background: var(--blood); box-shadow: inset 0 2px 0 #e06a5f; }
   .will { height: 8px; }
   .will > i { background: var(--sky); box-shadow: inset 0 2px 0 #9cc6ea; }
   .will.golden > i { background: var(--gold); }
   .seuil { font-size: 11px; color: var(--sky); margin-top: 3px; }
-  .ferveur { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+  .ferveur { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
   .ferveur .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); width: 82px; flex: none; }
   .ferveur .bar { flex: 1; height: 8px; }
   .ferveur .bar > i { background: var(--ember); box-shadow: inset 0 2px 0 #f5a46e; }

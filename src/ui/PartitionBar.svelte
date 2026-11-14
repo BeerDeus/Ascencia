@@ -8,21 +8,21 @@
 </script>
 
 <div class="wrap">
-  <div class="bar mana"><i style="width:{(s.run.mana / st.manaMax) * 100}%"></i><span class="outline">{Math.floor(s.run.mana)}/{st.manaMax}</span></div>
+  <div class="mana" title="Mana"><i style="width:{(s.run.mana / st.manaMax) * 100}%"></i></div>
   <div class="row">
     {#each PARTITIONS as p, i}
       {@const unlocked = E.partitionUnlocked(s, i)}
       {@const cdLeft = Math.max(0, s.run.cooldowns[i] - s.time)}
       {@const isActive = s.time < s.run.activeUntil[i]}
-      {@const noMana = s.run.mana < p.mana}
-      <button class="p slot" class:active={isActive} class:dim={unlocked && !cdLeft && noMana}
+      {@const ready = unlocked && !cdLeft && s.run.mana >= p.mana}
+      <button class="p" class:active={isActive} class:ready class:dim={unlocked && !ready && !cdLeft}
         disabled={!unlocked} onclick={() => act(g => E.castPartition(g, i))} aria-label={p.name}>
         {#if unlocked}
           <img src={gfx(p.icon)} alt="" />
-          {#if cdLeft > 0}<span class="cd" style="height:{(cdLeft / p.cd) * 100}%"></span><span class="cdt outline">{Math.ceil(cdLeft)}</span>{/if}
-          <span class="cost outline">{p.mana}</span>
+          {#if cdLeft > 0}<span class="cd" style="width:{(cdLeft / p.cd) * 100}%"></span><span class="t outline">{Math.ceil(cdLeft)}s</span>
+          {:else}<span class="t cost outline">{p.mana}</span>{/if}
         {:else}
-          <span class="lock">Ét. {p.unlock}</span>
+          <span class="lock">Ét.{p.unlock}</span>
         {/if}
       </button>
     {/each}
@@ -30,19 +30,20 @@
 </div>
 
 <style>
-  .wrap { flex: none; padding: 5px 8px 6px; background: var(--stone-2); border-bottom: 2px solid var(--ink-0); }
-  .mana { height: 12px; margin-bottom: 5px; }
-  .mana > i { background: var(--sky-lo); box-shadow: inset 0 2px 0 #4f86bb; }
-  .mana span { position: absolute; inset: 0; z-index: 1; text-align: center; font-size: 9px; line-height: 8px; color: #d8ecff; }
-  .row { display: flex; justify-content: space-between; gap: 6px; }
-  .p { position: relative; flex: 1; aspect-ratio: 1; max-width: 60px; display: grid; place-items: center; overflow: hidden; }
-  .p img { width: 82%; height: 82%; object-fit: contain; }
-  .p.active { background: #5a4a26; outline: 2px solid var(--gold); outline-offset: -4px; animation: on .4s steps(2) infinite; }
-  @keyframes on { 50% { outline-color: var(--gold-hi); } }
+  .wrap { flex: none; background: var(--stone-2); border-bottom: 2px solid var(--ink-0); }
+  .mana { height: 5px; background: #0f0d13; }
+  .mana i { display: block; height: 100%; background: var(--sky); transition: width .12s linear; }
+  .row { display: flex; gap: 3px; padding: 3px 4px 4px; }
+  .p { position: relative; flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; gap: 2px; overflow: hidden;
+    background: var(--stone-1); border: 2px solid var(--ink-0); box-shadow: inset 0 2px 0 var(--hi); }
+  .p img { width: 30px; height: 30px; object-fit: contain; position: relative; z-index: 1; }
+  .p.ready { background: #2f2a3d; box-shadow: inset 0 0 0 1px var(--sky), inset 0 2px 0 var(--hi); }
+  .p.active { background: #5a4a26; box-shadow: inset 0 0 0 2px var(--gold); animation: on .4s steps(2) infinite; }
+  @keyframes on { 50% { box-shadow: inset 0 0 0 2px var(--gold-hi); } }
   .p.dim img { filter: grayscale(1) brightness(.55); }
-  .p:disabled { background: var(--stone-1); }
+  .p:disabled { opacity: .55; }
   .lock { font-size: 11px; color: var(--text-3); }
-  .cd { position: absolute; left: 0; right: 0; top: 0; background: rgba(12,10,16,.72); }
-  .cdt { position: absolute; font-size: 17px; font-weight: 700; }
-  .cost { position: absolute; right: 3px; bottom: 1px; font-size: 11px; color: #a9d4ff; }
+  .cd { position: absolute; right: 0; top: 0; bottom: 0; background: rgba(12,10,16,.75); z-index: 2; }
+  .t { position: relative; z-index: 3; font-size: 11px; font-weight: 700; }
+  .cost { color: #a9d4ff; }
 </style>

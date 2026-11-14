@@ -6,6 +6,7 @@
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
   import BuyMult from './BuyMult.svelte';
+  import UpButton from './UpButton.svelte';
   import { sfxUp } from '../lib/audio';
 
   const s = $derived(G.s);
@@ -36,7 +37,7 @@
     </div>
     <div class="right">
       <BuyMult />
-      <button class="btn" disabled={cost > s.run.gold} onclick={buy}>+{n} · {N(cost)}</button>
+      <UpButton label={'+' + n + ' niv.'} cost={N(cost)} can={cost <= s.run.gold} onclick={buy} />
     </div>
   </div>
 
@@ -45,6 +46,7 @@
     <div class="slot"><span class="label">Critique</span><b>{(st.critChance * 100).toFixed(1)} % · ×{st.critMult.toFixed(1)}</b></div>
     <div class="slot"><span class="label">Or</span><b>×{st.goldMult.toFixed(2)}</b></div>
     <div class="slot"><span class="label">Volonté</span><b>{st.bossTime} s</b></div>
+    {#if st.autoTaps > 0}<div class="slot"><span class="label">Tirs automatiques</span><b>{st.autoTaps.toFixed(1)}/s · {N(st.autoTaps * st.tap)}/s</b></div>{/if}
     <div class="slot"><span class="label">Légende</span><b>{N(s.legende)} (×{N(1 + 0.05 * s.legende)})</b></div>
     <div class="slot"><span class="label">Record</span><b>Étage {s.bestFloor}</b></div>
   </div>
