@@ -21,6 +21,8 @@ import * as Cr from '../src/game/crafting';
 import * as Ex from '../src/game/expeditions';
 import * as Fo from '../src/game/forge';
 import * as Sh from '../src/game/shop';
+import * as Ach from '../src/game/achievements';
+import { PACKS } from '../src/game/data/shop';
 import { MUTATIONS, PLANT_BY_ID } from '../src/game/data/garden';
 import { ZONES } from '../src/game/data/expeditions';
 import { SETS, ORDER_STATS, orderMetal } from '../src/game/data/forge';
@@ -61,15 +63,38 @@ const between = ([a, b]: number[]) => a + rnd() * (b - a);
 let cps = 6;                       // frappes/s du moment
 const craftLog = { potions: 0, bues: 0, repas: 0, mutations: 0, recoltes: 0, expeditions: 0, commandes: 0, pieces: 0 };
 const firstMutation: Record<string, string> = {};
-// PAYER=aube1 : n'achète que le pack à 0,99 € ; PAYER=tout : achète chaque pack d'étape proposé
+// Profils d'achat (PAYER) :
+//   (vide) gratuit · aube1 : pack à 0,99 € · b20 : les 4 packs d'équipement (18,96 €) · g20 : 2 × 1 000 gemmes (19,98 €)
+//   tout : tous les packs + Pass mensuel + Sans pub + 6 000 gemmes au départ
 const PAYER = process.env.PAYER ?? '';
 const payLog: string[] = [];
+let spent = 0;
+const price = (id: string) => Number((PACKS.find(p => p.id === id)?.price ?? '0').replace(',', '.').replace(/[^0-9.]/g, ''));
+function pay(id: string) { if (E.grantPurchase(s, id)) { spent += price(id); payLog.push(`${id} j${day}`); } }
+const WANT: Record<string, string[]> = {
+  aube1: ['aube1'], b20: ['aube1', 'aube2', 'aube3', 'aube4'],
+  tout: ['aube1', 'aube2', 'aube3', 'aube4', 'starter', 'fief', 'resonance'],
+};
 function buyOffers() {
-  if (!PAYER) return;
+  if (PAYER === 'g20' && day === 1 && !payLog.length) { pay('gems_1000'); s.shop.owned = s.shop.owned.filter(x => x !== 'gems_1000'); pay('gems_1000'); }
+  if (PAYER === 'tout') {
+    if (day === 1 && !s.shop.owned.includes('noads')) { pay('noads'); pay('gems_6000'); }
+    if (!Sh.passActive(s)) pay('pass');
+  }
   const o = Sh.pendingOffer(s, Fi.fiefUnlocked(s));
   if (!o) return;
   s.shop.offersSeen.push(o.id);
-  if (PAYER === 'tout' || o.id === PAYER) { E.grantPurchase(s, o.id); payLog.push(`${o.id} j${day} ét.${s.bestFloor}`); }
+  if ((WANT[PAYER] ?? []).includes(o.id)) pay(o.id);
+}
+
+// ---------------------------------------------------------------- gemmes (tous les profils, comme un joueur)
+function gems() {
+  for (const a of Ach.claimable(s)) Ach.claimAch(s, a.id);
+  Sh.shopCheck(s);
+  E.claimCalendar(s);
+  while (Sh.adsLeft(s, 'gemmes') > 0 && Sh.adGems(s)) { /* pubs récompensées regardées */ }
+  // bénédictions de combat entretenues quand on a de quoi
+  for (const b of ['force', 'or'] as const) if (!Sh.blessing(s, b) && s.gems >= (b === 'force' ? 40 : 30)) Sh.buyBlessing(s, b);
 }
 
 function shop() {
@@ -115,7 +140,7 @@ function gear() {
   }
   // panoplies : porter les pièces d'un même set dès qu'on en a 2
   const bySet: Record<string, typeof s.run.inventory> = {};
-  for (const it of s.run.inventory) if (it.set) (bySet[it.set] ??= []).push(it);
+  for (const it of s.run.inventory) if (it.set && !it.bound) (bySet[it.set] ??= []).push(it);
   for (const items of Object.values(bySet)) if (new Set(items.map(i => i.slot)).size >= 2) for (const it of items) I.equip(s, it.id);
   const best = s.run.inventory.filter(i => !i.bound).sort((a, b) => I.score(b) - I.score(a))[0];
   if (best) s.heritage = best.id;
@@ -290,6 +315,7 @@ function resonateMaybe(): boolean {
 
 function ascend() {
   if (resonateMaybe()) return;
+  if (!s.shop.eclatsBoost && s.gems >= 100) E.buyGemItem(s, 'parchemin');
   if ((s.potions.brume ?? 0) > 0) Cr.drink(s, 'brume');
   const gain = E.ascensionGain(s);
   ascLog.push(`A${s.ascensions + 1} j${day} ${h(active)} étage ${s.run.maxFloor} +${gain}`);
@@ -317,7 +343,7 @@ function playSession(seconds: number) {
     E.tick(s, DT);
     active += DT; wall += DT * 1000; acc += DT;
     if (acc >= 2) { acc = 0; shop(); }
-    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { buyOffers(); gear(); fief(); anchors(); }
+    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { buyOffers(); gems(); gear(); fief(); anchors(); }
     if (Math.floor(active) % 120 === 0 && t % 120 < DT) { garden(); workshops(); }
     const evs = E.drainEvents();
     for (const e of evs) if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') { ascend(); }
@@ -354,7 +380,8 @@ for (; day <= DAYS; day++) {
   const stars = Object.values(s.constellations).reduce((a, b) => a + b, 0);
   if ([1, 2, 3, 5, 7, 10, 14, 20, 25, 30, 40, 45, 50, 60, 75, 90, 120].includes(day)) console.log(`${String(day).padStart(4)} | ${h(active).padStart(5)} | ${String(s.bestFloor).padStart(6)} | ${String(s.ascensions).padStart(3)} | ${String(s.legende).padStart(7)} | ${String(Ar.owned(s)).padStart(7)} | ${stars}`);
 }
-console.log('\nJour 1, record à la fin de chaque session :', sessionFloors.join(' → '), PAYER ? `· achats : ${payLog.join(', ')}` : '');
+console.log('\nJour 1, record à la fin de chaque session :', sessionFloors.join(' → '));
+console.log(`Dépensé : ${spent.toFixed(2)} € ${payLog.length ? '(' + payLog.join(', ') + ')' : ''} · gemmes restantes ${s.gems}`);
 console.log('\nPremière arrivée :', MARKS.map(m => `${m}→${firstReach[m] ?? '—'}`).join('  '));
 console.log('\nRésonances :\n' + (resLog.join('\n') || '—'));
 console.log('Ancres terminées :', JSON.stringify(anchorDay));
