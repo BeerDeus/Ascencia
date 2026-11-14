@@ -32,6 +32,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: hostinger
           publish_dir: ./site-dist
-          force_orphan: true
+          keep_files: false
           enable_jekyll: true
           commit_message: 'Site'

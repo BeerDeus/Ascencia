@@ -16,10 +16,14 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 AddType image/webp .webp
 AddType font/woff2 .woff2
 
+# /jouer sans barre finale → /jouer/ (les chemins du jeu sont relatifs)
+RewriteRule ^jouer$ /jouer/ [R=301,L]
 # Ancienne adresse de l'aperçu
 RewriteRule ^preview/?(.*)$ /jouer/$1 [R=301,L]
 
 # Le service worker doit toujours être revalidé
-<Files "sw.js">
-  Header set Cache-Control "no-cache"
-</Files>
+<IfModule mod_headers.c>
+  <Files "sw.js">
+    Header set Cache-Control "no-cache"
+  </Files>
+</IfModule>
