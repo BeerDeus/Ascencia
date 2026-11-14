@@ -9,6 +9,8 @@ import { fmt } from './format';
 import * as I from './items';
 import { arc, familyMult } from './arcanes';
 import * as Fi from './fief';
+import * as Sh from './shop';
+import { CALENDAR, PARTITION_REFILL_COST, BOUNTY_REROLL_COST } from './data/shop';
 import { RARITIES } from './data/items';
 import { SCENE_BY_ID, LARRY_QUIPS, LARRY_ON, KILL_LINES, BOSS_LINES } from './data/story';
 
@@ -39,6 +41,7 @@ export function newGame(): GameState {
     stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0 },
     nextLarryAt: 600, metal: 0, itemSeq: 0, heritage: null,
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
+    gems: 0, shop: Sh.newShop(), messenger: null, nextMessengerAt: 240,
   };
   s.run = newRun(s, 1);
   Fi.dailyCheck(s);
@@ -88,7 +91,7 @@ export function stats(s: GameState): Stats {
   const g = I.gearTotals(s);
   const meal = Fi.mealActive(s);
   const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power')) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0));
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1);
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) : 0;
   let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (c === 'guerrier' ? 2 : 1);
@@ -101,11 +104,11 @@ export function stats(s: GameState): Stats {
     tap, dps: comp * global, power, global, seuilBlocked,
     critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (c === 'archer' ? 1.3 : 1),
-    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)),
+    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (c === 'mage' ? 2 : 1),
     bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0)) * 10) / 10,
-    autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0),
+    autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0),
   };
 }
 
@@ -213,7 +216,7 @@ function kill(s: GameState) {
     log(s, 'boss', pick(BOSS_LINES).replace('{m}', m.name) + ` (+${fmt(gold)} or)`);
     emit({ type: 'kill', monster: m, gold });
     if (m.story) story(s, `kill:${m.story}`);
-    if (I.lootUnlocked(s) && (m.story || rnd() < 0.4 * (1 + arc(s, 'loot')))) drop(s, m.story ? 2 : 0, m.story ? 1 : 0);
+    if (I.lootUnlocked(s) && (m.story || rnd() < 0.4 * lootMult(s))) drop(s, m.story ? 2 : 0, m.story ? 1 : 0);
     advanceFloor(s);
     return;
   }
@@ -228,7 +231,7 @@ function kill(s: GameState) {
   }
   addGold(s, gold);
   emit({ type: 'kill', monster: m, gold });
-  if (m.kind === 'mob' && I.lootUnlocked(s) && rnd() < 0.012 * (1 + arc(s, 'loot'))) drop(s);
+  if (m.kind === 'mob' && I.lootUnlocked(s) && rnd() < 0.012 * lootMult(s)) drop(s);
   r.wave++;
   if (r.farming) {
     if (r.wave >= F.MOBS_PER_FLOOR) {
@@ -243,6 +246,8 @@ function kill(s: GameState) {
     r.monster = spawnMob(s);
   }
 }
+
+const lootMult = (s: GameState) => (1 + arc(s, 'loot')) * (Sh.blessing(s, 'butin') ? 2 : 1);
 
 function drop(s: GameState, minRarity = 0, bonus = 0) {
   const rar = Math.min(5, I.rollRarity(s.run.floor, rnd, minRarity) + (rnd() < 0.5 ? bonus : 0));
@@ -358,6 +363,10 @@ export function tick(s: GameState, dt: number) {
     if (r.bossTime <= 0) bossFailed(s);
   }
 
+  // Messager de Lysandra : une lettre traverse l'écran de temps en temps
+  if (s.messenger && s.time > s.messenger.until) { s.messenger = null; s.nextMessengerAt = s.time + 150 + rnd() * 150; }
+  if (!s.messenger && s.time >= s.nextMessengerAt && s.bestFloor >= 5) { s.messenger = { until: s.time + 9 }; emit({ type: 'messenger' }); }
+
   if (s.time >= s.nextLarryAt) {
     s.nextLarryAt = s.time + 480 + rnd() * 360;
     if (s.bestFloor >= 26) larry(s, LARRY_QUIPS);
@@ -420,6 +429,63 @@ export function castPartition(s: GameState, i: number): boolean {
     r.parryUntil = 0;
   }
   return true;
+}
+
+// ---------------------------------------------------------------- Messager, boutique
+export type MessengerReward = { kind: 'or' | 'metal' | 'gemmes' | 'mana'; amount: number };
+/** Ouvre la lettre du Messager. `mult` = 3 si le joueur a regardé une pub. */
+export function claimMessenger(s: GameState, mult = 1): MessengerReward | null {
+  if (!s.messenger) return null;
+  s.messenger = null;
+  s.nextMessengerAt = s.time + 150 + rnd() * 150;
+  const x = rnd();
+  let rw: MessengerReward;
+  if (x < 0.55) rw = { kind: 'or', amount: F.mobGold(s.run.floor) * 60 * stats(s).goldMult * mult };
+  else if (x < 0.75) rw = { kind: 'mana', amount: stats(s).manaMax };
+  else if (x < 0.93) rw = { kind: 'metal', amount: Math.round((10 + s.bestFloor / 5) * mult) };
+  else rw = { kind: 'gemmes', amount: 2 * mult };
+  if (rw.kind === 'or') addGold(s, rw.amount);
+  else if (rw.kind === 'mana') s.run.mana = rw.amount;
+  else if (rw.kind === 'metal') s.metal += rw.amount;
+  else s.gems += rw.amount;
+  log(s, 'gold', `Une lettre de Lysandra : ${rw.kind === 'mana' ? 'mana restauré' : `+${fmt(rw.amount)} ${rw.kind === 'or' ? 'or' : rw.kind === 'metal' ? 'métal' : 'gemmes'}`}.`);
+  return rw;
+}
+
+/** Coffre du marchand (récompense publicitaire) : un objet rare ou mieux. */
+export function merchantChest(s: GameState) {
+  const it = I.makeItem(s, s.run.floor, I.rollRarity(s.run.floor + 40, rnd, 2), rnd);
+  I.addItem(s, it);
+  log(s, 'loot', `Coffre du marchand : ${it.name} [${RARITIES[it.rarity].name}]`);
+  return it;
+}
+
+export function refillPartitions(s: GameState): boolean {
+  if (s.gems < PARTITION_REFILL_COST) return false;
+  s.gems -= PARTITION_REFILL_COST;
+  s.run.cooldowns = s.run.cooldowns.map(() => 0);
+  s.run.mana = stats(s).manaMax;
+  return true;
+}
+
+export function rerollBounties(s: GameState): boolean {
+  if (s.gems < BOUNTY_REROLL_COST || s.daily.bounties.every(b => b.claimed)) return false;
+  s.gems -= BOUNTY_REROLL_COST;
+  Fi.rerollBounties(s, '#' + Math.floor(rnd() * 1e9));
+  return true;
+}
+
+export function claimCalendar(s: GameState): string | null {
+  if (!Sh.calendarReady(s)) return null;
+  const rw = CALENDAR[s.shop.calIndex % CALENDAR.length];
+  s.shop.calLast = Fi.dayKey();
+  s.shop.calIndex++;
+  if (rw.kind === 'gemmes') { s.gems += rw.amount; return `+${rw.amount} gemmes`; }
+  if (rw.kind === 'metal') { s.metal += rw.amount; return `+${rw.amount} métal`; }
+  if (rw.kind === 'or') { const g = F.mobGold(s.run.floor) * rw.amount; addGold(s, g); return `+${fmt(g)} or`; }
+  const it = I.makeItem(s, s.run.floor, I.rollRarity(s.run.floor + 80, rnd, rw.amount), rnd);
+  I.addItem(s, it);
+  return `${it.name} [${RARITIES[it.rarity].name}]`;
 }
 
 // ---------------------------------------------------------------- Fief
@@ -525,7 +591,8 @@ function migrate(raw: any): GameState {
   // compagnons ajoutés après coup
   while (s.run.companions.length < COMPANIONS.length) s.run.companions.push(0);
   s.run.inventory ??= []; s.run.equipped ??= {};
-  s.arcanes ??= {}; s.meal ??= null;
+  s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
+  s.messenger = null; s.nextMessengerAt ??= s.time + 240;
   Fi.dailyCheck(s);
   while (s.run.cooldowns.length < PARTITIONS.length) { s.run.cooldowns.push(0); s.run.activeUntil.push(0); }
   s.version = SAVE_VERSION;

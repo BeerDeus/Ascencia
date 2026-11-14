@@ -9,6 +9,7 @@ import { fmt } from './format';
 import * as I from './items';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
+import * as Sh from './shop';
 import { ARCANES } from './data/arcanes';
 
 const gfx = (k: string) => `public/gfx/${k}.webp`;
@@ -141,5 +142,28 @@ describe('moteur', () => {
     expect(Fi.eat(s, 'soupe')).toBe(true);
     expect(E.stats(s).goldMult).toBeCloseTo(before * 1.6);
     expect(Fi.eat(s, 'steak')).toBe(false);
+  });
+
+  it('Boutique : bénédictions, quotas de pub, calendrier, Messager, packs', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 30; E.newRun(s, 30);
+    Sh.shopCheck(s);
+    s.gems = 100;
+    const dmg = E.stats(s).tap;
+    expect(Sh.buyBlessing(s, 'force')).toBe(true);
+    expect(s.gems).toBe(60);
+    expect(E.stats(s).tap).toBeCloseTo(dmg * 2);
+    for (let i = 0; i < 5; i++) expect(Sh.adGems(s)).toBe(true);
+    expect(Sh.adGems(s)).toBe(false);
+    expect(E.claimCalendar(s)).toBe('+10 gemmes');
+    expect(E.claimCalendar(s)).toBeNull();
+    s.messenger = { until: s.time + 5 };
+    expect(E.claimMessenger(s, 3)).not.toBeNull();
+    expect(s.messenger).toBeNull();
+    expect(Sh.grantPack(s, 'noads')).toBe(true);
+    expect(Sh.grantPack(s, 'noads')).toBe(false);
+    expect(Sh.noAds(s)).toBe(true);
+    const migrated = E.deserialize(JSON.stringify({ ...JSON.parse(E.serialize(s)), shop: undefined, gems: undefined }))!;
+    expect(migrated.gems).toBe(0);
+    expect(migrated.shop.ads).toEqual({});
   });
 });

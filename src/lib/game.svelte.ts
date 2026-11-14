@@ -6,7 +6,10 @@ import * as A from './audio';
 import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
 import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from './cloud.svelte';
 import { RARITIES } from '../game/data/items';
-import { dailyCheck } from '../game/fief';
+import { dailyCheck, fiefUnlocked } from '../game/fief';
+import { shopCheck, calendarReady, pendingOffer } from '../game/shop';
+import type { Pack } from '../game/data/shop';
+import { adUi } from './ads.svelte';
 
 export const G = $state<{ s: GameState }>({ s: E.newGame() });
 
@@ -21,6 +24,10 @@ export const ui = $state({
   classPicker: null as null | 'start' | 'ascension',
   ritual: 0,
   conflict: null as CloudSave | null,
+  shop: false,
+  calendar: false,
+  offer: null as Pack | null,
+  messenger: false,
   toasts: [] as { id: number; text: string; kind: string }[],
 });
 
@@ -36,7 +43,8 @@ export function toast(text: string, kind = 'info') {
   setTimeout(() => { const i = ui.toasts.findIndex(t => t.id === id); if (i >= 0) ui.toasts.splice(i, 1); }, 2600);
 }
 
-export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict;
+export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict
+  || ui.calendar || !!ui.offer || ui.messenger || adUi.open;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {
@@ -122,6 +130,16 @@ function checkOffline() {
   flush();
 }
 
+// ---------------------------------------------------------------- quotidien, offres
+function daily() {
+  const pass = shopCheck(G.s);
+  if (pass) toast(`Bénédiction de Lysandra : +${pass} gemmes`, 'gold');
+  if (paused() || !G.s.classId) return;
+  if (calendarReady(G.s) && G.s.bestFloor >= 5) { ui.calendar = true; return; }
+  const offer = pendingOffer(G.s, fiefUnlocked(G.s));
+  if (offer) ui.offer = offer;
+}
+
 // ---------------------------------------------------------------- boucle
 const STEP = 0.1;
 let acc = 0, last = 0, hiddenAt = 0;
@@ -133,7 +151,7 @@ function frame(now: number) {
     while (acc >= STEP) { E.tick(G.s, STEP); acc -= STEP; }
     flush();
   }
-  if (now - lastPersist > 10000) { dailyCheck(G.s); persist(); }
+  if (now - lastPersist > 10000) { dailyCheck(G.s); daily(); persist(); }
   requestAnimationFrame(frame);
 }
 

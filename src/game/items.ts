@@ -1,10 +1,10 @@
 // Logique d'équipement : génération, bonus, Forge, Héritage.
 import type { GameState, Item } from './types';
 import { arc } from './arcanes';
+import { invMax } from './shop';
 import { T } from './tuning';
 import { BASES, EPITHETS, RARITIES, SECONDARY, SLOTS, SLOT_PRIMARY, STATS, type Slot, type StatId } from './data/items';
 
-export const INVENTORY_MAX = 40;
 export const PLUS_MAX = 10;
 const RARITY_MULT = [1, 1.4, 1.9, 2.6, 3.5, 5];
 const AFFIX_COUNT = [1, 2, 2, 3, 3, 4];
@@ -62,7 +62,7 @@ export function addItem(s: GameState, it: Item): Item | null {
   const inv = s.run.inventory;
   inv.push(it);
   let dropped: Item | null = null;
-  if (inv.length > INVENTORY_MAX) {
+  if (inv.length > invMax(s)) {
     const cands = inv.filter(i => !isEquipped(s, i) && i.id !== s.heritage).sort((a, b) => score(a) - score(b));
     if (cands[0]) { dropped = cands[0]; recycle(s, dropped.id); }
   }

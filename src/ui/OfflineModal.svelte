@@ -3,6 +3,8 @@
   import { fmt, fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';
   import { sfxGold } from '../lib/audio';
+  import { rewarded } from '../lib/ads.svelte';
+  import { adsLeft, noAds } from '../game/shop';
   const r = $derived(ui.offline!);
   let shown = $state(0);
   $effect(() => {
@@ -12,7 +14,11 @@
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   });
+  let doubled = $state(false);
   function close() { sfxGold(); ui.offline = null; }
+  async function double() {
+    if (await rewarded(G.s, 'horsligne')) { G.s.run.gold += r.gold; G.s.stats.goldEarned += r.gold; doubled = true; shown = r.gold * 2; sfxGold(); }
+  }
 </script>
 
 <div class="veil">
@@ -23,6 +29,7 @@
       Voici ce qu’ils ont ramassé :</p>
     <div class="gold outline"><img src={gfx('obj/bourse_or')} alt="" />+{fmt(shown, G.s.settings.notation)}</div>
     <p class="sign book">— Lysandra</p>
+    {#if !doubled && adsLeft(G.s, 'horsligne')}<button class="btn sky go" onclick={double}>{noAds(G.s) ? 'Doubler' : '▶ Doubler avec une pub'}</button>{/if}
     <button class="btn go" onclick={close}>Récupérer</button>
   </div>
 </div>

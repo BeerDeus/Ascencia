@@ -17,8 +17,8 @@ function seeded(seed: string) {
   return () => { h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
 }
 
-export function rollDaily(s: GameState, day: string): Daily {
-  const r = seeded(day);
+export function rollDaily(s: GameState, day: string, salt = ''): Daily {
+  const r = seeded(day + salt);
   const types = [...BOUNTY_TYPES].sort(() => r() - 0.5).slice(0, 3);
   const kinds: Bounty['reward']['kind'][] = s.ascensions > 0 ? ['or', 'metal', 'eclats'] : ['or', 'metal', 'or'];
   const prevDay = s.daily?.day;
@@ -38,6 +38,12 @@ export function rollDaily(s: GameState, day: string): Daily {
 export function dailyCheck(s: GameState) {
   const day = dayKey();
   if (!s.daily || s.daily.day !== day) s.daily = rollDaily(s, day);
+}
+
+/** Relance les primes non encaissées (gemmes). */
+export function rerollBounties(s: GameState, salt: string) {
+  const fresh = rollDaily(s, s.daily.day, salt);
+  s.daily.bounties = s.daily.bounties.map((b, i) => (b.claimed ? b : { ...fresh.bounties[i] }));
 }
 
 export function count(s: GameState, c: Counter, n = 1) { if (s.daily) s.daily.c[c] += n; }

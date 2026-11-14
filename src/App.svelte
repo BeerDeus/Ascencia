@@ -12,6 +12,12 @@
   import FiefPanel from './ui/FiefPanel.svelte';
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
+  import ShopSheet from './ui/ShopSheet.svelte';
+  import CalendarModal from './ui/CalendarModal.svelte';
+  import OfferModal from './ui/OfferModal.svelte';
+  import AdOverlay from './ui/AdOverlay.svelte';
+  import MessengerModal from './ui/MessengerModal.svelte';
+  import { adUi } from './lib/ads.svelte';
   import CloudConflict from './ui/CloudConflict.svelte';
   import OptionsPanel from './ui/OptionsPanel.svelte';
   import Dialogue from './ui/Dialogue.svelte';
@@ -41,11 +47,16 @@
     <Nav />
   </main>
   <Toasts />
+  {#if ui.shop}<ShopSheet />{/if}
   {#if ui.ritual}<Ritual />
   {:else if ui.scenes.length}<Dialogue />
   {:else if ui.classPicker}<ClassPicker />
   {:else if ui.conflict}<CloudConflict />
-  {:else if ui.offline}<OfflineModal />{/if}
+  {:else if ui.offline}<OfflineModal />
+  {:else if ui.messenger}<MessengerModal />
+  {:else if ui.calendar}<CalendarModal />
+  {:else if ui.offer}<OfferModal />{/if}
+  {#if adUi.open}<AdOverlay />{/if}
 {/if}
 
 <style>

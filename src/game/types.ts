@@ -1,5 +1,6 @@
 import type { Slot, StatId } from './data/items';
 import type { Daily } from './fief';
+import type { ShopState } from './shop';
 
 export type ClassId = 'guerrier' | 'archer' | 'mage';
 export type CompType = 'melee' | 'distance' | 'magie';
@@ -81,6 +82,10 @@ export interface GameState {
   arcanes: Record<string, number>;
   daily: Daily;
   meal: { id: string; until: number } | null;
+  gems: number;
+  shop: ShopState;
+  messenger: { until: number } | null;   // Messager de Lysandra à l'écran (temps de jeu)
+  nextMessengerAt: number;
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
@@ -99,4 +104,5 @@ export type GameEvent =
   | { type: 'golden-escape' }
   | { type: 'story'; id: string }
   | { type: 'heavy' }
-  | { type: 'loot'; item: Item };
+  | { type: 'loot'; item: Item }
+  | { type: 'messenger' };

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { G, act, onGameEvent, paused } from '../lib/game.svelte';
+  import { G, ui, act, onGameEvent, paused } from '../lib/game.svelte';
   import * as E from '../game/engine';
   import { actFor, SEUIL_HARMONIQUE } from '../game/data/world';
   import { RARITIES } from '../game/data/items';
@@ -95,6 +95,10 @@
     {/key}
   </div>
 
+  {#if s.messenger}
+    <button class="messenger" onpointerdown={stop(() => (ui.messenger = true))} aria-label="Lettre de Lysandra"><img src={gfx('obj/lettre')} alt="" /></button>
+  {/if}
+
   {#if parryOpen}
     <button class="parry" onpointerdown={stop(() => act(E.parry))} aria-label="Parer"><img src={gfx('icons/defense')} alt="" /><span class="outline">Parer !</span></button>
   {/if}
@@ -152,6 +156,10 @@
   .pop.loot { font-size: 14px; }
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
+  .messenger { position: absolute; top: 34%; left: -50px; z-index: 6; width: 46px; height: 46px; animation: fly 9s linear forwards; }
+  .messenger img { width: 100%; height: 100%; filter: drop-shadow(0 0 0 #fff) drop-shadow(2px 2px 0 #000); animation: flap .3s steps(2) infinite; }
+  @keyframes fly { 0% { left: -50px; top: 30%; } 25% { top: 22%; } 50% { top: 34%; } 75% { top: 24%; } 100% { left: calc(100% + 10px); top: 30%; } }
+  @keyframes flap { 50% { transform: translateY(-4px) rotate(-6deg); } }
   .parry { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 2px;
     font-weight: 700; font-size: 14px; color: #fff; padding: 8px 12px; background: var(--sky-lo); border: 2px solid var(--ink-0);
     box-shadow: inset 2px 2px 0 #4f86bb, inset -2px -3px 0 #1b3a5a; clip-path: var(--notch); animation: blink .22s steps(2) infinite; }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { G, act, toast } from '../lib/game.svelte';
   import * as I from '../game/items';
+  import { invMax } from '../game/shop';
   import { SLOTS, RARITIES, STATS } from '../game/data/items';
   import type { Item } from '../game/types';
   import { fmt } from '../game/format';
@@ -45,7 +46,7 @@
       <button class="btn" onclick={equipBest}>Équiper le mieux</button>
     </div>
 
-    <div class="label">Sac · {s.run.inventory.length}/{I.INVENTORY_MAX}</div>
+    <div class="label">Sac · {s.run.inventory.length}/{invMax(s)}</div>
     <div class="inv">
       {#each inv as it (it.id)}
         <button class="cell slot" class:sel={selId === it.id} class:eq={I.isEquipped(s, it)} style="--r:{RARITIES[it.rarity].color}" onclick={() => (selId = it.id)}>
