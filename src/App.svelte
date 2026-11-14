@@ -29,6 +29,8 @@
   import MessengerModal from './ui/MessengerModal.svelte';
   import EchoFight from './ui/EchoFight.svelte';
   import { adUi } from './lib/ads.svelte';
+  import { payUi } from './lib/billing.svelte';
+  import PayOverlay from './ui/PayOverlay.svelte';
   import CloudConflict from './ui/CloudConflict.svelte';
   import OptionsPanel from './ui/OptionsPanel.svelte';
   import Dialogue from './ui/Dialogue.svelte';
@@ -80,6 +82,7 @@
   {:else if ui.offer}<OfferModal />{/if}
   {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}
+  {#if payUi.open}<PayOverlay />{/if}
 {/if}
 
 <style>

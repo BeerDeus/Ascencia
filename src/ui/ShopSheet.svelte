@@ -5,7 +5,7 @@
   import { BLESSINGS, PACKS, AD_LIMITS, AD_GEMS, BAG_COST, BAG_MAX_BONUS, PARTITION_REFILL_COST, BOUNTY_REROLL_COST, GEM_ICON } from '../game/data/shop';
   import { fiefUnlocked } from '../game/fief';
   import { rewarded } from '../lib/ads.svelte';
-  import { purchase, billingReady, billingTest } from '../lib/billing';
+  import { purchase, billingReady, billingTest } from '../lib/billing.svelte';
   import { GEM_ITEMS, AUBE_BY_ID } from '../game/data/packs';
   import { fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';

@@ -16,6 +16,7 @@ export interface ShopState {
   passLastDay: string;
   bagBonus: number;
   eclatsBoost?: boolean;   // Parchemin des Éclats en attente
+  offersShownAt?: Record<string, number>;  // dernier affichage d'une offre (rappel max 1×/jour)
 }
 
 export const newShop = (): ShopState => ({
@@ -87,6 +88,11 @@ export function grantPack(s: GameState, id: string): boolean {
 }
 
 /** Offre contextuelle à présenter (une seule fois), ex. le Pack du Fief à son déblocage. */
+/** Rappel « coup de pouce » quand le joueur bloque : un pack débloqué non acheté, pas montré depuis 24 h. */
+export function stuckOffer(s: GameState, fiefOpen: boolean, nowMs: number) {
+  return PACKS.find(p => p.items && !s.shop.owned.includes(p.id) && packUnlocked(s, p, fiefOpen)
+    && nowMs - (s.shop.offersShownAt?.[p.id] ?? 0) > 86_400_000);
+}
 /** Un pack d'étape est proposé (et visible au Marché) quand sa condition est remplie. */
 export function packUnlocked(s: GameState, p: (typeof PACKS)[number], fiefOpen = true) {
   if (p.floor) return s.bestFloor >= p.floor;

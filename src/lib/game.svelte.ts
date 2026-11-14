@@ -7,7 +7,7 @@ import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
 import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from './cloud.svelte';
 import { RARITIES } from '../game/data/items';
 import { dailyCheck, fiefUnlocked } from '../game/fief';
-import { shopCheck, calendarReady, pendingOffer } from '../game/shop';
+import { shopCheck, calendarReady, pendingOffer, stuckOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
 import { adUi } from './ads.svelte';
 import { newlyDone } from '../game/achievements';
@@ -63,16 +63,16 @@ function handle(e: GameEvent) {
       else if (e.monster.kind === 'golden') { A.sfxGold(); buzz('medium'); toast('Gobelin doré ! Or ×20', 'gold'); }
       else A.sfxKill();
       break;
-    case 'floor': A.setKey(actFor(e.floor).key); break;
+    case 'floor': A.setKey(actFor(e.floor).key); bossFails = 0; if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
     case 'boss-attack': A.sfxAttack(); buzz('heavy'); break;
     case 'parry': A.sfxParry(); buzz('medium'); break;
-    case 'boss-fail': A.sfxFail(); break;
+    case 'boss-fail': A.sfxFail(); if (++bossFails >= 3) { bossFails = 0; moment('bloque'); } break;
     case 'crescendo': A.sfxCrescendo(); buzz('heavy'); toast('CRESCENDO !', 'crit'); break;
     case 'partition': A.sfxPartition(); break;
     case 'milestone': A.sfxUp(); toast(`Palier ${e.level} atteint !`, 'up'); break;
     case 'heavy': buzz('heavy'); break;
     case 'loot': if (e.item.rarity >= 3) { toast(`${RARITIES[e.item.rarity].name} : ${e.item.name}`, e.item.rarity >= 4 ? 'crit' : 'up'); A.sfxUp(); } break;
-    case 'story': ui.scenes.push(e.id); break;
+    case 'story': ui.scenes.push(e.id); if (/^(kill:|ascension:|resonance:|defeat:)/.test(e.id)) moment('histoire'); break;
     case 'hunt': toast(e.won ? 'Bête Primordiale vaincue !' : 'La Bête s’échappe…', e.won ? 'crit' : 'info'); if (e.won) A.sfxBoss(); break;
     case 'auto-ascend': toast(`Ascension automatique : +${e.gain} Éclats`, 'up'); A.sfxAscend(); break;
   }
@@ -150,8 +150,24 @@ function daily() {
   if (pass) toast(`Bénédiction de Lysandra : +${pass} gemmes`, 'gold');
   if (paused() || !G.s.classId) return;
   if (calendarReady(G.s) && G.s.bestFloor >= 5) { ui.calendar = true; return; }
-  const offer = pendingOffer(G.s, fiefUnlocked(G.s));
-  if (offer) ui.offer = offer;
+}
+
+// ---------------------------------------------------------------- offres au bon moment
+// Une offre ne surgit jamais au hasard : seulement après un moment marquant (boss de l'histoire, palier franchi,
+// Ascension, Résonance) une fois les dialogues fermés, ou en « coup de pouce » après 3 échecs de suite contre un boss.
+const MOMENT_FLOORS = [10, 26, 50, 100, 180, 300];
+let bossFails = 0;
+let pendingMoment: null | { kind: 'palier' | 'histoire' | 'bloque'; at: number } = null;
+function moment(kind: 'palier' | 'histoire' | 'bloque') {
+  if (!pendingMoment || kind !== 'bloque') pendingMoment = { kind, at: performance.now() };
+}
+function offerMomentCheck(now: number) {
+  if (!pendingMoment || paused() || now - pendingMoment.at < 1200) return;
+  const kind = pendingMoment.kind;
+  pendingMoment = null;
+  const fief = fiefUnlocked(G.s);
+  const offer = pendingOffer(G.s, fief) ?? (kind === 'bloque' ? stuckOffer(G.s, fief, Date.now()) : undefined);
+  if (offer) { (G.s.shop.offersShownAt ??= {})[offer.id] = Date.now(); ui.offer = offer; }
 }
 
 // ---------------------------------------------------------------- boucle
@@ -165,6 +181,7 @@ function frame(now: number) {
     while (acc >= STEP) { E.tick(G.s, STEP); acc -= STEP; }
     flush();
   }
+  offerMomentCheck(now);
   if (now - lastPersist > 10000) { dailyCheck(G.s); daily(); persist(); }
   requestAnimationFrame(frame);
 }
@@ -208,7 +225,7 @@ export function chooseClass(id: 'guerrier' | 'archer' | 'mage') {
     A.sfxAscend();
     buzz('heavy');
     E.ascend(G.s, id);
-    setTimeout(() => { ui.ritual = 0; flush(); }, 2800);
+    setTimeout(() => { ui.ritual = 0; flush(); moment('histoire'); }, 2800);
   }
   A.setKey(actFor(G.s.run.floor).key);
   persist();

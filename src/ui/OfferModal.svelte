@@ -1,7 +1,7 @@
 <script lang="ts">
   import { guard } from '../lib/guard';
   import { G, ui, toast } from '../lib/game.svelte';
-  import { billingReady, purchase } from '../lib/billing';
+  import { billingReady, purchase } from '../lib/billing.svelte';
   import * as E from '../game/engine';
   import { AUBE_BY_ID } from '../game/data/packs';
   import { sfxGold } from '../lib/audio';
@@ -17,7 +17,7 @@
 
 <div class="veil" use:guard>
   <div class="box frame">
-    <div class="label">Offre unique</div>
+    <div class="label">{G.s.shop.offersSeen.includes(p.id) ? 'Un coup de pouce ?' : 'Nouvelle offre'}</div>
     <img src={gfx(p.icon)} alt="" />
     <div class="gothic h">{p.name}</div>
     <p>{p.desc}</p>
