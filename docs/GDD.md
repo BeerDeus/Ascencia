@@ -374,6 +374,11 @@ Vague (10 pastilles) · PV monstre · Volonté · Ferveur · Mana · XP de Maît
 
 Principe : **le temps s'achète, la puissance non** (aucun stat exclusif payant, aucune Arcane en vente directe).
 
+**Packs d'étape** (en jeu) : proposés une fois au palier atteint, puis visibles au Marché. Sets liés au compte à niveau fixe
+(Aube 0,99 €, Zénith 2,99 €, Crépuscule 4,99 €, Nuit étoilée 9,99 €) : un booster de départ à chaque vie, que le butin et
+la Forge dépassent ensuite. Détails et mesures : `docs/EQUILIBRAGE.md`. Objets en gemmes : Parchemin des Éclats, Engrais,
+Retour express, Coffre légendaire. Mode test : ouvrir le jeu avec `?achats=test` (achats simulés).
+
 ---
 
 ## 17. Économie & formules

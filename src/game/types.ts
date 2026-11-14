@@ -31,8 +31,11 @@ export interface Item {
   rarity: number;        // 0..5
   ilvl: number;
   plus: number;          // améliorations de Forge
-  affixes: { stat: StatId; v: number }[];
+  affixes: { stat: StatId; v: number; r?: number }[];
   set?: string;          // pièce de panoplie
+  bound?: boolean;       // lié au compte : revient à chaque vie et suit l'étage
+  minFloor?: number;     // record d'étage requis pour le porter
+  cap?: number;          // étage au-delà duquel l'objet lié ne progresse plus
 }
 
 export interface RunState {
@@ -112,7 +115,8 @@ export interface GameState {
   potions: Record<string, number>;
   buffs: Record<string, number>;          // potions actives (fin, horodatage réel)
   expeditions: Expedition[];
-  forge: { sets: Record<string, string[]> };   // pièces de panoplie déjà forgées (collection)
+  forge: { sets: Record<string, string[]> };
+  vault: Item[];          // équipements liés au compte (packs)   // pièces de panoplie déjà forgées (collection)
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

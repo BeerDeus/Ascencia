@@ -24,9 +24,20 @@ export const PARTITION_REFILL_COST = 10;
 export const BOUNTY_REROLL_COST = 15;
 
 /** Packs en argent réel (prix indicatifs ; produits à créer dans la Play Console). */
-export interface Pack { id: string; name: string; icon: string; price: string; gems: number; desc: string; once?: boolean; offer?: string }
+export interface Pack { id: string; name: string; icon: string; price: string; gems: number; desc: string; once?: boolean; offer?: string;
+  /** Pack d'étape : pièces de l'Aube offertes, condition d'apparition. */ items?: string[]; floor?: number; fragments?: number }
 export const PACKS: Pack[] = [
-  { id: 'starter', name: 'Pack du Voyageur', icon: 'packs/gem_pack_starter', price: '2,99 €', gems: 300, desc: '300 gemmes + 2 Bénédictions de Guerre', once: true, offer: 'ascension:1' },
+  { id: 'aube1', name: 'Pack de l’Aube', icon: 'equip/longue_epee_de_chevalier', price: '0,99 €', gems: 50, once: true, floor: 10, items: ['aube_lame', 'aube_talisman'],
+    desc: 'Lame et Talisman de l’Aube (légendaires, niveau 35) + 50 gemmes' },
+  { id: 'aube2', name: 'Pack du Zénith', icon: 'equip/espadon_de_mercenaire', price: '2,99 €', gems: 150, once: true, offer: 'ascension:1', items: ['zenith_lame', 'zenith_armure', 'zenith_anneau'],
+    desc: '3 pièces légendaires du Zénith (niveau 90, record 50 requis) + 150 gemmes' },
+  { id: 'aube3', name: 'Pack du Crépuscule', icon: 'equip/lame_du_crepuscule', price: '4,99 €', gems: 300, once: true, floor: 100, items: ['crep_lame', 'crep_heaume', 'crep_gants'],
+    desc: '3 pièces légendaires du Crépuscule (niveau 160, record 100 requis) + 300 gemmes' },
+  { id: 'aube4', name: 'Pack de la Nuit étoilée', icon: 'equip/dagues_de_l_ombre_dansante', price: '9,99 €', gems: 600, once: true, floor: 180, items: ['nuit_dagues', 'nuit_manteau', 'nuit_greves', 'nuit_sandales'],
+    desc: '4 pièces mythiques de la Nuit étoilée (niveau 250, record 180 requis) + 600 gemmes' },
+  { id: 'resonance', name: 'Pack de la Résonance', icon: 'packs/gem_pack_100', price: '14,99 €', gems: 1200, once: true, offer: 'resonance:1', fragments: 10,
+    desc: '1 200 gemmes + 10 Fragments d’Écho' },
+  { id: 'starter', name: 'Pack du Voyageur', icon: 'packs/gem_pack_starter', price: '2,99 €', gems: 300, desc: '300 gemmes + 2 Bénédictions de Guerre', once: true, offer: 'floor:26' },
   { id: 'fief', name: 'Pack du Jardinier', icon: 'packs/gem_pack_monthly', price: '1,99 €', gems: 150, desc: '150 gemmes, 20 graines communes et 3 h de Bénédiction de Fortune', once: true, offer: 'fief' },
   { id: 'gems_80', name: 'Poignée de gemmes', icon: 'packs/gem_pack_1', price: '0,99 €', gems: 80, desc: '80 gemmes' },
   { id: 'gems_450', name: 'Bourse de gemmes', icon: 'packs/gem_pack_5', price: '4,99 €', gems: 450, desc: '450 gemmes' },

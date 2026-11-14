@@ -16,6 +16,8 @@ import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
 import { newGarden, harvest as harvestPlot } from './garden';
 import { FAMILY_DROPS, DEFAULT_DROP, STORY_RARES } from './data/resources';
+import { AUBE_BY_ID, AUBE_ROLL, GEM_ITEMS } from './data/packs';
+import { PACKS } from './data/shop';
 import { HUNTS, HUNT_TIME, COMPASS_FLOORS, NOYAU_FLOOR } from './data/resonance';
 import { CALENDAR, PARTITION_REFILL_COST, BOUNTY_REROLL_COST } from './data/shop';
 import { RARITIES } from './data/items';
@@ -54,7 +56,7 @@ export function newGame(): GameState {
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
     gems: 0, shop: Sh.newShop(), messenger: null, nextMessengerAt: 240,
     anchors: Rz.newAnchors(), resonance: Rz.newResonance(),
-    jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} },
+    jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} }, vault: [],
   };
   s.run = newRun(s, 1);
   Fi.dailyCheck(s);
@@ -71,6 +73,7 @@ export function newRun(s: GameState, startFloor: number): RunState {
     tapsTotal: 0, scriptedDefeat: false, inventory: [], equipped: {},
   };
   s.run = run;
+  restoreVault(s);
   run.mana = stats(s).manaMax;
   run.monster = spawnMob(s);
   return run;
@@ -578,6 +581,46 @@ export function harvestSeed(s: GameState): boolean {
   return true;
 }
 
+// ---------------------------------------------------------------- Équipement lié au compte (packs d'étape)
+function restoreVault(s: GameState) {
+  if (!s.vault) return;
+  for (const it of s.vault) {
+    if (!s.run.inventory.some(x => x.id === it.id)) s.run.inventory.push(it);
+    const cur = I.equippedIn(s, it.slot);
+    if (I.canWear(s, it) && (!cur || I.score(it, s) >= I.score(cur, s))) s.run.equipped[it.slot] = it.id;
+  }
+}
+export function makeAube(s: GameState, pieceId: string) {
+  const p = AUBE_BY_ID[pieceId];
+  const affixes = p.stats.map((stat, i) => ({ stat, v: 0, r: (i === 0 ? 1 : 0.6) * AUBE_ROLL }));
+  const it = { id: ++s.itemSeq, slot: p.slot, base: p.base, name: p.name, rarity: p.rarity, ilvl: p.cap, plus: 0, affixes, set: p.set, bound: true, minFloor: p.minFloor || undefined, cap: p.cap };
+  s.vault.push(it);
+  restoreVault(s);
+  return it;
+}
+/** Accorde un achat (après validation du paiement) : gemmes, bénédictions, pièces de l'Aube, Fragments. */
+export function grantPurchase(s: GameState, id: string): boolean {
+  if (!Sh.grantPack(s, id)) return false;
+  const p = PACKS.find(x => x.id === id)!;
+  for (const piece of p.items ?? []) if (!s.vault.some(v => v.name === AUBE_BY_ID[piece].name)) makeAube(s, piece);
+  if (p.fragments) { s.resonance.fragments += p.fragments; s.resonance.total += p.fragments; }
+  log(s, 'gold', `Merci ! ${p.name} reçu.`);
+  return true;
+}
+/** Articles achetables en gemmes. */
+export function buyGemItem(s: GameState, id: string): boolean {
+  const g = GEM_ITEMS.find(x => x.id === id);
+  if (!g || s.gems < g.cost) return false;
+  if (id === 'parchemin' && s.shop.eclatsBoost) return false;
+  if (id === 'retour' && !s.expeditions.length) return false;
+  s.gems -= g.cost;
+  if (id === 'parchemin') s.shop.eclatsBoost = true;
+  else if (id === 'engrais') s.garden.plots.forEach(p => { if (p && !p.dissonantSince) p.progress = 1; });
+  else if (id === 'retour') s.expeditions.forEach(e => (e.start = now() - e.hours * 3600_000));
+  else if (id === 'coffre_leg') { const it = I.makeItem(s, s.run.floor, 4, rnd); I.addItem(s, it); log(s, 'loot', `Coffre légendaire : ${it.name}`); }
+  return true;
+}
+
 // ---------------------------------------------------------------- Fin du jeu : l'Écho Oublié
 export const echoAvailable = (s: GameState) => s.bestFloor > 400 && !s.ending.done;
 /** Victoire au Chant : la voie choisie donne un bonus permanent (modifiable à chaque Résonance). */
@@ -644,7 +687,7 @@ function automate(s: GameState) {
 
 // ---------------------------------------------------------------- Ascension
 export function ascensionGain(s: GameState): number {
-  return Math.floor(F.eclatsFor(s.run.maxFloor) * (1 + arc(s, 'eclats')) * Rz.symEclatsMult(s) * (1 + potion(s, 'eclats'))) + (s.ascensions === 0 ? 6 : 0);
+  return Math.floor(F.eclatsFor(s.run.maxFloor) * (1 + arc(s, 'eclats')) * Rz.symEclatsMult(s) * (1 + potion(s, 'eclats')) * (s.shop?.eclatsBoost ? 1.5 : 1)) + (s.ascensions === 0 ? 6 : 0);
 }
 export function canAscend(s: GameState) { return s.ascensionUnlocked && s.run.maxFloor >= 30; }
 export function startFloor(s: GameState): number {
@@ -654,11 +697,12 @@ export function ascend(s: GameState, classId: ClassId): number {
   if (!canAscend(s)) return 0;
   const gain = ascensionGain(s);
   s.eclats += gain; s.legende += gain; s.ascensions++;
+  s.shop.eclatsBoost = false;
   s.classId = classId;
   const keep = s.run.inventory.find(i => i.id === s.heritage);
   newRun(s, startFloor(s));
-  if (keep) { s.run.inventory.push(keep); s.run.equipped[keep.slot] = keep.id; }
-  else s.heritage = null;
+  if (keep && !keep.bound) { s.run.inventory.push(keep); s.run.equipped[keep.slot] = keep.id; }
+  else if (!keep) s.heritage = null;
   log(s, 'story', `✦ Ascension n°${s.ascensions} : +${gain} Éclats. Votre légende pèse désormais ${s.legende}.`);
   if (s.ascensions === 1) story(s, 'ascension:1');
   else larry(s, LARRY_ON.ascension, 0.5);
@@ -738,6 +782,9 @@ function migrate(raw: any): GameState {
   s.achievements ??= {}; s.achSeen ??= [];
   s.anchors = { ...Rz.newAnchors(), ...(s.anchors ?? {}) };
   s.forge ??= { sets: {} };
+  s.vault ??= [];
+  // une seule instance par objet lié au compte (le Sac de la vie en cours pointe sur le coffre)
+  s.run.inventory = s.run.inventory.map(it => (it.bound ? s.vault.find(v => v.id === it.id) ?? it : it));
   s.ending = Object.assign({ done: false, path: null, attempts: 0 }, s.ending);
   s.jobs ??= {}; s.res ??= {}; s.potions ??= {}; s.buffs ??= {}; s.expeditions ??= [];
   s.garden = { ...newGarden(), ...(s.garden ?? {}) };

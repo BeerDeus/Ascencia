@@ -40,8 +40,15 @@ export function makeItem(s: GameState, ilvl: number, rarity: number, rnd: () => 
   return { id: ++s.itemSeq, slot: sl, base, name, rarity, ilvl, plus: 0, affixes };
 }
 
-export function score(it: Item): number {
-  return it.affixes.reduce((a, x) => a + STATS[x.stat].weight * effective(it, x.v) / STATS[x.stat].base, 0);
+export const canWear = (s: GameState, it: Item) => !it.minFloor || s.bestFloor >= it.minFloor;
+/** Valeur actuelle d'un affixe (les objets liés au compte ont un niveau fixe, `cap`). */
+export function affixNow(s: GameState | null, it: Item, a: { stat: StatId; v: number; r?: number }): number {
+  if (it.bound) return affixValue(a.stat, it.cap ?? it.ilvl, it.rarity, a.r ?? 1) * (1 + 0.12 * it.plus);
+  return effective(it, a.v);
+}
+export function score(it: Item, s: GameState | null = null): number {
+  if (s && !canWear(s, it)) return -1;
+  return it.affixes.reduce((a, x) => a + STATS[x.stat].weight * affixNow(s, it, x) / STATS[x.stat].base, 0);
 }
 
 export function gearTotals(s: GameState): Record<StatId, number> {
@@ -50,7 +57,7 @@ export function gearTotals(s: GameState): Record<StatId, number> {
   if (!r?.equipped) return t;
   for (const id of Object.values(r.equipped)) {
     const it = r.inventory.find(i => i.id === id);
-    if (it) for (const a of it.affixes) t[a.stat] += effective(it, a.v);
+    if (it && canWear(s, it)) for (const a of it.affixes) t[a.stat] += affixNow(s, it, a);
   }
   return t;
 }
@@ -63,22 +70,22 @@ export function addItem(s: GameState, it: Item): Item | null {
   inv.push(it);
   let dropped: Item | null = null;
   if (inv.length > invMax(s)) {
-    const cands = inv.filter(i => !isEquipped(s, i) && i.id !== s.heritage).sort((a, b) => score(a) - score(b));
+    const cands = inv.filter(i => !isEquipped(s, i) && i.id !== s.heritage && !i.bound).sort((a, b) => score(a) - score(b));
     if (cands[0]) { dropped = cands[0]; recycle(s, dropped.id); }
   }
-  if (!s.run.equipped[it.slot]) s.run.equipped[it.slot] = it.id; // emplacement vide : équipe d'office
+  if (!s.run.equipped[it.slot] && canWear(s, it)) s.run.equipped[it.slot] = it.id; // emplacement vide : équipe d'office
   return dropped;
 }
 
 export function equip(s: GameState, id: number) {
   const it = s.run.inventory.find(i => i.id === id);
-  if (it) s.run.equipped[it.slot] = id;
+  if (it && canWear(s, it)) s.run.equipped[it.slot] = id;
 }
 
 export function equipBest(s: GameState): number {
   let n = 0;
   for (const { id: slot } of SLOTS) {
-    const best = s.run.inventory.filter(i => i.slot === slot).sort((a, b) => score(b) - score(a))[0];
+    const best = s.run.inventory.filter(i => i.slot === slot && canWear(s, i)).sort((a, b) => score(b, s) - score(a, s))[0];
     if (best && s.run.equipped[slot] !== best.id) { s.run.equipped[slot] = best.id; n++; }
   }
   return n;
@@ -90,7 +97,7 @@ export function recycle(s: GameState, id: number): number {
   const inv = s.run.inventory, i = inv.findIndex(x => x.id === id);
   if (i < 0) return 0;
   const it = inv[i];
-  if (isEquipped(s, it) || it.id === s.heritage) return 0;
+  if (isEquipped(s, it) || it.id === s.heritage || it.bound) return 0;
   inv.splice(i, 1);
   const v = Math.round(recycleValue(it) * (1 + arc(s, 'metal')));
   s.metal += v;

@@ -15,6 +15,7 @@ export interface ShopState {
   passUntil: number;
   passLastDay: string;
   bagBonus: number;
+  eclatsBoost?: boolean;   // Parchemin des Éclats en attente
 }
 
 export const newShop = (): ShopState => ({
@@ -86,7 +87,12 @@ export function grantPack(s: GameState, id: string): boolean {
 }
 
 /** Offre contextuelle à présenter (une seule fois), ex. le Pack du Fief à son déblocage. */
+/** Un pack d'étape est proposé (et visible au Marché) quand sa condition est remplie. */
+export function packUnlocked(s: GameState, p: (typeof PACKS)[number], fiefOpen = true) {
+  if (p.floor) return s.bestFloor >= p.floor;
+  if (p.offer) return p.offer === 'fief' ? fiefOpen : s.seenStory.includes(p.offer);
+  return true;
+}
 export function pendingOffer(s: GameState, fiefOpen: boolean) {
-  return PACKS.find(p => p.offer && !s.shop.offersSeen.includes(p.id) && !s.shop.owned.includes(p.id)
-    && (p.offer === 'fief' ? fiefOpen : s.seenStory.includes(p.offer)));
+  return PACKS.find(p => (p.offer || p.floor) && !s.shop.offersSeen.includes(p.id) && !s.shop.owned.includes(p.id) && packUnlocked(s, p, fiefOpen));
 }

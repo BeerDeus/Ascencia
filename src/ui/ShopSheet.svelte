@@ -5,7 +5,8 @@
   import { BLESSINGS, PACKS, AD_LIMITS, AD_GEMS, BAG_COST, BAG_MAX_BONUS, PARTITION_REFILL_COST, BOUNTY_REROLL_COST, GEM_ICON } from '../game/data/shop';
   import { fiefUnlocked } from '../game/fief';
   import { rewarded } from '../lib/ads.svelte';
-  import { purchase, billingReady } from '../lib/billing';
+  import { purchase, billingReady, billingTest } from '../lib/billing';
+  import { GEM_ITEMS, AUBE_BY_ID } from '../game/data/packs';
   import { fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';
   import { sfxGold, sfxUp } from '../lib/audio';
@@ -25,7 +26,8 @@
   function bless(id: Parameters<typeof Sh.buyBlessing>[1]) { if (act(g => Sh.buyBlessing(g, id))) { sfxUp(); toast('Bénédiction active', 'up'); } }
   async function buy(id: string) {
     if (!billingReady) { toast('Achats disponibles dans l’appli Play Store', 'info'); return; }
-    if (await purchase(id)) act(g => Sh.grantPack(g, id));
+    const p = PACKS.find(x => x.id === id)!;
+    if (await purchase(id, `${p.name} (${p.price})`)) { act(g => E.grantPurchase(g, id)); sfxGold(); toast(`${p.name} reçu !`, 'crit'); }
   }
 </script>
 
@@ -78,15 +80,25 @@
         <button class="btn" disabled={s.gems < BAG_COST || s.shop.bagBonus >= BAG_MAX_BONUS} onclick={() => act(Sh.buyBag) && sfxUp()}><img src={gfx(GEM_ICON)} alt="" />{BAG_COST}</button>
       </div>
 
-      <div class="label">Packs</div>
-      {#each PACKS.filter(p => !(p.once && s.shop.owned.includes(p.id))) as p}
-        <div class="row frame pack">
+      <div class="label">Objets</div>
+      {#each GEM_ITEMS as g}
+        <div class="row frame">
+          <img src={gfx(g.icon)} alt="" />
+          <div class="mi"><b>{g.name}</b><span>{g.desc}{g.id === 'parchemin' && s.shop.eclatsBoost ? ' · déjà actif' : ''}</span></div>
+          <button class="btn" disabled={s.gems < g.cost || (g.id === 'parchemin' && !!s.shop.eclatsBoost) || (g.id === 'retour' && !s.expeditions.length)} onclick={() => act(x => E.buyGemItem(x, g.id)) && sfxUp()}><img src={gfx(GEM_ICON)} alt="" />{g.cost}</button>
+        </div>
+      {/each}
+
+      <div class="label">Packs{billingTest ? ' · mode test (achats simulés)' : ''}</div>
+      {#each PACKS.filter(p => !(p.once && s.shop.owned.includes(p.id)) && Sh.packUnlocked(s, p, fiefUnlocked(s))) as p}
+        <div class="row frame pack" class:aube={!!p.items}>
           <img src={gfx(p.icon)} alt="" />
-          <div class="mi"><b>{p.name}</b><span>{p.desc}</span></div>
+          <div class="mi"><b>{p.name}</b><span>{p.desc}</span>
+            {#if p.items}<span class="pieces">{#each p.items as id}<img src={gfx(AUBE_BY_ID[id].base)} alt="" title={AUBE_BY_ID[id].name} />{/each}<em>liés au compte · boost de départ à chaque vie</em></span>{/if}</div>
           <button class="btn stone" onclick={() => buy(p.id)}>{p.price}</button>
         </div>
       {/each}
-      <p class="note">Les achats réels seront activés dans l’application Android (Google Play). Aucun bonus permanent de puissance n’est vendu.</p>
+      <p class="note">Les achats réels seront activés dans l’application Android (Google Play). Les packs d’étape apparaissent quand vous atteignez leur palier.</p>
     </div>
   </div>
 </div>
@@ -110,5 +122,9 @@
   .mi em { font-style: normal; color: var(--gold); }
   .row .btn { gap: 3px; font-size: 12.5px; padding: 6px 8px; min-width: 70px; }
   .btn img { width: 16px; height: 16px; }
+  .pack.aube { box-shadow: inset 0 0 0 2px var(--ember); }
+  .pieces { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+  .pieces img { width: 22px; height: 22px; object-fit: contain; }
+  .pieces em { font-style: normal; color: var(--ember); font-size: 10.5px; }
   .note { font-size: 11px; color: var(--text-3); margin: 8px 2px; }
 </style>

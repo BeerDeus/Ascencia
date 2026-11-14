@@ -20,6 +20,7 @@ import * as Gd from '../src/game/garden';
 import * as Cr from '../src/game/crafting';
 import * as Ex from '../src/game/expeditions';
 import * as Fo from '../src/game/forge';
+import * as Sh from '../src/game/shop';
 import { MUTATIONS, PLANT_BY_ID } from '../src/game/data/garden';
 import { ZONES } from '../src/game/data/expeditions';
 import { SETS, ORDER_STATS, orderMetal } from '../src/game/data/forge';
@@ -41,7 +42,7 @@ const STALL_ASCEND = 240; // s actives sans nouveau record → Ascension
 
 let wall = Date.UTC(2026, 10, 16, 7, 0, 0);
 setClock(() => wall);
-let seed = 12345;
+let seed = Number(process.env.SEED ?? 12345);
 const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 E.setRandom(rnd);
 
@@ -60,6 +61,16 @@ const between = ([a, b]: number[]) => a + rnd() * (b - a);
 let cps = 6;                       // frappes/s du moment
 const craftLog = { potions: 0, bues: 0, repas: 0, mutations: 0, recoltes: 0, expeditions: 0, commandes: 0, pieces: 0 };
 const firstMutation: Record<string, string> = {};
+// PAYER=aube1 : n'achète que le pack à 0,99 € ; PAYER=tout : achète chaque pack d'étape proposé
+const PAYER = process.env.PAYER ?? '';
+const payLog: string[] = [];
+function buyOffers() {
+  if (!PAYER) return;
+  const o = Sh.pendingOffer(s, Fi.fiefUnlocked(s));
+  if (!o) return;
+  s.shop.offersSeen.push(o.id);
+  if (PAYER === 'tout' || o.id === PAYER) { E.grantPurchase(s, o.id); payLog.push(`${o.id} j${day} ét.${s.bestFloor}`); }
+}
 
 function shop() {
   const st = E.stats(s);
@@ -106,7 +117,7 @@ function gear() {
   const bySet: Record<string, typeof s.run.inventory> = {};
   for (const it of s.run.inventory) if (it.set) (bySet[it.set] ??= []).push(it);
   for (const items of Object.values(bySet)) if (new Set(items.map(i => i.slot)).size >= 2) for (const it of items) I.equip(s, it.id);
-  const best = [...s.run.inventory].sort((a, b) => I.score(b) - I.score(a))[0];
+  const best = s.run.inventory.filter(i => !i.bound).sort((a, b) => I.score(b) - I.score(a))[0];
   if (best) s.heritage = best.id;
 }
 
@@ -306,7 +317,7 @@ function playSession(seconds: number) {
     E.tick(s, DT);
     active += DT; wall += DT * 1000; acc += DT;
     if (acc >= 2) { acc = 0; shop(); }
-    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { gear(); fief(); anchors(); }
+    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { buyOffers(); gear(); fief(); anchors(); }
     if (Math.floor(active) % 120 === 0 && t % 120 < DT) { garden(); workshops(); }
     const evs = E.drainEvents();
     for (const e of evs) if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') { ascend(); }
@@ -323,6 +334,7 @@ function playSession(seconds: number) {
 }
 
 let day = 1;
+const sessionFloors: number[] = [];
 console.log('TUNE', process.env.TUNE ?? '(défaut)');
 console.log(`Profil ${PROFILE} (${P.sessions} × ${P.minutes} min/j, ${P.cps.join('–')} frappes/s, ${P.boss.join('–')} contre les boss), classe ${CLASS}, ${DAYS} jours\n`);
 console.log('jour | actif | record | asc | légende | arcanes | étoiles');
@@ -330,6 +342,7 @@ for (; day <= DAYS; day++) {
   const gap = (16 * 3600) / P.sessions;
   for (let k = 0; k < P.sessions; k++) {
     playSession(P.minutes * 60);
+    if (day === 1) sessionFloors.push(s.bestFloor);
     const off = k === P.sessions - 1 ? 8 * 3600 + (gap - P.minutes * 60) : gap - P.minutes * 60;
     expeditions(off); garden();
     wall += off * 1000;
@@ -341,6 +354,7 @@ for (; day <= DAYS; day++) {
   const stars = Object.values(s.constellations).reduce((a, b) => a + b, 0);
   if ([1, 2, 3, 5, 7, 10, 14, 20, 25, 30, 40, 45, 50, 60, 75, 90, 120].includes(day)) console.log(`${String(day).padStart(4)} | ${h(active).padStart(5)} | ${String(s.bestFloor).padStart(6)} | ${String(s.ascensions).padStart(3)} | ${String(s.legende).padStart(7)} | ${String(Ar.owned(s)).padStart(7)} | ${stars}`);
 }
+console.log('\nJour 1, record à la fin de chaque session :', sessionFloors.join(' → '), PAYER ? `· achats : ${payLog.join(', ')}` : '');
 console.log('\nPremière arrivée :', MARKS.map(m => `${m}→${firstReach[m] ?? '—'}`).join('  '));
 console.log('\nRésonances :\n' + (resLog.join('\n') || '—'));
 console.log('Ancres terminées :', JSON.stringify(anchorDay));

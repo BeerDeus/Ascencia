@@ -91,6 +91,22 @@ PV après 140 : ×1,305 (au lieu de 1,30) ; Harmoniques ×2,7 (au lieu de ×3) ;
 
 Fin de partie au J90 : Chasseur ~70, Jardinier ~50, Alchimiste ~20, Forgeron ~30, Cuisinier ~15 ; 2–3 panoplies complètes.
 
+## Packs d'étape (pay to fast) — ajout du 15/11
+Sets liés au compte, **niveau d'objet fixe** : forts en début de vie, puis dépassés par le butin et la Forge
+(qui fabrique au niveau de l'étage actuel) ; ils reviennent à chaque vie pour réaccélérer le départ.
+
+| Pack | Prix | Apparaît | Contenu |
+|---|---|---|---|
+| Aube | 0,99 € | étage 10 | 2 légendaires niv. 35 + 50 gemmes |
+| Zénith | 2,99 € | 1re Ascension | 3 légendaires niv. 90 (record 50) + 150 gemmes |
+| Crépuscule | 4,99 € | étage 100 | 3 légendaires niv. 160 (record 100) + 300 gemmes |
+| Nuit étoilée | 9,99 € | étage 180 | 4 mythiques niv. 250 (record 180) + 600 gemmes |
+| Résonance | 14,99 € | 1re Résonance | 1 200 gemmes + 10 Fragments |
+
+Effet mesuré (Guerrier engagé, 2 tirages) :
+- Pack de l'Aube seul : **+8 à +9 étages le jour 1** (80/79 contre 71), écart nul vers J10–J14.
+- Tous les packs : +18 étages le jour 1, ~+35 au J10, **aucun écart au J30** (302 / 302).
+
 ## Points à surveiller
 - La 1re Ascension arrive vite (~12–25 min) : bon pour l'accroche, à confirmer en test réel.
 - Le joueur occasionnel progresse ~2× moins vite ; la Constellation *Somnambule* (montée hors-ligne) est son meilleur levier.

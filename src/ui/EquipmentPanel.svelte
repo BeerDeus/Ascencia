@@ -9,11 +9,11 @@
   import { sfxUp, sfxGold } from '../lib/audio';
 
   const s = $derived(G.s);
-  const inv = $derived([...s.run.inventory].sort((a, b) => b.rarity - a.rarity || I.score(b) - I.score(a)));
+  const inv = $derived([...s.run.inventory].sort((a, b) => b.rarity - a.rarity || I.score(b, s) - I.score(a, s)));
   let selId = $state<number | null>(null);
   const sel = $derived(s.run.inventory.find(i => i.id === selId) ?? null);
   const cur = $derived(sel ? I.equippedIn(s, sel.slot) : undefined);
-  const better = (it: Item) => { const e = I.equippedIn(s, it.slot); return !e || (e.id !== it.id && I.score(it) > I.score(e)); };
+  const better = (it: Item) => { const e = I.equippedIn(s, it.slot); return I.canWear(s, it) && (!e || (e.id !== it.id && I.score(it, s) > I.score(e, s))); };
   const N = (x: number) => fmt(x, s.settings.notation);
 
   function equipBest() { const n = act(I.equipBest); toast(n ? `${n} objet(s) équipé(s)` : 'Déjà au mieux', 'up'); }
@@ -54,6 +54,8 @@
           {#if it.plus}<b class="outline">+{it.plus}</b>{/if}
           {#if better(it)}<i class="up">▲</i>{/if}
           {#if it.id === s.heritage}<i class="her">★</i>{/if}
+          {#if it.bound}<i class="bnd">◆</i>{/if}
+          {#if !I.canWear(s, it)}<i class="lock">🔒</i>{/if}
         </button>
       {/each}
       {#if !inv.length}<p class="empty">Rien pour l’instant. Les boss lâchent du butin.</p>{/if}
@@ -68,21 +70,22 @@
         <div>
           <div class="iname" style="color:{RARITIES[sel.rarity].color}">{sel.name}{sel.plus ? ' +' + sel.plus : ''}</div>
           <div class="label">{RARITIES[sel.rarity].name} · {SLOTS.find(x => x.id === sel.slot)?.name} · niv. {sel.ilvl}{sel.set ? ' · panoplie' : ''}</div>
+          {#if sel.bound}<div class="bound">◆ Lié au compte : revient à chaque vie{sel.minFloor ? ` · record ${sel.minFloor} requis` : ''}</div>{/if}
         </div>
       </div>
       <ul>
         {#each sel.affixes as a}
-          {@const v = I.effective(sel, a.v)}
-          {@const other = cur && cur.id !== sel.id ? cur.affixes.filter(x => x.stat === a.stat).reduce((t, x) => t + I.effective(cur, x.v), 0) : null}
+          {@const v = I.affixNow(s, sel, a)}
+          {@const other = cur && cur.id !== sel.id ? cur.affixes.filter(x => x.stat === a.stat).reduce((t, x) => t + I.affixNow(s, cur, x), 0) : null}
           <li>{STATS[a.stat].fmt(v)}{#if other !== null}<em class:pos={v >= other} class:neg={v < other}>{v >= other ? '▲' : '▼'}</em>{/if}</li>
         {/each}
       </ul>
       <div class="acts">
-        {#if !I.isEquipped(s, sel)}<button class="btn" onclick={() => act(g => I.equip(g, sel.id))}>Équiper</button>{/if}
+        {#if !I.isEquipped(s, sel)}<button class="btn" disabled={!I.canWear(s, sel)} onclick={() => act(g => I.equip(g, sel.id))}>{I.canWear(s, sel) ? 'Équiper' : `Record ${sel.minFloor} requis`}</button>{/if}
         <button class="btn sky" disabled={sel.plus >= I.PLUS_MAX || I.upgradeCost(sel) > s.metal} onclick={() => forge(sel)}>
           Forger {sel.plus >= I.PLUS_MAX ? 'max' : '· ' + N(I.upgradeCost(sel))}<img src={gfx('res/metal')} alt="" /></button>
-        <button class="btn stone" onclick={() => act(g => I.setHeritage(g, sel.id))}>{s.heritage === sel.id ? '★ Héritage' : '☆ Héritage'}</button>
-        {#if !I.isEquipped(s, sel) && sel.id !== s.heritage}<button class="btn blood" onclick={() => recycle(sel)}>Recycler +{I.recycleValue(sel)}</button>{/if}
+        {#if !sel.bound}<button class="btn stone" onclick={() => act(g => I.setHeritage(g, sel.id))}>{s.heritage === sel.id ? '★ Héritage' : '☆ Héritage'}</button>{/if}
+        {#if !I.isEquipped(s, sel) && sel.id !== s.heritage && !sel.bound}<button class="btn blood" onclick={() => recycle(sel)}>Recycler +{I.recycleValue(sel)}</button>{/if}
       </div>
       <p class="hint">Héritage : cet objet survit à l’Ascension (1 seul).</p>
     </div>
@@ -103,6 +106,9 @@
   .cell.eq::after { content: 'E'; position: absolute; left: 3px; top: 1px; font-size: 10px; color: var(--gold); }
   .cell b { position: absolute; right: 3px; bottom: 1px; font-size: 11px; color: var(--sky); }
   .up { position: absolute; right: 3px; top: 1px; font-size: 10px; color: var(--moss); font-style: normal; }
+  .bnd { position: absolute; right: 3px; top: 1px; font-size: 10px; color: var(--ember); font-style: normal; }
+  .lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 16px; font-style: normal; }
+  .bound { font-size: 11px; color: var(--ember); }
   .her { position: absolute; left: 3px; bottom: 0; font-size: 11px; color: var(--gold); font-style: normal; }
   .tools { display: flex; align-items: center; gap: 6px; }
   .metal { display: inline-flex; align-items: center; gap: 3px; margin-right: auto; font-weight: 700; color: #b9c2c9; }

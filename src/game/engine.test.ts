@@ -19,6 +19,7 @@ import * as Ex from './expeditions';
 import * as Jb from './jobs';
 import * as Fo from './forge';
 import * as Ec from './echo';
+import { AUBE } from './data/packs';
 import { SETS } from './data/forge';
 import { PLANTS, plantSprite } from './data/garden';
 import { RESOURCES } from './data/resources';
@@ -56,7 +57,7 @@ describe('données', () => {
       ...CLASSES.flatMap(c => [c.icon, c.portrait]), ...Object.values(SPEAKERS).flatMap(s => s.sprite ? [s.sprite] : []),
       'mobs/gobelin_vulnerable', ...ARCANES.map(a => 'cards/' + a.id),
       ...PLANTS.flatMap(p => [1, 2, 3].map(k => plantSprite(p.id, k))), ...Object.values(RESOURCES).map(r => r.sprite),
-      ...SETS.flatMap(d => d.pieces.map(p => p.base)), ...POTIONS.map(p => p.sprite), ...MEALS.map(m => m.sprite), ...ZONES.map(z => z.icon), 'mobs/garden_beetle', 'mobs/garden_worm',
+      ...SETS.flatMap(d => d.pieces.map(p => p.base)), ...AUBE.map(a => a.base), ...POTIONS.map(p => p.sprite), ...MEALS.map(m => m.sprite), ...ZONES.map(z => z.icon), 'mobs/garden_beetle', 'mobs/garden_worm',
     ];
     const missing = sprites.filter(k => !existsSync(gfx(k)));
     expect(missing).toEqual([]);
@@ -338,5 +339,45 @@ describe('moteur', () => {
     const g = Ec.newFight(); Ec.begin(g);
     for (let k = 0; k < 400 && g.phase !== 'lost'; k++) { Ec.tick(g, 0.1, rnd); if (g.phase === 'input') Ec.press(g, (g.seq[g.input] + 1) % 5); }
     expect(g.phase).toBe('lost');
+  });
+
+  it('Packs d’étape : Aube liée au compte, record requis, survit à l’Ascension, niveau fixe', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 12; E.newRun(s, 12);
+    expect(Sh.pendingOffer(s, false)?.id).toBe('aube1');
+    const tap = E.stats(s).tap;
+    expect(E.grantPurchase(s, 'aube1')).toBe(true);
+    expect(E.grantPurchase(s, 'aube1')).toBe(false);          // achat unique
+    expect(s.vault).toHaveLength(2);
+    expect(s.run.equipped.arme).toBe(s.vault[0].id);
+    expect(E.stats(s).tap).toBeGreaterThan(tap * 1.5);
+    expect(I.recycle(s, s.vault[1].id)).toBe(0);              // jamais recyclable
+    // pièces à record minimum : visibles mais pas portables avant le record 50
+    E.grantPurchase(s, 'aube2');
+    const armure = s.vault.find(v => v.slot === 'torse')!;
+    expect(I.canWear(s, armure)).toBe(false);
+    expect(s.run.equipped.torse).not.toBe(armure.id);
+    // l'Ascension rend les pièces et elles suivent l'étage
+    s.bestFloor = 60; s.ascensionUnlocked = true; s.run.maxFloor = 60;
+    E.ascend(s, 'archer');
+    expect(s.run.inventory.filter(i => i.bound)).toHaveLength(5);
+    expect(s.run.equipped.torse).toBe(armure.id);
+    const lame = s.vault[0];
+    const low = I.affixNow(s, lame, lame.affixes[0]);
+    E.newRun(s, 120);
+    expect(I.affixNow(s, lame, lame.affixes[0])).toBe(low);           // niveau fixe : la Forge le dépasse plus haut
+    s.metal = 1e5; for (const [id, n] of Object.entries({ bois: 9, pierre: 9 })) Jb.give(s, id, n);
+    const forged = Fo.order(s, 'arme', 'frappe')!;
+    expect(I.affixNow(s, forged, forged.affixes[0])).toBeGreaterThan(low);
+    // sérialisation : une seule instance (la Forge +1 se retrouve dans le coffre)
+    const back = E.deserialize(E.serialize(s))!;
+    const it = back.run.inventory.find(i => i.id === lame.id)!;
+    back.metal = 1e6; I.upgrade(back, it.id);
+    expect(back.vault.find(v => v.id === lame.id)!.plus).toBe(1);
+    // objets en gemmes
+    s.gems = 500;
+    expect(E.buyGemItem(s, 'parchemin')).toBe(true);
+    expect(E.buyGemItem(s, 'parchemin')).toBe(false);
+    s.run.maxFloor = 100; const g1 = E.ascensionGain(s); s.shop.eclatsBoost = false;
+    expect(g1).toBeGreaterThan(E.ascensionGain(s) * 1.4);
   });
 });
