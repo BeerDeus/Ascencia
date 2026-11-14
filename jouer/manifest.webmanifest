@@ -1,0 +1,17 @@
+{
+  "name": "Ascencia",
+  "short_name": "Ascencia",
+  "description": "RPG incrémental narratif : grimpe, tombe, ascensionne.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16131c",
+  "theme_color": "#16131c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
