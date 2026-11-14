@@ -1,11 +1,11 @@
-# Déploie les règles et index Firestore à chaque modification sur main.
-# Nécessite le secret GitHub FIREBASE_SERVICE_ACCOUNT (clé JSON d'un compte de service).
+# Déploie les règles Firestore et les domaines autorisés d'Auth à chaque modification sur main.
+# Nécessite le secret GitHub FIREBASE_SERVICE_ACCOUNT (clé JSON du compte de service).
 name: Firebase (règles Firestore)
 
 on:
   push:
     branches: [main]
-    paths: [firestore.rules, firestore.indexes.json, firebase.json, .github/workflows/firebase.yml, tools/firebase-auth-domains.mjs]
+    paths: [firestore.rules, .github/workflows/firebase.yml, tools/firebase-deploy.mjs]
   workflow_dispatch:
 
 jobs:
@@ -21,21 +21,16 @@ jobs:
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          if [ -z "$SA" ]; then echo "::warning::Secret FIREBASE_SERVICE_ACCOUNT absent : règles non déployées"; echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ -z "$SA" ]; then echo "::warning::Secret FIREBASE_SERVICE_ACCOUNT absent : rien n'est déployé"; echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
           echo "ok=true" >> "$GITHUB_OUTPUT"
-      - name: Déployer les règles
-        if: steps.key.outputs.ok == 'true'
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx -y firebase-tools@15 deploy --only firestore:rules,firestore:indexes --project ascencia-app-off --non-interactive
-      - name: Domaines autorisés (Firebase Auth)
+      - name: Déployer
         if: steps.key.outputs.ok == 'true'
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
         run: |
-          mkdir -p "$RUNNER_TEMP/fa" && cp tools/firebase-auth-domains.mjs "$RUNNER_TEMP/fa/"
-          cd "$RUNNER_TEMP/fa" && npm init -y >/dev/null && npm i --silent google-auth-library@9
-          node firebase-auth-domains.mjs
+          mkdir -p "$RUNNER_TEMP/fb" && cp tools/firebase-deploy.mjs firestore.rules "$RUNNER_TEMP/fb/"
+          cd "$RUNNER_TEMP/fb" && npm init -y >/dev/null && npm i --silent google-auth-library@9
+          node firebase-deploy.mjs firestore.rules
       - if: always()
         run: rm -f "$RUNNER_TEMP/sa.json"

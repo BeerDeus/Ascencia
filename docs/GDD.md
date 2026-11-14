@@ -470,3 +470,6 @@ Le dossier `assets/` est un **pack** : on pioche ce qui sert, on ne cherche pas 
 - **Play Store** : compte personnel (test fermé 12 testeurs × 14 j avant prod).
 - **Rythme** : Résonance ≈ 1 mois, fin de l'histoire ≈ 2–3 mois.
 - **Site** : ascencia.manaorbit.app (Hostinger, déployé depuis la branche `hostinger`).
+
+## 22. À discuter
+- **Jardin** (demande du 14/11) : un vrai système de plantations à terme (semis, croissance en temps réel, saisons, croisements, récoltes utilisées par Alaric/Gaston, Graine-Cœur d'Yggdrasil). À concevoir ensemble avant développement — sprites dispo : `garden/plants` (12 plantes × 3 stades), `garden/seasons`.
