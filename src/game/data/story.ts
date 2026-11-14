@@ -67,6 +67,7 @@ export const SCENES: Scene[] = [
   { id: 'boss:50', lines: [
     { who: 'larry', text: 'Ah, mon petit jouet. Tu as bien grandi.' },
     { who: 'larry', text: 'Tu joues encore la vieille mélodie. C’est ennuyeux. Laisse-moi t’apprendre un nouveau rythme.' },
+    { who: 'narrateur', text: 'La chimère se referme sur chaque blessure. Cette fois, frapper ne suffira pas.' },
   ] },
   { id: 'defeat:chef_doeuvre', title: 'La défaite', lines: [
     { who: 'narrateur', text: 'Larry disparaît dans un éclat de rire. Son chef-d’œuvre de chair et de cristal vous laisse pour mort.' },

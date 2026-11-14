@@ -97,6 +97,8 @@ describe('moteur', () => {
     for (let i = 0; i < 200; i++) E.tick(s, 0.1);
     expect(s.ascensionUnlocked).toBe(true);
     expect(s.run.farming).toBe(true);
+    E.challengeBoss(s);                                   // pas de mur : le second essai est un vrai boss
+    expect(Number.isFinite(s.run.monster.hp)).toBe(true);
     const gain = E.ascend(s, 'mage');
     expect(gain).toBe(12);
     expect(s.legende).toBe(12);

@@ -185,7 +185,8 @@ function spawnBoss(s: GameState): Monster {
   if (r.floor === SEUIL_HARMONIQUE.floor && certitude(s) < 1)
     log(s, 'fail', `La Certitude du Gardien absorbe ${Math.round((1 - certitude(s)) * 100)} % de vos coups. Votre légende ne pèse pas encore assez.`);
   if (sb) {
-    if (sb.id === 'chef_doeuvre' && s.ascensions === 0) {
+    // défaite scénarisée une seule fois (elle débloque l'Ascension) ; ensuite, boss normal (PV ×2)
+    if (sb.id === 'chef_doeuvre' && s.ascensions === 0 && !s.ascensionUnlocked) {
       r.scriptedDefeat = true;
       r.bossTime = 15;
       return { sprite: sb.sprite, name: sb.name, kind: 'boss', hp: Infinity, maxHp: Infinity, story: sb.id };
@@ -756,7 +757,7 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
       const f = r.floor, sb = storyBossAt(f);
       const bHp = F.bossHp(f) * (sb?.hpMult ?? 1) * bossHpMult(s);
       const bDmg = dmg * (f === SEUIL_HARMONIQUE.floor ? certitude(s) : 1);
-      if (bHp / bDmg > st.bossTime || (sb?.id === 'chef_doeuvre' && s.ascensions === 0)) break;
+      if (bHp / bDmg > st.bossTime || (sb?.id === 'chef_doeuvre' && s.ascensions === 0 && !s.ascensionUnlocked)) break;
       const t = F.MOBS_PER_FLOOR * (F.mobHp(f) / dmg + 0.4) + bHp / bDmg;
       if (t > left) break;
       left -= t;
