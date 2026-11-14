@@ -1,0 +1,20 @@
+# Vérifie chaque push : compilation du site complet + tests.
+# La mise en ligne est faite par Hostinger (build depuis GitHub : `npm run build`, dossier `dist`).
+name: Vérifications
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test

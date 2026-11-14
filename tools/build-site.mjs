@@ -1,10 +1,9 @@
-// Compose le site déployé : site/ (vitrine) + dist/ (jeu (PWA) sous /jouer/) + images utilisées.
-import { cpSync, rmSync, mkdirSync, existsSync } from 'node:fs';
-const OUT = 'site-dist';
-rmSync(OUT, { recursive: true, force: true });
-mkdirSync(OUT);
+// Compose le site publié dans dist/ : vitrine (site/) à la racine, jeu (PWA) déjà compilé dans dist/jouer/.
+// Hostinger publie dist/ tel quel ; Capacitor embarque uniquement dist/jouer/.
+import { cpSync, existsSync, readdirSync, rmSync } from 'node:fs';
+const OUT = 'dist';
+if (!existsSync(`${OUT}/jouer/index.html`)) throw new Error('Jeu absent : lancer "vite build" avant.');
+for (const f of readdirSync(OUT)) if (f !== 'jouer') rmSync(`${OUT}/${f}`, { recursive: true, force: true });
 cpSync('site', OUT, { recursive: true });
-if (!existsSync('dist/index.html')) throw new Error('Lancer "npm run build" avant.');
-cpSync('dist', `${OUT}/jouer`, { recursive: true });
-cpSync('dist/favicon.png', `${OUT}/favicon.png`);
-console.log(`[site] prêt -> ${OUT}/`);
+cpSync(`${OUT}/jouer/favicon.png`, `${OUT}/favicon.png`);
+console.log('[site] vitrine + jeu prêts -> dist/ (jeu sous /jouer/)');
