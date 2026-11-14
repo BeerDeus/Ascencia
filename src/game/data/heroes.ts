@@ -43,9 +43,9 @@ export const MILESTONE_TITLES = ['Initié', 'Aguerri', 'Vétéran', 'Expert', 'M
 export interface ClassDef { id: ClassId; name: string; icon: string; portrait: string; style: string; perks: string[] }
 export const CLASSES: ClassDef[] = [
   { id: 'guerrier', name: 'Guerrier', icon: 'classes/guerrier', portrait: 'portraits/guerrier', style: 'Actif · Frappe',
-    perks: ['Frappe ×1,5', 'Ferveur ×1,5 plus rapide', 'Rage : tous les 100 coups, un coup lourd ×25'] },
+    perks: ['Frappe ×2', 'Ferveur ×1,5 plus rapide', 'Rage : tous les 100 coups, un coup lourd ×40'] },
   { id: 'archer', name: 'Archer', icon: 'classes/archer', portrait: 'portraits/archer', style: 'Critique · Idle',
-    perks: ['+8 % chance de critique', 'Tirs automatiques (2/s, +1 tous les 100 niveaux)', 'Dégâts critiques ×1,5'] },
+    perks: ['+8 % chance de critique', 'Tirs automatiques (1/s, +1 tous les 150 niveaux)', 'Dégâts critiques ×1,3'] },
   { id: 'mage', name: 'Mage', icon: 'classes/mage', portrait: 'portraits/mage', style: 'Burst · Partitions',
     perks: ['Mana max +50, régénération ×2', 'Effets des Partitions +50 %', 'Trille Foudroyant ×2'] },
 ];

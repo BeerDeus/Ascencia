@@ -376,38 +376,21 @@ Principe : **le temps s'achète, la puissance non** (aucun stat exclusif payant,
 
 ---
 
-## 17. Économie & formules (v0, à affiner)
-
-Valeurs de départ testées avec `tools/balance_sim.py` (modèle simplifié : Frappe + Compagnons, sans équipement/Arcanes/Fief).
+## 17. Économie & formules
+Réglages centralisés dans `src/game/tuning.ts`, validés par simulation (`tools/balance.ts`).
+Méthode, problèmes corrigés et résultats détaillés : **[docs/EQUILIBRAGE.md](EQUILIBRAGE.md)**.
 
 ```
-PV monstre(e)   = 10 × 1.34^(e−1)            (e ≤ 140)
-                  … × 1.22^(e−140)           (e > 140)
+PV monstre(e)   = 10 × 1.34^(e−1) (e ≤ 140), puis × 1.30 par étage
 PV boss         = 8 × PV(e) ; Volonté = 30 s
 Or / monstre    = 10 % des PV ; boss = ×1,5
-Recrutement(k)  = 40 × 8^k        DPS base(k) = 3 × 6.2^k
-Coût niveau     = recrutement × 1.075^niv
-Paliers         = ×2.5 (10…150), ×3 (200…1000)
-Frappe niv      = 5 × 1.07^niv
-Éclats(e)       = 3 × (e/30) × 1.03^(e−30)   (e ≥ 30)
-Légende         = +5 % dégâts par Éclat cumulé
+Compagnon k     = recrutement 40 × 8^k ; DPS de base 3 × 3.5^k ; niveau ×1,075 ; paliers ×2,5 puis ×3
+Frappe niv      = coût 5 × 1.07^niv
+Éclats(e)       = 0.12 × (e/10)^2.5   (e ≥ 30)
+Légende         = +3 % dégâts par Éclat cumulé
+Seuil (180)     = part des dégâts qui passe = (Légende / 4000)^1.5
 ```
-
-**Rythme obtenu (jeu actif cumulé, simulation)** :
-| Ascension | Étage max | Temps cumulé |
-|---|---|---|
-| 0 (forcée à 50 par l'histoire) | ~50 | ~50 min |
-| 2 | ~104 | ~5,5 h |
-| 5 | ~162 | ~9 h |
-| 7 | ~230 | ~12 h |
-| 9–13 | **plafonne à ~290–310** | 14–19 h |
-
-→ Le plafond naturel tombe pile sur le **Noyau du Silence (300)**, là où l'histoire impose la Résonance. 
-Cible calendrier (avec idle, ~30–60 min actives/jour) : **Résonance ≈ J+20–30**, **fin de l'histoire (400) ≈ 2–3 mois**, puis infini.
-
-À faire en implémentation : simulateur complet (équipement, Arcanes, Partitions, idle vs actif) + télémétrie en test fermé.
-
----
+Rythme simulé (joueur engagé, 48 min/j) : étage 100 à J3, Seuil 180 à J12, ~290 à J30.
 
 ## 18. Technique
 

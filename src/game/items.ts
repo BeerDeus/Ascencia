@@ -1,6 +1,7 @@
 // Logique d'équipement : génération, bonus, Forge, Héritage.
 import type { GameState, Item } from './types';
 import { arc } from './arcanes';
+import { T } from './tuning';
 import { BASES, EPITHETS, RARITIES, SECONDARY, SLOTS, SLOT_PRIMARY, STATS, type Slot, type StatId } from './data/items';
 
 export const INVENTORY_MAX = 40;
@@ -12,7 +13,7 @@ export function lootUnlocked(s: GameState) { return s.bestFloor > 10 || s.ascens
 
 export function affixValue(stat: StatId, ilvl: number, rarity: number, roll: number) {
   const d = STATS[stat];
-  return d.base * (d.scales ? 1 + ilvl / 8 : 1) * RARITY_MULT[rarity] * roll;
+  return d.base * (d.scales ? T.gearBase * (1 + ilvl / T.gearIlvlDiv) : 1) * RARITY_MULT[rarity] * roll;
 }
 export const effective = (it: Item, v: number) => v * (1 + 0.12 * it.plus);
 

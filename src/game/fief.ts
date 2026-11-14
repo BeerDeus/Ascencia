@@ -1,4 +1,5 @@
 // Fief : Primes quotidiennes (Tableau de la garde) et Auberge de Gaston.
+import { now } from './clock';
 import type { GameState } from './types';
 import { BOUNTY_TYPES, MEALS, MEAL_BY_ID, FIEF_UNLOCK, type Counter, type MealDef } from './data/fief';
 import { mobGold } from './formulas';
@@ -7,7 +8,7 @@ export interface Bounty { c: Counter; target: number; reward: { kind: 'or' | 'me
 export interface Daily { day: string; c: Record<Counter, number>; bounties: Bounty[]; chestClaimed: boolean; streak: number }
 
 export const fiefUnlocked = (s: GameState) => s.bestFloor >= FIEF_UNLOCK || s.ascensions > 0;
-export function dayKey(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+export function dayKey(d = new Date(now())) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 const emptyCounters = (): Record<Counter, number> => ({ kills: 0, bosses: 0, taps: 0, golden: 0, partitions: 0, loot: 0 });
 
 function seeded(seed: string) {
@@ -21,7 +22,7 @@ export function rollDaily(s: GameState, day: string): Daily {
   const types = [...BOUNTY_TYPES].sort(() => r() - 0.5).slice(0, 3);
   const kinds: Bounty['reward']['kind'][] = s.ascensions > 0 ? ['or', 'metal', 'eclats'] : ['or', 'metal', 'or'];
   const prevDay = s.daily?.day;
-  const yesterday = dayKey(new Date(Date.now() - 86400000));
+  const yesterday = dayKey(new Date(now() - 86400000));
   const streak = prevDay === yesterday && s.daily?.chestClaimed ? (s.daily.streak ?? 0) + 1 : prevDay === day ? s.daily.streak : 0;
   return {
     day, c: emptyCounters(), chestClaimed: false, streak,
@@ -57,7 +58,7 @@ export function claimBounty(s: GameState, i: number): boolean {
 export const chestReady = (s: GameState) => !!s.daily && !s.daily.chestClaimed && s.daily.bounties.every(b => b.claimed);
 
 // ---- Auberge
-export const mealActive = (s: GameState): MealDef | null => (s.meal && s.meal.until > Date.now() ? MEAL_BY_ID[s.meal.id] : null);
+export const mealActive = (s: GameState): MealDef | null => (s.meal && s.meal.until > now() ? MEAL_BY_ID[s.meal.id] : null);
 export const mealCost = (s: GameState, m: MealDef) => mobGold(s.run.floor) * m.costKills;
 export const mealUnlocked = (s: GameState, m: MealDef) => s.bestFloor >= m.unlock;
 export function eat(s: GameState, id: string): boolean {
@@ -66,7 +67,7 @@ export function eat(s: GameState, id: string): boolean {
   const c = mealCost(s, m);
   if (c > s.run.gold) return false;
   s.run.gold -= c;
-  s.meal = { id, until: Date.now() + m.hours * 3600_000 };
+  s.meal = { id, until: now() + m.hours * 3600_000 };
   return true;
 }
 export { MEALS };

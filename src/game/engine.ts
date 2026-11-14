@@ -1,5 +1,7 @@
+import { now } from './clock';
 import type { ClassId, GameEvent, GameState, Monster, RunState, ChronicleKind } from './types';
 import * as F from './formulas';
+import { T } from './tuning';
 import { COMPANIONS, PARTITIONS, MILESTONE_TITLES, MILESTONES } from './data/heroes';
 import { actFor, monsterName, storyBossAt, SEUIL_HARMONIQUE } from './data/world';
 import { STAR_BY_ID, starCost } from './data/constellations';
@@ -28,7 +30,7 @@ const pick = <T,>(a: T[]): T => a[Math.floor(rnd() * a.length)];
 // ---------------------------------------------------------------- création
 export function newGame(): GameState {
   const s: GameState = {
-    version: SAVE_VERSION, time: 0, lastSave: Date.now(), classId: null,
+    version: SAVE_VERSION, time: 0, lastSave: now(), classId: null,
     run: null as unknown as RunState,
     eclats: 0, legende: 0, ascensions: 0, ascensionUnlocked: false, bestFloor: 1,
     mastery: { guerrier: 0, archer: 0, mage: 0 },
@@ -89,21 +91,21 @@ export function stats(s: GameState): Stats {
   let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0));
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) : 0;
-  let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (c === 'guerrier' ? 1.5 : 1);
+  let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (c === 'guerrier' ? 2 : 1);
   if (r && active(s, 'crescendo')) tapMult *= 1 + 2 * power;
-  if (r && s.time < r.crescendoUntil) tapMult *= 2;
+  if (r && s.time < r.crescendoUntil) tapMult *= T.crescendoMult;
   const share = 0.03 + star(s, 'meute_frappe');
   const tap = ((r ? F.frappeBase(r.heroLevel) : 1) * tapMult + share * comp) * global;
-  const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < SEUIL_HARMONIQUE.legende;
+  const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < T.seuilLegende;
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
     critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
-    critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (c === 'archer' ? 1.5 : 1),
+    critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (c === 'archer' ? 1.3 : 1),
     goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (c === 'mage' ? 2 : 1),
-    bossTime: Math.round((F.BOSS_TIME + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0)) * 10) / 10,
-    autoTaps: (c === 'archer' ? 2 + Math.floor((r?.heroLevel ?? 0) / 100) : 0) + (r && active(s, 'staccato') ? 10 * power : 0),
+    bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0)) * 10) / 10,
+    autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0),
   };
 }
 
@@ -135,6 +137,11 @@ function spawnMob(s: GameState): Monster {
   return { sprite, name: monsterName(sprite), kind: 'mob', hp, maxHp: hp };
 }
 
+/** Part des dégâts qui traverse la Certitude du Gardien Harmonique (1 = tout passe). */
+export function certitude(s: GameState): number {
+  return Math.min(1, (s.legende / T.seuilLegende) ** 1.5);
+}
+
 export const bossHpMult = (s: GameState) => 1 - Math.min(0.5, arc(s, 'bosshp'));
 
 function spawnBoss(s: GameState): Monster {
@@ -142,6 +149,8 @@ function spawnBoss(s: GameState): Monster {
   r.bossTime = st.bossTime;
   r.bossAttackIn = 6 + rnd() * 4;
   story(s, `boss:${r.floor}`);
+  if (r.floor === SEUIL_HARMONIQUE.floor && certitude(s) < 1)
+    log(s, 'fail', `La Certitude du Gardien absorbe ${Math.round((1 - certitude(s)) * 100)} % de vos coups. Votre légende ne pèse pas encore assez.`);
   if (sb) {
     if (sb.id === 'chef_doeuvre' && s.ascensions === 0) {
       r.scriptedDefeat = true;
@@ -160,7 +169,7 @@ function spawnBoss(s: GameState): Monster {
 export function damage(s: GameState, amount: number, crit = false, isTap = false) {
   const m = s.run.monster;
   if (!m || m.hp <= 0) return;
-  if (m.kind === 'boss' && stats(s).seuilBlocked) amount *= 0.001; // bouclier de Certitude
+  if (m.kind === 'boss' && s.run.floor === SEUIL_HARMONIQUE.floor) amount *= certitude(s); // la Certitude du Gardien absorbe les coups
   m.hp -= amount;
   emit({ type: 'hit', amount, crit, tap: isTap });
   if (m.hp <= 0) kill(s);
@@ -178,17 +187,17 @@ export function tap(s: GameState) {
   r.tapsTotal++; s.stats.taps++; Fi.count(s, 'taps');
   r.lastTapAt = s.time;
   if (s.time >= r.crescendoUntil) {
-    r.ferveur += (s.classId === 'guerrier' ? 6 : 4) * (1 + arc(s, 'ferveur'));
+    r.ferveur += (s.classId === 'guerrier' ? T.ferveurGainWar : T.ferveurGain) * (1 + arc(s, 'ferveur'));
     if (r.ferveur >= 100) {
       r.ferveur = 0;
-      r.crescendoUntil = s.time + 10 + star(s, 'glaive_ferveur');
+      r.crescendoUntil = s.time + T.crescendoDur + star(s, 'glaive_ferveur');
       emit({ type: 'crescendo' });
       log(s, 'crit', 'CRESCENDO ! La Ferveur double vos frappes.');
     }
   }
   if (s.classId === 'guerrier' && r.tapsTotal % 100 === 0) {
     emit({ type: 'heavy' });
-    rollTap(s, st, 25);
+    rollTap(s, st, 40);
     return;
   }
   rollTap(s, st);
@@ -287,7 +296,7 @@ function bossFailed(s: GameState) {
     log(s, 'fail', `${m.name} vous écrase. L'Ascension est désormais possible.`);
   } else {
     log(s, 'fail', `Votre Volonté flanche face à ${m.name}. Repli à l'entraînement.`);
-    if (r.floor === SEUIL_HARMONIQUE.floor && s.legende < SEUIL_HARMONIQUE.legende) story(s, 'seuil');
+    if (r.floor === SEUIL_HARMONIQUE.floor && s.legende < T.seuilLegende) story(s, 'seuil');
     else larry(s, LARRY_ON.bossFail, 0.5);
   }
   r.farming = true;
@@ -314,7 +323,7 @@ export function tick(s: GameState, dt: number) {
   const st = stats(s);
 
   r.mana = Math.min(st.manaMax, r.mana + st.manaRegen * dt);
-  if (s.time - r.lastTapAt > 1 && r.ferveur > 0) r.ferveur = Math.max(0, r.ferveur - 20 * dt);
+  if (s.time - r.lastTapAt > 1 && r.ferveur > 0) r.ferveur = Math.max(0, r.ferveur - T.ferveurDecay * dt);
 
   // dégâts continus (compagnons + tirs auto)
   if (st.dps > 0) damage(s, st.dps * dt);
@@ -477,9 +486,9 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
     while (left > 0 && floors < 2000) {
       const f = r.floor, sb = storyBossAt(f);
       const bHp = F.bossHp(f) * (sb?.hpMult ?? 1) * bossHpMult(s);
-      if (bHp / dmg > st.bossTime || (sb?.id === 'chef_doeuvre' && s.ascensions === 0)) break;
-      if (f === SEUIL_HARMONIQUE.floor && s.legende < SEUIL_HARMONIQUE.legende) break;
-      const t = F.MOBS_PER_FLOOR * (F.mobHp(f) / dmg + 0.4) + bHp / dmg;
+      const bDmg = dmg * (f === SEUIL_HARMONIQUE.floor ? certitude(s) : 1);
+      if (bHp / bDmg > st.bossTime || (sb?.id === 'chef_doeuvre' && s.ascensions === 0)) break;
+      const t = F.MOBS_PER_FLOOR * (F.mobHp(f) / dmg + 0.4) + bHp / bDmg;
       if (t > left) break;
       left -= t;
       gold += (F.MOBS_PER_FLOOR * F.mobGold(f) + F.bossGold(f)) * st.goldMult;
@@ -500,7 +509,7 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
 
 // ---------------------------------------------------------------- sauvegarde
 export function serialize(s: GameState): string {
-  s.lastSave = Date.now();
+  s.lastSave = now();
   return JSON.stringify(s, (_k, v) => (v === Infinity ? '__inf' : v));
 }
 export function deserialize(json: string): GameState | null {

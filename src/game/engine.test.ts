@@ -50,7 +50,8 @@ describe('formules', () => {
   it('courbes', () => {
     expect(mobHp(1)).toBe(10);
     expect(eclatsFor(29)).toBe(0);
-    expect(eclatsFor(50)).toBe(9);
+    expect(eclatsFor(50)).toBe(6);
+    expect(eclatsFor(100)).toBe(37);
     expect(geomMax(10, 1.07, geomSum(10, 1.07, 7) + 0.01)).toBe(7);
     expect(fmt(1234)).toBe('1.23K');
     expect(fmt(1e15)).toBe('1.00aa');
@@ -79,8 +80,8 @@ describe('moteur', () => {
     expect(s.ascensionUnlocked).toBe(true);
     expect(s.run.farming).toBe(true);
     const gain = E.ascend(s, 'mage');
-    expect(gain).toBe(15);
-    expect(s.legende).toBe(15);
+    expect(gain).toBe(12);
+    expect(s.legende).toBe(12);
     expect(s.run.floor).toBe(1);
     expect(E.buyStar(s, 'glaive_frappe')).toBe(true);
   });

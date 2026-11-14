@@ -1,25 +1,23 @@
-// Formules d'économie (cf. docs/GDD.md §17 et tools/balance_sim.py)
+// Formules d’économie (réglages : tuning.ts ; méthode : docs/EQUILIBRAGE.md)
 import { MILESTONES } from './data/heroes';
+import { T } from './tuning';
 
 export const MOBS_PER_FLOOR = 10;
-export const BOSS_HP_MULT = 8;
-export const BOSS_TIME = 30;
-export const GOLD_RATIO = 0.1;
 export const HERO_COST_BASE = 5;
 export const HERO_COST_GROWTH = 1.07;
 export const COMP_COST_GROWTH = 1.075;
 
 export function mobHp(floor: number): number {
-  return 10 * 1.34 ** Math.min(floor - 1, 139) * 1.22 ** Math.max(floor - 140, 0);
+  return T.hpBase * T.hpGrowth1 ** Math.min(floor - 1, T.hpBreak - 1) * T.hpGrowth2 ** Math.max(floor - T.hpBreak, 0);
 }
 export function bossHp(floor: number): number {
-  return mobHp(floor) * BOSS_HP_MULT;
+  return mobHp(floor) * T.bossHpMult;
 }
 export function mobGold(floor: number): number {
-  return Math.max(1, mobHp(floor) * GOLD_RATIO);
+  return Math.max(1, mobHp(floor) * T.goldRatio);
 }
 export function bossGold(floor: number): number {
-  return bossHp(floor) * GOLD_RATIO * 1.5;
+  return bossHp(floor) * T.goldRatio * 1.5;
 }
 
 // --- Héros (Frappe)
@@ -31,8 +29,8 @@ export function heroCost(level: number, n = 1): number {
 }
 
 // --- Compagnons
-export function compRecruit(i: number): number { return 40 * 8 ** i; }
-export function compBaseDps(i: number): number { return 3 * 6.2 ** i; }
+export function compRecruit(i: number): number { return 40 * T.compCostGrowth ** i; }
+export function compBaseDps(i: number): number { return 3 * T.compDpsGrowth ** i; }
 export function milestoneMult(level: number): number {
   let m = 1;
   for (const t of MILESTONES) if (level >= t) m *= t < 200 ? 2.5 : 3;
@@ -51,10 +49,13 @@ export function compCost(i: number, level: number, n = 1, discount = 0): number 
 
 // --- Prestige
 export function eclatsFor(maxFloor: number): number {
-  return maxFloor < 30 ? 0 : Math.floor(3 * (maxFloor / 30) * 1.03 ** (maxFloor - 30));
+  if (maxFloor < T.eclatsMin) return 0;
+  return T.eclatsMode === 'exp'
+    ? Math.floor(T.eclatsK * (maxFloor / 30) * T.eclatsExp ** (maxFloor - 30))
+    : Math.floor(T.eclatsK * (maxFloor / 10) ** T.eclatsPow);
 }
 export function legendeMult(legende: number): number {
-  return 1 + 0.05 * legende;
+  return 1 + T.legendPer * legende;
 }
 export function masteryLevel(xp: number): number {
   return Math.floor(Math.sqrt(xp / 20));

@@ -5,6 +5,7 @@
   import { actFor, SEUIL_HARMONIQUE } from '../game/data/world';
   import { RARITIES } from '../game/data/items';
   import { fmt } from '../game/format';
+  import { T } from '../game/tuning';
   import { gfx } from '../lib/gfx';
   import { unlockAudio } from '../lib/audio';
 
@@ -19,7 +20,7 @@
   const parryOpen = $derived(r.parryUntil > 0 && s.time <= r.parryUntil);
   const crescendo = $derived(s.time < r.crescendoUntil);
   const goldenLeft = $derived(m.kind === 'golden' && m.fleeAt ? Math.max(0, m.fleeAt - s.time) : 0);
-  const certitude = $derived(r.floor === SEUIL_HARMONIQUE.floor && m.kind === 'boss' && s.legende < SEUIL_HARMONIQUE.legende);
+  const certitude = $derived(r.floor === SEUIL_HARMONIQUE.floor && m.kind === 'boss' && E.certitude(s) < 1);
   const N = (x: number) => fmt(x, s.settings.notation);
 
   type Pop = { id: number; x: number; y: number; text: string; cls: string; color?: string };
@@ -111,7 +112,7 @@
     {#if m.kind === 'boss'}
       <div class="line sub"><span>Volonté</span><span>{Math.max(0, r.bossTime).toFixed(1)} s</span></div>
       <div class="bar will"><i style="width:{Math.max(0, r.bossTime / st.bossTime) * 100}%"></i></div>
-      {#if certitude}<div class="seuil">Bouclier de Certitude — Poids de Légende {Math.floor((s.legende / SEUIL_HARMONIQUE.legende) * 100)} %</div>{/if}
+      {#if certitude}<div class="seuil">Certitude du Gardien : {Math.round((1 - E.certitude(s)) * 100)} % de vos coups absorbés · Légende {Math.floor((s.legende / T.seuilLegende) * 100)} %</div>{/if}
     {:else if m.kind === 'golden'}
       <div class="line sub"><span>Il s’enfuit !</span><span>{goldenLeft.toFixed(1)} s</span></div>
       <div class="bar will golden"><i style="width:{(goldenLeft / 6) * 100}%"></i></div>
