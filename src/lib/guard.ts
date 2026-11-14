@@ -1,3 +1,4 @@
+import { buzz } from './native';
 // Protège une fenêtre contre les frappes « en rafale » : elle ignore les touches pendant `ms` après son apparition.
 export function guard(node: HTMLElement, ms = 600) {
   node.style.pointerEvents = 'none';
@@ -9,7 +10,7 @@ export function guard(node: HTMLElement, ms = 600) {
 export function longpress(node: HTMLElement, cb: () => void) {
   let t: ReturnType<typeof setTimeout> | undefined, fired = false, x = 0, y = 0;
   const clear = () => { clearTimeout(t); t = undefined; };
-  const down = (e: PointerEvent) => { fired = false; x = e.clientX; y = e.clientY; clear(); t = setTimeout(() => { fired = true; t = undefined; cb(); }, 450); };
+  const down = (e: PointerEvent) => { fired = false; x = e.clientX; y = e.clientY; clear(); t = setTimeout(() => { fired = true; t = undefined; buzz('light'); cb(); }, 450); };
   const move = (e: PointerEvent) => { if (t && Math.hypot(e.clientX - x, e.clientY - y) > 12) clear(); };
   const click = (e: MouseEvent) => { if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; } };
   node.addEventListener('pointerdown', down);

@@ -73,7 +73,7 @@
       <span>Le combat continue en arrière-plan (dégâts automatiques).</span>
     </div>
     <div class="acts">
-      <button class="btn blood" onclick={() => (ui.tab = 'chronique')}><img src={gfx('icons/combat')} alt="" />Combat</button>
+      <button class="btn blood" onclick={() => (ui.tab = 'compagnons')}><img src={gfx('icons/combat')} alt="" />Combat</button>
       <button class="btn" onclick={harvestAll}>Tout récolter</button>
       <button class="btn stone" onclick={() => (herbier = true)}>Herbier {s.garden.known.length}/{PLANTS.length}</button>
     </div>

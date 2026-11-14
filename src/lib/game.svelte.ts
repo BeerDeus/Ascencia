@@ -20,7 +20,7 @@ export const G = $state<{ s: GameState }>({ s: E.newGame() });
 
 export const ui = $state({
   ready: false,
-  tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
+  tab: 'compagnons' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
   heroTab: 'heros' as 'heros' | 'sac' | 'hf',
   ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
   atelier: 'alchimie' as 'alchimie' | 'forge',
