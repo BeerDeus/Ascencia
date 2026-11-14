@@ -110,8 +110,8 @@
 
   {#if stand}
     <button class="stand" class:urgent={standLeft < 6 * 3600} onpointerdown={stop(() => (ui.offer = stand))} aria-label="Offre : {stand.name}">
-      <span class="tag">Toujours là !</span>
-      <img src={gfx(stand.icon)} alt="" />
+      <span class="medal"><img src={gfx(stand.icon)} alt="" /><i class="shine"></i></span>
+      <span class="price">{stand.price.replace(' €', '')}<b class="eur">€</b></span>
       <span class="timer outline">{left(standLeft)}</span>
     </button>
   {/if}
@@ -160,7 +160,7 @@
   .waves img { width: 18px; height: 18px; margin-left: 3px; filter: grayscale(1) brightness(.5); }
   .waves img.on { filter: none; animation: throb .6s steps(2) infinite; }
   @keyframes throb { 50% { transform: scale(1.2); } }
-  .echo.low { top: 130px; }
+  .echo.low { top: 88px; }
   .echo { position: absolute; top: 38px; left: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; animation: call 1s steps(2) infinite; }
   @keyframes call { 50% { filter: brightness(1.3); } }
   .challenge { position: absolute; top: 38px; right: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; }
@@ -182,16 +182,25 @@
   .pop.loot { font-size: 14px; }
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
-  .stand { position: absolute; top: 34px; left: 6px; z-index: 6; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 1px;
-    padding: 3px 2px 2px; background: rgba(22,19,28,.82); border: 2px solid var(--gold); box-shadow: 0 0 0 2px var(--ink-0), 0 0 12px rgba(230,182,74,.55);
-    animation: standPulse 1.4s steps(4) infinite; }
-  .stand img { width: 42px; height: 42px; object-fit: contain; animation: standBob 1.4s steps(2) infinite; }
-  .stand .tag { font-size: 9px; font-weight: 700; color: var(--gold-hi); line-height: 1; white-space: nowrap; }
-  .stand .timer { font-size: 12px; font-weight: 700; color: #fff; line-height: 1; }
-  .stand.urgent { border-color: var(--blood); box-shadow: 0 0 0 2px var(--ink-0), 0 0 14px rgba(200,60,60,.7); }
+  /* offre en vitrine : petit médaillon discret, reflet + balancement toutes les 6 s */
+  .stand { position: absolute; top: 32px; left: 6px; z-index: 6; display: flex; flex-direction: column; align-items: center; animation: float 1.6s ease-in-out infinite; }
+  .stand .medal { animation: nudge 4s infinite, halo 1.6s ease-in-out infinite; }
+  .eur { font-family: system-ui, Roboto, sans-serif; font-weight: 800; font-size: 11px; margin-left: 2px; }
+  .medal { position: relative; width: 40px; height: 40px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, rgba(247,218,139,.28), rgba(22,19,28,.85) 70%);
+    box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px rgba(11,9,14,.85), 0 0 10px rgba(230,182,74,.45); }
+  .medal img { width: 30px; height: 30px; object-fit: contain; }
+  .shine { position: absolute; inset: -20%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
+    transform: translateX(-120%); animation: shine 4s infinite; }
+  .price { margin-top: -6px; padding: 1px 5px; font-size: 10px; font-weight: 700; line-height: 1.2; color: var(--parch-ink); white-space: nowrap;
+    background: var(--gold); border: 1px solid var(--ink-0); position: relative; }
+  .timer { margin-top: 1px; font-size: 10px; font-weight: 700; line-height: 1; color: var(--text); }
+  .stand.urgent .medal { animation: nudge 2s infinite; box-shadow: 0 0 0 2px var(--blood), 0 0 0 4px rgba(11,9,14,.85), 0 0 10px rgba(196,71,63,.6); }
   .stand.urgent .timer { color: #ff8a7a; }
-  @keyframes standPulse { 50% { box-shadow: 0 0 0 2px var(--ink-0), 0 0 2px rgba(230,182,74,.3); } }
-  @keyframes standBob { 50% { transform: translateY(-2px); } }
+  @keyframes float { 50% { transform: translateY(-3px); } }
+  @keyframes halo { 50% { box-shadow: 0 0 0 2px var(--gold-hi), 0 0 0 4px rgba(11,9,14,.85), 0 0 18px 4px rgba(247,218,139,.75); } }
+  @keyframes shine { 0%, 80% { transform: translateX(-120%); } 92%, 100% { transform: translateX(120%); } }
+  @keyframes nudge { 0%, 84%, 100% { transform: rotate(0); } 87% { transform: rotate(-8deg); } 90% { transform: rotate(7deg); } 93% { transform: rotate(-4deg); } }
   .messenger { position: absolute; top: 34%; left: -50px; z-index: 6; width: 46px; height: 46px; animation: fly 9s linear forwards; }
   .messenger img { width: 100%; height: 100%; filter: drop-shadow(0 0 0 #fff) drop-shadow(2px 2px 0 #000); animation: flap .3s steps(2) infinite; }
   @keyframes fly { 0% { left: -50px; top: 30%; } 25% { top: 22%; } 50% { top: 34%; } 75% { top: 24%; } 100% { left: calc(100% + 10px); top: 30%; } }
