@@ -458,5 +458,15 @@ Le dossier `assets/` est un **pack** : on pioche ce qui sert, on ne cherche pas 
 
 ---
 
-## 21. Questions ouvertes
-Voir le message de discussion associé — chaque réponse mettra à jour ce document (§ concernés).
+## 21. Décisions validées (14/11/2026)
+- **Stack** : Svelte 5 + TypeScript + Vite, nombres natifs (`number`), Capacitor 8.
+- **Classes** : changement possible à chaque Ascension.
+- **Monétisation** : gratuit + pubs récompensées (double récompense, gemmes x fois/jour) + micro-transactions « pay-to-fast » et packs de déblocage contextuels (ex. pack Jardin à son déblocage). **Aucune pub forcée.**
+- **Hors-ligne** : or + montée d'étages via la Constellation *Somnambule*.
+- **En ligne** : Firebase (sauvegarde cloud, auth) — jeu jouable hors connexion d'abord.
+- **Profondeurs** : reporté (post-1.0).
+- **Ton** : Larry sarcastique en fil rouge, dialogues courts.
+- **Lore** : on *monte* la Brèche (Ascension) ; les Profondeurs sont la descente.
+- **Play Store** : compte personnel (test fermé 12 testeurs × 14 j avant prod).
+- **Rythme** : Résonance ≈ 1 mois, fin de l'histoire ≈ 2–3 mois.
+- **Site** : ascencia.manaorbit.app (Hostinger, déployé depuis la branche `hostinger`).
