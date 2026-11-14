@@ -42,6 +42,8 @@ if (process.env.TUNE) applyTuning(JSON.parse(process.env.TUNE));
 E.setStatsCache(true);
 const DT = 0.2;
 const STALL_ASCEND = 240; // s actives sans nouveau record → Ascension
+const STALL_RESONANCE = Number(process.env.STALL_RES ?? 2 * 2880); // s actives sans +5 étages de record → Résonance
+let bestSeen = 0, bestAt = 0;
 
 let wall = Date.UTC(2026, 10, 16, 7, 0, 0);
 setClock(() => wall);
@@ -305,7 +307,8 @@ function spendFragments() {
 }
 
 function resonateMaybe(): boolean {
-  if (!Rz.canResonate(s) || Rz.fragmentsFor(s) < Math.max(5, s.resonance.total)) return false;
+  if (s.bestFloor >= bestSeen + 5) { bestSeen = s.bestFloor; bestAt = active; } // stagnation = moins de 5 étages de record
+  if (!Rz.canResonate(s) || Rz.fragmentsFor(s) < Math.max(5, s.resonance.total) || active - bestAt < STALL_RESONANCE) return false;
   const gain = E.resonate(s, CLASS);
   resLog.push(`R${s.resonance.count} j${day} ${h(active)} record ${s.bestFloor} +${gain} fragments`);
   E.drainEvents();
