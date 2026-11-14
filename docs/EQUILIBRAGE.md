@@ -73,8 +73,27 @@ Simulation 90 jours (Guerrier engagé) :
 
 Écarté : Fragments `3 × √` et Harmoniques ×2 (coût ×1,6) — après la remise à zéro, il fallait plus de 20 jours pour retrouver son record.
 
+## Bot « vrai joueur » et métiers (ajout du 15/11)
+Le bot joue désormais comme un humain : **5–9 frappes/s** (10–15 contre les boss, pauses dans les menus ; occasionnel 5–7,
+très actif 6–10), Jardin en damier qui vise les croisements jusqu'à la **Graine-Cœur réelle** (plus d'hypothèse),
+cultures « garde-manger », Alchimie (préparer/boire), Cuisine, Expéditions avant chaque absence, Forge (panoplies, commandes).
+
+Avec les métiers bien exploités, la progression allait ~25 % plus vite (Larry au J61). Corrections :
+PV après 140 : ×1,305 (au lieu de 1,30) ; Harmoniques ×2,7 (au lieu de ×3) ; XP de Chasseur réduite (1/ressource, 4/boss).
+
+| Guerrier engagé (avec métiers) | Jour |
+|---|---|
+| Rang III au Jardin | J5–J8 |
+| Ancres terminées / Graine-Cœur | J26–J31 |
+| 1re Résonance | J31 |
+| Étage 350 | J54 |
+| Larry (400) | J89 |
+
+Fin de partie au J90 : Chasseur ~70, Jardinier ~50, Alchimiste ~20, Forgeron ~30, Cuisinier ~15 ; 2–3 panoplies complètes.
+
 ## Points à surveiller
 - La 1re Ascension arrive vite (~12–25 min) : bon pour l'accroche, à confirmer en test réel.
 - Le joueur occasionnel progresse ~2× moins vite ; la Constellation *Somnambule* (montée hors-ligne) est son meilleur levier.
 - Le bot lance les Partitions parfaitement : le Mage est un peu surestimé.
+- Les potions sont bues en continu par le bot (≈ 500 en 60 jours) : c'est un plafond haut ; un vrai joueur en boira moins.
 - À refaire quand la Résonance, les gemmes et le Jardin seront en place.

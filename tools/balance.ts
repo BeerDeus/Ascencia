@@ -1,6 +1,8 @@
 // Simulateur d'équilibrage : un bot joue avec le VRAI moteur, journée par journée.
 // Usage : npx vite-node tools/balance.ts [jours=30] [profil=engage] [classe=guerrier]
 //   profils : engage (4 × 12 min/j), casual (2 × 10 min/j), hardcore (6 × 20 min/j)
+// Le bot joue « comme un humain » : frappes variables (5–9/s, 10–15/s contre les boss, pauses dans les menus),
+// Jardin (croisements visés jusqu'à la Graine-Cœur), Alchimie, Cuisine, Expéditions, Forge et panoplies.
 import * as E from '../src/game/engine';
 import * as F from '../src/game/formulas';
 import * as I from '../src/game/items';
@@ -12,17 +14,25 @@ import * as Rz from '../src/game/resonance';
 import { SYMPHONY, symCost, HUNTS } from '../src/game/data/resonance';
 import { COMPANIONS, PARTITIONS, MILESTONES } from '../src/game/data/heroes';
 import { STARS, starCost } from '../src/game/data/constellations';
-import { MEALS } from '../src/game/data/crafting';
-import { canPay } from '../src/game/jobs';
+import { MEALS, POTIONS } from '../src/game/data/crafting';
+import { canPay, level, has } from '../src/game/jobs';
+import * as Gd from '../src/game/garden';
+import * as Cr from '../src/game/crafting';
+import * as Ex from '../src/game/expeditions';
+import * as Fo from '../src/game/forge';
+import { MUTATIONS, PLANT_BY_ID } from '../src/game/data/garden';
+import { ZONES } from '../src/game/data/expeditions';
+import { SETS, ORDER_STATS, orderMetal } from '../src/game/data/forge';
+import { SLOTS, SLOT_PRIMARY } from '../src/game/data/items';
 import type { ClassId, GameState } from '../src/game/types';
 
 const DAYS = Number(process.argv[2] ?? 30);
 const PROFILE = (process.argv[3] ?? 'engage') as keyof typeof PROFILES;
 const CLASS = (process.argv[4] ?? 'guerrier') as ClassId;
 const PROFILES = {
-  casual: { sessions: 2, minutes: 10, tps: 3, parry: 0.5 },
-  engage: { sessions: 4, minutes: 12, tps: 4, parry: 0.75 },
-  hardcore: { sessions: 6, minutes: 20, tps: 5, parry: 0.9 },
+  casual: { sessions: 2, minutes: 10, cps: [5, 7], boss: [8, 11], pause: 0.2, parry: 0.5 },
+  engage: { sessions: 4, minutes: 12, cps: [5, 9], boss: [10, 13], pause: 0.15, parry: 0.75 },
+  hardcore: { sessions: 6, minutes: 20, cps: [6, 10], boss: [12, 15], pause: 0.1, parry: 0.9 },
 };
 const P = PROFILES[PROFILE];
 if (process.env.TUNE) applyTuning(JSON.parse(process.env.TUNE));
@@ -46,6 +56,10 @@ const resLog: string[] = [];
 let nextHuntTry = 0;
 const ascLog: string[] = [];
 const h = (sec: number) => (sec / 3600).toFixed(1) + 'h';
+const between = ([a, b]: number[]) => a + rnd() * (b - a);
+let cps = 6;                       // frappes/s du moment
+const craftLog = { potions: 0, bues: 0, repas: 0, mutations: 0, recoltes: 0, expeditions: 0, commandes: 0, pieces: 0 };
+const firstMutation: Record<string, string> = {};
 
 function shop() {
   const st = E.stats(s);
@@ -58,7 +72,7 @@ function shop() {
     for (const n of [1, 10]) {
       const c = E.heroCostN(s, n);
       if (c <= s.run.gold) {
-        const g = (F.frappeBase(L + n) - F.frappeBase(L)) * tapUnit * P.tps;
+        const g = (F.frappeBase(L + n) - F.frappeBase(L)) * tapUnit * cps;
         if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => E.buyHero(s, n) };
       }
     }
@@ -88,6 +102,10 @@ function gear() {
       .filter(i => i.plus < I.PLUS_MAX).sort((a, b) => I.upgradeCost(a) - I.upgradeCost(b))[0];
     if (!eq || !I.upgrade(s, eq.id)) break;
   }
+  // panoplies : porter les pièces d'un même set dès qu'on en a 2
+  const bySet: Record<string, typeof s.run.inventory> = {};
+  for (const it of s.run.inventory) if (it.set) (bySet[it.set] ??= []).push(it);
+  for (const items of Object.values(bySet)) if (new Set(items.map(i => i.slot)).size >= 2) for (const it of items) I.equip(s, it.id);
   const best = [...s.run.inventory].sort((a, b) => I.score(b) - I.score(a))[0];
   if (best) s.heritage = best.id;
 }
@@ -126,12 +144,115 @@ function anchors() {
   if (!Rz.anchorsVisible(s)) return;
   for (const [k, ok] of [['création', Rz.creationDone(s)], ['chaos', Rz.chaosDone(s)], ['destinée', Rz.destinyDone(s)]] as const)
     if (ok && !anchorDay[k]) anchorDay[k] = `j${day}`;
-  // Jardin non simulé : on suppose qu'un joueur engagé fait éclore la Graine-Cœur vers le 28e jour
-  if (day >= 28) s.anchors.seedDone = true;
   if (!Rz.chaosDone(s) && active > nextHuntTry && !s.run.monster.hunt) {
     const h = HUNTS.find(x => !s.anchors.hunts[x.id]);
     if (h) E.startHunt(s, h.id);
     nextHuntTry = active + 900;
+  }
+}
+
+// ---------------------------------------------------------------- Jardin
+const TARGETS = ['trefle_dore', 'racine_eponge', 'rose_sanguine', 'lys_givre', 'fleur_lave', 'tournesol_radieux', 'cristal_givre', 'orchidee_silencieuse'];
+function gardenGoal(): { a: string; b: string } | 'ygg' | null {
+  const g = s.garden;
+  const t3 = ['tournesol_radieux', 'cristal_givre', 'orchidee_silencieuse'];
+  if (!s.anchors.seedDone && Rz.anchorsVisible(s) && t3.every(id => (g.seeds[id] ?? 0) >= 1) && t3.reduce((a, id) => a + (g.seeds[id] ?? 0), 0) >= 4) return 'ygg';
+  // garde-manger : un cycle sur trois pour la cuisine quand les réserves sont basses
+  if (rnd() < 0.34 && (has(s, 'racine_terreuse') < 6 || has(s, 'champignon_terreux') < 4)) return { a: 'racine_terreuse', b: 'champignon_terreux' };
+  if (rnd() < 0.2 && has(s, 'graine_solaire') < 6) return { a: 'graine_solaire', b: 'herbe_robuste' };
+  for (const id of TARGETS) {
+    const m = MUTATIONS.find(x => x.result === id)!;
+    if ((g.seeds[id] ?? 0) >= 4 && g.known.includes(id)) continue;   // assez de graines de ce résultat
+    const tier1 = (x: string) => PLANT_BY_ID[x].tier === 1;
+    const ok = (x: string) => tier1(x) || (g.seeds[x] ?? 0) >= 2;
+    if (ok(m.a) && ok(m.b)) return { a: m.a, b: m.b };
+  }
+  return { a: 'herbe_robuste', b: 'fleur_rosee' };
+}
+function seedFor(id: string): boolean {
+  if ((s.garden.seeds[id] ?? 0) > 0) return true;
+  return PLANT_BY_ID[id].tier === 1 && Gd.buySeed(s, id, 3);
+}
+function garden() {
+  if (!Gd.gardenUnlocked(s)) return;
+  for (const e of Gd.gardenTick(s)) if (e.kind === 'mutation') { craftLog.mutations++; firstMutation[e.plant] ??= `j${day}`; }
+  const g = s.garden, n = Gd.gridSize(s);
+  // soins, nuisibles, récoltes
+  for (let i = 0; i < 36; i++) {
+    const p = g.plots[i];
+    if (!p || !Gd.inGrid(s, i)) continue;
+    if (p.pest) Gd.removePest(s, i);
+    if (p.dissonantSince) {
+      if ((s.potions.purete ?? 0) > 0) Gd.cure(s, i);
+      else if (!Gd.mature(p)) { g.plots[i] = null; continue; }
+    }
+    if (Gd.mature(p)) { if (E.gardenHarvest(s, i)) craftLog.recoltes++; }
+  }
+  // replanter selon l'objectif
+  const goal = gardenGoal();
+  if (goal === 'ygg') {
+    // croix autour de la parcelle (1,1) avec les plantes de rang III
+    const cross = [1, 6, 8, 13], t3 = ['tournesol_radieux', 'cristal_givre', 'orchidee_silencieuse', 'tournesol_radieux', 'cristal_givre', 'orchidee_silencieuse'];
+    if (g.plots[7] && g.plots[7]!.plant !== 'yggdrasil') g.plots[7] = null;
+    let k = 0;
+    for (const i of cross) {
+      if (g.plots[i]) continue;
+      while (k < t3.length && !(g.seeds[t3[k]] > 0)) k++;
+      if (k < t3.length) Gd.plant(s, i, t3[k++]);
+    }
+    return;
+  }
+  if (!goal) return;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const i = y * 6 + x;
+    if ((x + y) % 2 === 0 || g.plots[i]) continue;   // damier : une case sur deux reste vide pour les mutations
+    const id = y % 2 === 0 ? goal.a : goal.b;
+    if (seedFor(id)) Gd.plant(s, i, id);
+  }
+}
+
+// ---------------------------------------------------------------- Ateliers
+function workshops() {
+  // Alchimie : préparer ce qui est possible (2 de chaque au plus), boire les potions de combat
+  const dissonant = s.garden.plots.some(p => p?.dissonantSince);
+  for (const p of POTIONS) {
+    if (!Cr.potionUnlocked(s, p.id)) continue;
+    const want = p.effect === 'purete' ? (dissonant ? 2 : 0) : p.effect === 'eclats' ? 1 : 2;
+    while ((s.potions[p.id] ?? 0) < want && Cr.brew(s, p.id, 1)) craftLog.potions++;
+  }
+  for (const p of POTIONS) {
+    if (['purete', 'eclats'].includes(p.effect) || (s.potions[p.id] ?? 0) <= 0 || (s.buffs[p.id] ?? 0) > wall) continue;
+    if (Cr.drink(s, p.id)) craftLog.bues++;
+  }
+  // Cuisine
+  if (!Fi.mealActive(s)) {
+    const m = [...MEALS].reverse().find(x => Fi.mealUnlocked(s, x) && canPay(s, x.cost));
+    if (m && Fi.eat(s, m.id)) craftLog.repas++;
+  }
+  // Forge : pièces de panoplie manquantes, puis commandes pour l'emplacement le plus faible
+  for (const d of SETS) {
+    if (!Fo.setUnlocked(s, d.id)) continue;
+    for (const p of d.pieces) if (!(s.forge.sets[d.id] ?? []).includes(p.slot) && Fo.forgePiece(s, d.id, p.slot, rnd)) craftLog.pieces++;
+  }
+  if (s.metal >= orderMetal(s.run.floor) * 3) {
+    const weakest = SLOTS.map(x => ({ x: x.id, sc: I.equippedIn(s, x.id) ? I.score(I.equippedIn(s, x.id)!) : -1 })).sort((a, b) => a.sc - b.sc)[0];
+    const stat = ['torse', 'jambes'].includes(weakest.x) ? 'comp' : SLOT_PRIMARY[weakest.x] === 'crit' ? 'frappe' : SLOT_PRIMARY[weakest.x];
+    if (ORDER_STATS.includes(stat) && Fo.order(s, weakest.x, stat, rnd)) craftLog.commandes++;
+  }
+}
+
+// ---------------------------------------------------------------- Expéditions (avant de poser le téléphone)
+function expeditions(gapSeconds: number) {
+  s.expeditions.forEach((_, i) => {});
+  for (let i = s.expeditions.length - 1; i >= 0; i--) if (Ex.isDone(s.expeditions[i])) { Ex.claim(s, i); }
+  const hours = gapSeconds >= 8 * 3600 ? 8 : gapSeconds >= 4 * 3600 ? 4 : 1;
+  const open = ZONES.filter(z => Ex.zoneOpen(s, z.id));
+  while (s.expeditions.length < Ex.slots(s) && open.length) {
+    // zone dont la ressource principale manque le plus (la mine pour le métal en priorité)
+    const z = [...open].sort((a, b) => (has(s, Object.keys(a.perHour)[0]) + (a.metal ? -50 : 0)) - (has(s, Object.keys(b.perHour)[0]) + (b.metal ? -50 : 0)))[0];
+    if (!Ex.send(s, z.id, hours)) break;
+    craftLog.expeditions++;
+    open.splice(open.indexOf(z), 1);
   }
 }
 
@@ -156,6 +277,7 @@ function resonateMaybe(): boolean {
 
 function ascend() {
   if (resonateMaybe()) return;
+  if ((s.potions.brume ?? 0) > 0) Cr.drink(s, 'brume');
   const gain = E.ascensionGain(s);
   ascLog.push(`A${s.ascensions + 1} j${day} ${h(active)} étage ${s.run.maxFloor} +${gain}`);
   E.ascend(s, CLASS);
@@ -165,9 +287,17 @@ function ascend() {
 }
 
 function playSession(seconds: number) {
-  let acc = 0;
+  let acc = 0, base = between(P.cps), paused = 0;
+  garden(); workshops();
   for (let t = 0; t < seconds; t += DT) {
-    const taps = P.tps * DT;
+    // rythme humain : variations, rafales contre les boss, pauses dans les menus
+    if (Math.floor(t) !== Math.floor(t - DT)) {
+      if (paused > 0) paused--;
+      else if (rnd() < P.pause / 10) paused = 3 + Math.floor(rnd() * 8);
+      base = Math.min(P.cps[1], Math.max(P.cps[0], base + (rnd() - 0.5)));
+    }
+    cps = paused > 0 ? 0 : s.run.monster.kind === 'boss' ? between(P.boss) : base;
+    const taps = cps * DT;
     for (let k = 0; k < Math.floor(taps) + (rnd() < taps % 1 ? 1 : 0); k++) E.tap(s);
     if (s.run.parryUntil && rnd() < P.parry * DT * 3) E.parry(s);
     PARTITIONS.forEach((_, i) => E.castPartition(s, i));
@@ -175,6 +305,7 @@ function playSession(seconds: number) {
     active += DT; wall += DT * 1000; acc += DT;
     if (acc >= 2) { acc = 0; shop(); }
     if (Math.floor(active) % 30 === 0 && t % 30 < DT) { gear(); fief(); anchors(); }
+    if (Math.floor(active) % 120 === 0 && t % 120 < DT) { garden(); workshops(); }
     const evs = E.drainEvents();
     for (const e of evs) if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') { ascend(); }
     if (s.run.maxFloor > lastRecord) {
@@ -191,13 +322,14 @@ function playSession(seconds: number) {
 
 let day = 1;
 console.log('TUNE', process.env.TUNE ?? '(défaut)');
-console.log(`Profil ${PROFILE} (${P.sessions} × ${P.minutes} min/j, ${P.tps} frappes/s), classe ${CLASS}, ${DAYS} jours\n`);
+console.log(`Profil ${PROFILE} (${P.sessions} × ${P.minutes} min/j, ${P.cps.join('–')} frappes/s, ${P.boss.join('–')} contre les boss), classe ${CLASS}, ${DAYS} jours\n`);
 console.log('jour | actif | record | asc | légende | arcanes | étoiles');
 for (; day <= DAYS; day++) {
   const gap = (16 * 3600) / P.sessions;
   for (let k = 0; k < P.sessions; k++) {
     playSession(P.minutes * 60);
     const off = k === P.sessions - 1 ? 8 * 3600 + (gap - P.minutes * 60) : gap - P.minutes * 60;
+    expeditions(off); garden();
     wall += off * 1000;
     const rep = E.applyOffline(s, off);
     if (process.env.TRACE && rep) console.log(`  hors-ligne ${(off / 3600).toFixed(1)}h : +${rep.gold.toExponential(1)} or, +${rep.floors} ét. (or en poche avant achats)`);
@@ -210,4 +342,8 @@ for (; day <= DAYS; day++) {
 console.log('\nPremière arrivée :', MARKS.map(m => `${m}→${firstReach[m] ?? '—'}`).join('  '));
 console.log('\nRésonances :\n' + (resLog.join('\n') || '—'));
 console.log('Ancres terminées :', JSON.stringify(anchorDay));
+console.log('\nMétiers :', Object.entries(s.jobs).map(([j, x]) => `${j} ${level(s, j as never)}`).join(' · '));
+console.log('Artisanat :', JSON.stringify(craftLog));
+console.log('Mutations (1re fois) :', JSON.stringify(firstMutation));
+console.log('Panoplies complètes :', SETS.filter(d => Fo.setComplete(s, d.id)).map(d => d.id).join(', ') || '—');
 console.log('\nAscensions :\n' + ascLog.slice(0, 12).join('\n') + (ascLog.length > 12 ? `\n… (${ascLog.length})\n` + ascLog.slice(-4).join('\n') : ''));

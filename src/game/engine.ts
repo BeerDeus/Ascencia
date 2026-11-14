@@ -279,7 +279,7 @@ function resourceDrop(s: GameState, m: Monster) {
   const id = m.sprite.split('/').pop()!;
   const res = FAMILY_DROPS.find(([re]) => re.test(id))?.[1] ?? DEFAULT_DROP;
   Jb.give(s, res, m.kind === 'boss' ? 2 + Math.floor(lv / 25) : 1);
-  Jb.addXp(s, 'chasseur', m.kind === 'boss' ? 10 : 3);
+  Jb.addXp(s, 'chasseur', m.kind === 'boss' ? 4 : 1);
 }
 
 const lootMult = (s: GameState) => (1 + arc(s, 'loot')) * (Sh.blessing(s, 'butin') ? 2 : 1);
