@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { G } from '../lib/game.svelte';
+  import { G, ui } from '../lib/game.svelte';
   import { actFor } from '../game/data/world';
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
@@ -17,6 +17,7 @@
     <span class="gold outline"><img src={gfx('obj/piece_or')} alt="Or" />{N(s.run.gold)}</span>
     {#if s.ascensions > 0 || s.eclats > 0}<span class="ecl outline"><img src={gfx('res/eclats_ascension')} alt="Éclats" />{N(s.eclats)}</span>{/if}
     {#if s.metal > 0}<span class="met outline"><img src={gfx('res/metal')} alt="Métal" />{N(s.metal)}</span>{/if}
+    <button class="opt" class:on={ui.tab === 'options'} onclick={() => (ui.tab = ui.tab === 'options' ? 'chronique' : 'options')} aria-label="Options"><img src={gfx('obj/cle')} alt="" /></button>
   </div>
 </header>
 
@@ -33,4 +34,7 @@
   .gold { color: var(--gold); }
   .ecl { color: #f08b80; }
   .met { color: #b9c2c9; }
+  .opt { width: 32px; height: 32px; display: grid; place-items: center; background: var(--stone-3); border: 2px solid var(--ink-0); box-shadow: inset 2px 2px 0 var(--hi), inset -2px -2px 0 var(--lo); }
+  .opt.on { background: var(--parch-2); }
+  .res .opt img { width: 20px; height: 20px; }
 </style>

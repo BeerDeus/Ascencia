@@ -1,7 +1,7 @@
 <script lang="ts">
   import { G, ui } from '../lib/game.svelte';
   import * as E from '../game/engine';
-  import { lootUnlocked } from '../game/items';
+  import { fiefUnlocked, chestReady } from '../game/fief';
   import { gfx } from '../lib/gfx';
   const s = $derived(G.s);
   const tabs = $derived([
@@ -9,9 +9,9 @@
     { id: 'heros', label: 'Héros', icon: 'classes/' + (s.classId ?? 'guerrier'), dot: E.heroCostN(s, 1) <= s.run.gold },
     { id: 'compagnons', label: 'Alliés', icon: 'icons/standard',
       dot: s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
-    { id: 'equipement', label: 'Sac', icon: 'obj/sac_a_dos', dot: false, locked: !lootUnlocked(s) },
+    { id: 'fief', label: 'Fief', icon: 'icons/village', locked: !fiefUnlocked(s),
+      dot: fiefUnlocked(s) && (chestReady(s) || s.daily?.bounties.some(b => !b.claimed && s.daily.c[b.c] >= b.target)) },
     { id: 'ascension', label: 'Ascension', icon: 'icons/harmonie', dot: E.canAscend(s) },
-    { id: 'options', label: 'Options', icon: 'obj/cle', dot: false },
   ] as { id: typeof ui.tab; label: string; icon: string; dot: boolean; locked?: boolean }[]);
 </script>
 

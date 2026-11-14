@@ -1,5 +1,6 @@
 // Logique d'équipement : génération, bonus, Forge, Héritage.
 import type { GameState, Item } from './types';
+import { arc } from './arcanes';
 import { BASES, EPITHETS, RARITIES, SECONDARY, SLOTS, SLOT_PRIMARY, STATS, type Slot, type StatId } from './data/items';
 
 export const INVENTORY_MAX = 40;
@@ -90,7 +91,7 @@ export function recycle(s: GameState, id: number): number {
   const it = inv[i];
   if (isEquipped(s, it) || it.id === s.heritage) return 0;
   inv.splice(i, 1);
-  const v = recycleValue(it);
+  const v = Math.round(recycleValue(it) * (1 + arc(s, 'metal')));
   s.metal += v;
   return v;
 }

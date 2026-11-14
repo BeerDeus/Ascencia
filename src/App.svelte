@@ -9,6 +9,9 @@
   import CompanionsPanel from './ui/CompanionsPanel.svelte';
   import AscensionPanel from './ui/AscensionPanel.svelte';
   import EquipmentPanel from './ui/EquipmentPanel.svelte';
+  import FiefPanel from './ui/FiefPanel.svelte';
+  import ArcanesPanel from './ui/ArcanesPanel.svelte';
+  import SubTabs from './ui/SubTabs.svelte';
   import CloudConflict from './ui/CloudConflict.svelte';
   import OptionsPanel from './ui/OptionsPanel.svelte';
   import Dialogue from './ui/Dialogue.svelte';
@@ -25,10 +28,14 @@
     <PartitionBar />
     <section class="panel">
       {#if ui.tab === 'chronique'}<Chronicle />
-      {:else if ui.tab === 'heros'}<HeroPanel />
+      {:else if ui.tab === 'heros'}
+        <SubTabs bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }]} />
+        {#if ui.heroTab === 'heros'}<HeroPanel />{:else}<EquipmentPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
-      {:else if ui.tab === 'equipement'}<EquipmentPanel />
-      {:else if ui.tab === 'ascension'}<AscensionPanel />
+      {:else if ui.tab === 'fief'}<FiefPanel />
+      {:else if ui.tab === 'ascension'}
+        {#if G.s.ascensions > 0}<SubTabs bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel & Constellations' }, { id: 'arcanes', label: 'Arcanes' }]} />{/if}
+        {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else}<AscensionPanel />{/if}
       {:else}<OptionsPanel />{/if}
     </section>
     <Nav />

@@ -13,6 +13,7 @@ const CONFIG = {
   appId: '1:1034405292687:web:4825a50e55a608b4831efa',
 };
 const FLAG = 'ascencia.cloud';
+const REDIRECT = 'ascencia.redirect';
 
 export interface CloudSummary { bestFloor: number; legende: number; ascensions: number; playSeconds: number; lastSave: number }
 export interface CloudSave extends CloudSummary { data: string }
@@ -40,6 +41,9 @@ function load(): Promise<void> {
     auth = A.initializeAuth(app, { persistence: [A.indexedDBLocalPersistence, A.browserLocalPersistence] });
     auth.languageCode = 'fr';
     db = FS.getFirestore(app);
+    let pending = false;
+    try { pending = localStorage.getItem(REDIRECT) === '1'; localStorage.removeItem(REDIRECT); } catch { /* ignoré */ }
+    if (pending) await A.getRedirectResult(auth, A.browserPopupRedirectResolver).catch(e => { account.error = MESSAGES[e?.code] ?? 'Connexion Google échouée.'; });
     await new Promise<void>(res => {
       let first = true;
       A.onAuthStateChanged(auth, u => {
@@ -58,7 +62,7 @@ export function onAuth(fn: (u: User | null) => void) { authListeners.push(fn); }
 /** Au démarrage : ne charge Firebase que si le joueur s'était déjà connecté. */
 export async function initCloud() {
   let was = false;
-  try { was = localStorage.getItem(FLAG) === '1'; } catch { /* ignoré */ }
+  try { was = localStorage.getItem(FLAG) === '1' || localStorage.getItem(REDIRECT) === '1'; } catch { /* ignoré */ }
   if (was) await load().catch(() => {});
 }
 
@@ -89,7 +93,19 @@ async function run<T>(fn: () => Promise<T>, ok?: string): Promise<T | undefined>
 }
 
 export const googleAvailable = !isNative; // natif : branché via @capacitor-firebase/authentication (à venir)
-export const signInGoogle = () => run(() => A.signInWithPopup(auth, new A.GoogleAuthProvider(), A.browserPopupRedirectResolver));
+export const signInGoogle = () => run(async () => {
+  const provider = new A.GoogleAuthProvider();
+  try {
+    return await A.signInWithPopup(auth, provider, A.browserPopupRedirectResolver);
+  } catch (e: any) {
+    // PWA / navigateurs qui bloquent les popups : bascule en redirection
+    if (e?.code === 'auth/popup-blocked' || e?.code === 'auth/operation-not-supported-in-this-environment') {
+      try { localStorage.setItem(REDIRECT, '1'); } catch { /* ignoré */ }
+      return A.signInWithRedirect(auth, provider, A.browserPopupRedirectResolver);
+    }
+    throw e;
+  }
+});
 export const signInEmail = (email: string, pw: string) => run(() => A.signInWithEmailAndPassword(auth, email.trim(), pw));
 export const signUpEmail = (email: string, pw: string) => run(() => A.createUserWithEmailAndPassword(auth, email.trim(), pw));
 export const resetPassword = (email: string) => run(() => A.sendPasswordResetEmail(auth, email.trim()), 'E-mail de réinitialisation envoyé.');

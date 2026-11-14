@@ -11,3 +11,9 @@ import { boot } from './lib/game.svelte';
 
 mount(App, { target: document.getElementById('app')! });
 boot();
+
+// PWA (navigateur uniquement ; inutile dans l'appli Capacitor)
+import { isNative } from './lib/native';
+if (!isNative && 'serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}

@@ -1,4 +1,5 @@
 import type { Slot, StatId } from './data/items';
+import type { Daily } from './fief';
 
 export type ClassId = 'guerrier' | 'archer' | 'mage';
 export type CompType = 'melee' | 'distance' | 'magie';
@@ -77,6 +78,9 @@ export interface GameState {
   metal: number;
   itemSeq: number;
   heritage: number | null;   // id de l'objet conservé à l'Ascension
+  arcanes: Record<string, number>;
+  daily: Daily;
+  meal: { id: string; until: number } | null;
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

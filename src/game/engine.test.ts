@@ -7,6 +7,9 @@ import { SPEAKERS } from './data/story';
 import { mobHp, eclatsFor, geomMax, geomSum } from './formulas';
 import { fmt } from './format';
 import * as I from './items';
+import * as Ar from './arcanes';
+import * as Fi from './fief';
+import { ARCANES } from './data/arcanes';
 
 const gfx = (k: string) => `public/gfx/${k}.webp`;
 
@@ -36,7 +39,7 @@ describe('données', () => {
       ...ACTS.flatMap(a => [...a.mobs, ...a.bosses].map(m => 'mobs/' + m)), ...ACTS.map(a => 'bg/' + a.bg),
       ...STORY_BOSSES.map(b => b.sprite), ...COMPANIONS.map(c => c.sprite), ...PARTITIONS.map(p => p.icon),
       ...CLASSES.flatMap(c => [c.icon, c.portrait]), ...Object.values(SPEAKERS).flatMap(s => s.sprite ? [s.sprite] : []),
-      'mobs/gobelin_vulnerable',
+      'mobs/gobelin_vulnerable', ...ARCANES.map(a => 'cards/' + a.id),
     ];
     const missing = sprites.filter(k => !existsSync(gfx(k)));
     expect(missing).toEqual([]);
@@ -112,5 +115,30 @@ describe('moteur', () => {
     E.ascend(s, 'mage');
     expect(s.run.inventory.map(i => i.id)).toEqual([it.id]);
     expect(s.run.equipped.arme).toBe(it.id);
+  });
+
+  it('Arcanes : pioche, amélioration, effets', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.ascensions = 1; s.eclats = 1000;
+    const base = E.stats(s).tap;
+    s.arcanes.empereur = 1;
+    expect(E.stats(s).tap).toBeGreaterThan(base * 1.2);
+    const id = Ar.draw(s, () => 0)!;
+    expect(s.arcanes[id]).toBe(1);
+    expect(Ar.upgradeArcane(s, id)).toBe(true);
+    expect(s.arcanes[id]).toBe(2);
+  });
+  it('Fief : primes quotidiennes et repas', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 40; E.newRun(s, 40);
+    Fi.dailyCheck(s);
+    expect(s.daily.bounties).toHaveLength(3);
+    const b = s.daily.bounties[0];
+    s.daily.c[b.c] = b.target;
+    expect(Fi.claimBounty(s, 0)).toBe(true);
+    expect(Fi.claimBounty(s, 0)).toBe(false);
+    s.run.gold = 1e30;
+    const before = E.stats(s).goldMult;
+    expect(Fi.eat(s, 'soupe')).toBe(true);
+    expect(E.stats(s).goldMult).toBeCloseTo(before * 1.6);
+    expect(Fi.eat(s, 'steak')).toBe(false);
   });
 });

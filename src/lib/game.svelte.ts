@@ -6,12 +6,15 @@ import * as A from './audio';
 import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
 import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from './cloud.svelte';
 import { RARITIES } from '../game/data/items';
+import { dailyCheck } from '../game/fief';
 
 export const G = $state<{ s: GameState }>({ s: E.newGame() });
 
 export const ui = $state({
   ready: false,
-  tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'equipement' | 'ascension' | 'options',
+  tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
+  heroTab: 'heros' as 'heros' | 'sac',
+  ascTab: 'rituel' as 'rituel' | 'arcanes',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
   offline: null as OfflineReport | null,
@@ -130,7 +133,7 @@ function frame(now: number) {
     while (acc >= STEP) { E.tick(G.s, STEP); acc -= STEP; }
     flush();
   }
-  if (now - lastPersist > 10000) persist();
+  if (now - lastPersist > 10000) { dailyCheck(G.s); persist(); }
   requestAnimationFrame(frame);
 }
 
