@@ -11,6 +11,8 @@ import { shopCheck, calendarReady, pendingOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
 import { adUi } from './ads.svelte';
 import { newlyDone } from '../game/achievements';
+import { gardenTick, gardenUnlocked } from '../game/garden';
+import { PLANT_BY_ID } from '../game/data/garden';
 import { askNotifications, scheduleReturnHooks, cancelReturnHooks } from './notify';
 
 export const G = $state<{ s: GameState }>({ s: E.newGame() });
@@ -20,6 +22,7 @@ export const ui = $state({
   tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
   heroTab: 'heros' as 'heros' | 'sac' | 'hf',
   ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
+  fiefTab: 'village' as 'village' | 'jardin' | 'alchimie' | 'expeditions' | 'coffre',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
   offline: null as OfflineReport | null,
@@ -137,6 +140,10 @@ function checkOffline() {
 // ---------------------------------------------------------------- quotidien, offres
 function daily() {
   for (const a of newlyDone(G.s)) toast(`Haut fait : ${a.name} !`, 'crit');
+  if (gardenUnlocked(G.s)) for (const e of gardenTick(G.s)) {
+    if (e.kind === 'mutation') toast(`Mutation au Jardin : ${PLANT_BY_ID[e.plant].name} !`, 'crit');
+    else if (e.kind === 'dissonance') toast('Une plante du Jardin devient dissonante…', 'info');
+  }
   const pass = shopCheck(G.s);
   if (pass) toast(`Bénédiction de Lysandra : +${pass} gemmes`, 'gold');
   if (paused() || !G.s.classId) return;

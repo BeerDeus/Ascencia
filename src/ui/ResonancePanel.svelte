@@ -2,9 +2,7 @@
   import { G, ui, act, toast, persist } from '../lib/game.svelte';
   import * as Rz from '../game/resonance';
   import * as E from '../game/engine';
-  import { HUNTS, COMPASS_FLOORS, SEED_HOURS, SYMPHONY, symCost } from '../game/data/resonance';
-  import { T } from '../game/tuning';
-  const SEED_COST_METAL = T.seedMetal;
+  import { HUNTS, COMPASS_FLOORS, SYMPHONY, symCost } from '../game/data/resonance';
   import { GEM_ICON } from '../game/data/shop';
   import { fmt, fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';
@@ -33,11 +31,11 @@
       <img src={gfx('res/plante_sauvage')} alt="" />
       <div class="mi"><b>Création · la Graine-Cœur d’Yggdrasil</b>
         {#if Rz.creationDone(s)}<span>Ancrée ✓</span>
-        {:else if !s.anchors.seedPlanted}<span>Planter coûte {SEED_COST_METAL} métal, puis {SEED_HOURS} h de croissance réelle (même hors-ligne).</span>
-        {:else}<div class="bar"><i style="width:{Rz.seedProgress(s) * 100}%"></i></div><span>{seedLeft > 0 ? 'Éclosion dans ' + fmtTime(seedLeft) : 'Prête à éclore !'}</span>{/if}
+        {:else if s.anchors.seedPlanted}<div class="bar"><i style="width:{Rz.seedProgress(s) * 100}%"></i></div><span>{seedLeft > 0 ? 'Éclosion dans ' + fmtTime(seedLeft) : 'Prête à éclore !'}</span>
+        {:else}<span>Elle naît au Jardin : une parcelle vide entourée de quatre plantes rares (rang III), dont les trois différentes.</span>{/if}
       </div>
       {#if !Rz.creationDone(s)}
-        {#if !s.anchors.seedPlanted}<button class="btn" disabled={s.metal < SEED_COST_METAL} onclick={() => act(Rz.plantSeed) && sfxUp()}>Planter<img src={gfx('res/metal')} alt="" /></button>
+        {#if !s.anchors.seedPlanted}<button class="btn" onclick={() => { ui.tab = 'fief'; ui.fiefTab = 'jardin'; }}>Jardin</button>
         {:else if seedLeft > 0}<button class="btn sky" disabled={Rz.seedSkipCost(s) > s.gems} onclick={() => act(Rz.skipSeed) && sfxUp()}>Hâter <img src={gfx(GEM_ICON)} alt="" />{Rz.seedSkipCost(s)}</button>
         {:else}<button class="btn" onclick={() => act(E.harvestSeed) && sfxUp()}>Récolter</button>{/if}
       {/if}

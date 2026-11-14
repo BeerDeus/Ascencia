@@ -2,7 +2,11 @@
   import { G, act, toast } from '../lib/game.svelte';
   import * as Fi from '../game/fief';
   import * as E from '../game/engine';
-  import { BOUNTY_TYPES, MEALS } from '../game/data/fief';
+  import { BOUNTY_TYPES } from '../game/data/fief';
+  import { MEALS } from '../game/data/crafting';
+  import * as Cr from '../game/crafting';
+  import Cost from './Cost.svelte';
+  import JobBar from './JobBar.svelte';
   import { RARITIES } from '../game/data/items';
   import { fmt, fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';
@@ -64,28 +68,25 @@
         <img class="pt" src={gfx('portraits/gaston')} alt="" />
         <div>
           <div class="gothic h">L’Auberge de Gaston</div>
-          <div class="label">Un plat à la fois · l’effet continue hors-ligne</div>
+          <div class="label">Un plat à la fois · ingrédients du Jardin, des monstres et des expéditions · l’effet continue hors-ligne</div>
         </div>
       </div>
       {#if meal && s.meal}
         <div class="active slot"><img src={gfx(meal.sprite)} alt="" /><div><b>{meal.name}</b><span>{meal.desc} · encore {fmtTime((s.meal.until - now) / 1000)}</span></div></div>
       {/if}
+      <JobBar job="cuisinier" />
       {#each MEALS as m}
-        {@const unlocked = Fi.mealUnlocked(s, m)}
-        {@const cost = Fi.mealCost(s, m)}
+        {@const unlocked = Cr.mealUnlocked(s, m)}
         <div class="meal" class:dim={!unlocked}>
           <div class="ic slot"><img src={gfx(m.sprite)} alt="" /></div>
-          <div class="mi"><b>{m.name}</b><span>{m.desc} · {m.hours} h</span></div>
-          {#if unlocked}<button class="btn" disabled={!!meal || cost > s.run.gold} onclick={() => cook(m.id)}><img src={gfx('obj/piece_or')} alt="" />{N(cost)}</button>
-          {:else}<span class="lk">Étage {m.unlock}</span>{/if}
+          <div class="mi"><b>{m.name}</b><span>{m.desc} · {m.hours} h</span>{#if unlocked}<Cost cost={m.cost} />{/if}</div>
+          {#if unlocked}<button class="btn" disabled={!Cr.canCook(s, m)} onclick={() => cook(m.id)}>Cuisiner</button>
+          {:else}<span class="lk">Cuisinier {m.level}</span>{/if}
         </div>
       {/each}
     </section>
 
-    <section class="frame soon">
-      <div class="hd"><img class="pt" src={gfx('res/plante_sauvage')} alt="" />
-        <div><div class="gothic h">Le Jardin</div><div class="label">Bientôt · semis, saisons, récoltes</div></div></div>
-    </section>
+
   </div>
 {/if}
 
@@ -124,5 +125,4 @@
   .mi { flex: 1; display: flex; flex-direction: column; font-size: 12px; color: var(--text-3); }
   .mi b { font-size: 14px; color: var(--text); }
   .lk { font-size: 11px; color: var(--text-3); }
-  .soon { opacity: .6; }
 </style>

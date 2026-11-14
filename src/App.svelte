@@ -10,6 +10,11 @@
   import AscensionPanel from './ui/AscensionPanel.svelte';
   import EquipmentPanel from './ui/EquipmentPanel.svelte';
   import FiefPanel from './ui/FiefPanel.svelte';
+  import GardenPanel from './ui/GardenPanel.svelte';
+  import AlchemyPanel from './ui/AlchemyPanel.svelte';
+  import ExpeditionsPanel from './ui/ExpeditionsPanel.svelte';
+  import ChestPanel from './ui/ChestPanel.svelte';
+  import { fiefUnlocked } from './game/fief';
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
   import AchievementsPanel from './ui/AchievementsPanel.svelte';
@@ -34,15 +39,24 @@
 {#if ui.ready}
   <main>
     <TopBar />
-    <Battle />
-    <PartitionBar />
+    <!-- Jardin en plein écran : le combat continue en arrière-plan (dégâts automatiques seulement) -->
+    {#if !(ui.tab === 'fief' && ui.fiefTab === 'jardin' && fiefUnlocked(G.s))}
+      <Battle />
+      <PartitionBar />
+    {/if}
     <section class="panel">
       {#if ui.tab === 'chronique'}<Chronicle />
       {:else if ui.tab === 'heros'}
         <SubTabs bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : '') }]} />
         {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else}<AchievementsPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
-      {:else if ui.tab === 'fief'}<FiefPanel />
+      {:else if ui.tab === 'fief'}
+        {#if fiefUnlocked(G.s)}<SubTabs bind:value={ui.fiefTab} tabs={[{ id: 'village', label: 'Village' }, { id: 'jardin', label: 'Jardin' }, { id: 'alchimie', label: 'Alchimie' }, { id: 'expeditions', label: 'Expéd.' }, { id: 'coffre', label: 'Coffre' }]} />{/if}
+        {#if !fiefUnlocked(G.s) || ui.fiefTab === 'village'}<FiefPanel />
+        {:else if ui.fiefTab === 'jardin'}<GardenPanel />
+        {:else if ui.fiefTab === 'alchimie'}<AlchemyPanel />
+        {:else if ui.fiefTab === 'expeditions'}<ExpeditionsPanel />
+        {:else}<ChestPanel />{/if}
       {:else if ui.tab === 'ascension'}
         {#if G.s.ascensions > 0}<SubTabs bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel' }, { id: 'arcanes', label: 'Arcanes' }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance' }] : [])]} />{/if}
         {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else if ui.ascTab === 'resonance' && anchorsVisible(G.s)}<ResonancePanel />{:else}<AscensionPanel />{/if}

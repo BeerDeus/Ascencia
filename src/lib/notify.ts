@@ -6,6 +6,9 @@ import { mealActive } from '../game/fief';
 import { OFFLINE_CAP_SECONDS } from '../game/engine';
 import { passActive } from '../game/shop';
 import { SEED_HOURS } from '../game/data/resonance';
+import { growSpeed, inGrid } from '../game/garden';
+import { PLANT_BY_ID } from '../game/data/garden';
+import { doneAt } from '../game/expeditions';
 
 /** Décale hors de la nuit (22 h – 9 h) pour ne réveiller personne. */
 function daytime(t: number) {
@@ -47,6 +50,16 @@ export async function scheduleReturnHooks(s: GameState) {
     if (s.anchors?.seedPlanted && !s.anchors.seedDone) {
       list.push({ id: 4, title: 'La Graine-Cœur', body: 'Quelque chose a éclos dans ton Fief…', at: daytime(s.anchors.seedPlanted + SEED_HOURS * 3600_000) });
     }
+    // Jardin : la prochaine plante mûre
+    let next = Infinity;
+    s.garden?.plots.forEach((p, i) => {
+      if (!p || p.progress >= 1 || !inGrid(s, i)) return;
+      const sp = growSpeed(s, i);
+      if (sp > 0) next = Math.min(next, now + ((1 - p.progress) * PLANT_BY_ID[p.plant].minutes * 60_000) / sp);
+    });
+    if (isFinite(next)) list.push({ id: 5, title: 'Le Jardin', body: 'Tes plantes sont mûres. Récolte-les avant que les nuisibles s’en chargent !', at: daytime(next) });
+    const exp = s.expeditions?.map(doneAt).filter(t => t > now).sort((a, b) => a - b)[0];
+    if (exp) list.push({ id: 6, title: 'Expédition de retour', body: 'Ton équipe est rentrée, les sacs pleins.', at: daytime(exp) });
     await LocalNotifications.schedule({
       notifications: list.filter(n => n.at.getTime() > now + 60_000).map(n => ({ id: n.id, title: n.title, body: n.body, schedule: { at: n.at, allowWhileIdle: true } })),
     });

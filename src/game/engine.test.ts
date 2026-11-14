@@ -13,6 +13,14 @@ import * as Sh from './shop';
 import * as Ach from './achievements';
 import * as Rz from './resonance';
 import { setClock } from './clock';
+import * as Gd from './garden';
+import * as Cr from './crafting';
+import * as Ex from './expeditions';
+import * as Jb from './jobs';
+import { PLANTS, plantSprite } from './data/garden';
+import { RESOURCES } from './data/resources';
+import { POTIONS, MEALS } from './data/crafting';
+import { ZONES } from './data/expeditions';
 import { ARCANES } from './data/arcanes';
 
 const gfx = (k: string) => `public/gfx/${k}.webp`;
@@ -44,6 +52,8 @@ describe('données', () => {
       ...STORY_BOSSES.map(b => b.sprite), ...COMPANIONS.map(c => c.sprite), ...PARTITIONS.map(p => p.icon),
       ...CLASSES.flatMap(c => [c.icon, c.portrait]), ...Object.values(SPEAKERS).flatMap(s => s.sprite ? [s.sprite] : []),
       'mobs/gobelin_vulnerable', ...ARCANES.map(a => 'cards/' + a.id),
+      ...PLANTS.flatMap(p => [1, 2, 3].map(k => plantSprite(p.id, k))), ...Object.values(RESOURCES).map(r => r.sprite),
+      ...POTIONS.map(p => p.sprite), ...MEALS.map(m => m.sprite), ...ZONES.map(z => z.icon), 'mobs/garden_beetle', 'mobs/garden_worm',
     ];
     const missing = sprites.filter(k => !existsSync(gfx(k)));
     expect(missing).toEqual([]);
@@ -140,11 +150,13 @@ describe('moteur', () => {
     s.daily.c[b.c] = b.target;
     expect(Fi.claimBounty(s, 0)).toBe(true);
     expect(Fi.claimBounty(s, 0)).toBe(false);
-    s.run.gold = 1e30;
     const before = E.stats(s).goldMult;
+    expect(Fi.eat(s, 'soupe')).toBe(false);          // pas d'ingrédients
+    Jb.give(s, 'racine_terreuse', 2); Jb.give(s, 'champignon_terreux', 1);
     expect(Fi.eat(s, 'soupe')).toBe(true);
+    expect(s.res.racine_terreuse).toBe(0);
     expect(E.stats(s).goldMult).toBeCloseTo(before * 1.6);
-    expect(Fi.eat(s, 'steak')).toBe(false);
+    expect(Fi.eat(s, 'soupe')).toBe(false);          // un plat à la fois
   });
 
   it('Boutique : bénédictions, quotas de pub, calendrier, Messager, packs', () => {
@@ -223,6 +235,59 @@ describe('moteur', () => {
     // Porte du Noyau franchissable après la Résonance
     E.newRun(s, 300); E.challengeBoss(s);
     expect(s.run.monster.locked).toBe(false);
+    setClock(() => Date.now());
+  });
+
+  it('Jardin : pousse, mutation par voisinage, récolte, Graine-Cœur', () => {
+    let t = Date.UTC(2026, 10, 2, 12);  // printemps
+    setClock(() => t);
+    Gd.setGardenRandom(() => 0.01);       // tous les jets réussissent
+    const s = E.newGame(); s.classId = 'mage'; s.bestFloor = 30;
+    Gd.gardenTick(s);
+    s.garden.seeds = { herbe_robuste: 1, fleur_rosee: 1 };
+    expect(Gd.plant(s, 0, 'herbe_robuste')).toBe(true);   // (0,0)
+    expect(Gd.plant(s, 2, 'fleur_rosee')).toBe(true);     // (2,0) — la case (1,0) les touche toutes les deux
+    t += 3600_000; Gd.gardenTick(s);
+    expect(Gd.mature(s.garden.plots[0])).toBe(true);
+    expect(s.garden.plots[1]?.plant).toBe('trefle_dore');  // mutation sur la case vide du milieu
+    expect(s.garden.known).toContain('trefle_dore');
+    s.garden.plots[0]!.pest = true;
+    expect(Gd.removePest(s, 0)).toBe(true);
+    const r = E.gardenHarvest(s, 0)!;
+    expect(r.qty).toBeGreaterThan(0);
+    expect(s.res.herbe_robuste).toBe(r.qty);
+    // Graine-Cœur : parcelle (1,1) entourée de 4 plantes de rang III
+    s.garden.plots = Array(36).fill(null);
+    for (const [i, id] of [[1, 'tournesol_radieux'], [6, 'cristal_givre'], [8, 'orchidee_silencieuse'], [13, 'tournesol_radieux']] as const)
+      s.garden.plots[i] = { plant: id, progress: 1 };
+    expect(Gd.mutationFor(s, 7)?.result).toBe('yggdrasil');
+    t += 3600_000; Gd.gardenTick(s);
+    expect(s.garden.plots[7]?.plant).toBe('yggdrasil');
+    s.garden.plots[7]!.progress = 1;
+    expect(E.gardenHarvest(s, 7)?.anchor).toBe(true);
+    expect(s.anchors.seedDone).toBe(true);
+    Gd.setGardenRandom(Math.random); setClock(() => Date.now());
+  });
+  it('Alchimie, expéditions et ressources de monstres', () => {
+    let t = Date.UTC(2026, 10, 20);
+    setClock(() => t);
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 50; E.newRun(s, 40);
+    Jb.give(s, 'herbe_robuste', 3); Jb.give(s, 'gelee_slime', 1);
+    expect(Cr.brew(s, 'tisane', 2)).toBe(1);
+    expect(s.jobs.alchimiste).toBeGreaterThan(0);
+    const tap = E.stats(s).tap;
+    expect(Cr.drink(s, 'tisane')).toBe(true);
+    expect(E.stats(s).tap).toBeCloseTo(tap * 1.5);
+    expect(Ex.send(s, 'mine', 4)).toBe(true);
+    expect(Ex.send(s, 'foret', 1)).toBe(false);   // une seule place au début
+    expect(Ex.claim(s, 0)).toBeNull();
+    t += 4 * 3600_000;
+    const loot = Ex.claim(s, 0)!;
+    expect(loot.res.pierre).toBeGreaterThan(0);
+    expect(s.metal).toBe(loot.metal);
+    // ressources de monstres : boss = 100 %
+    E.challengeBoss(s); E.damage(s, 1e300);
+    expect(Object.values(s.res).reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
     setClock(() => Date.now());
   });
 });

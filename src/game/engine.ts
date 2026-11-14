@@ -11,6 +11,10 @@ import { arc, familyMult } from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
 import * as Rz from './resonance';
+import * as Jb from './jobs';
+import { potion } from './crafting';
+import { newGarden, harvest as harvestPlot } from './garden';
+import { FAMILY_DROPS, DEFAULT_DROP, STORY_RARES } from './data/resources';
 import { HUNTS, HUNT_TIME, COMPASS_FLOORS, NOYAU_FLOOR } from './data/resonance';
 import { CALENDAR, PARTITION_REFILL_COST, BOUNTY_REROLL_COST } from './data/shop';
 import { RARITIES } from './data/items';
@@ -47,6 +51,7 @@ export function newGame(): GameState {
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
     gems: 0, shop: Sh.newShop(), messenger: null, nextMessengerAt: 240,
     anchors: Rz.newAnchors(), resonance: Rz.newResonance(),
+    jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [],
   };
   s.run = newRun(s, 1);
   Fi.dailyCheck(s);
@@ -96,10 +101,10 @@ export function stats(s: GameState): Stats {
   const g = I.gearTotals(s);
   const meal = Fi.mealActive(s);
   const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power')) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1);
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3'));
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
-  const comp = r ? companionsDps(s) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) : 0;
-  let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (c === 'guerrier' ? 2 : 1);
+  const comp = r ? companionsDps(s) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) : 0;
+  let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (c === 'guerrier' ? 2 : 1);
   if (r && active(s, 'crescendo')) tapMult *= 1 + 2 * power;
   if (r && s.time < r.crescendoUntil) tapMult *= T.crescendoMult;
   const share = 0.03 + star(s, 'meute_frappe');
@@ -107,12 +112,12 @@ export function stats(s: GameState): Stats {
   const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < T.seuilLegende;
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
-    critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
+    critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (c === 'archer' ? 1.3 : 1),
-    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1),
+    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
-    manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (c === 'mage' ? 2 : 1),
-    bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0)) * 10) / 10,
+    manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
+    bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte')) * 10) / 10,
     autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0),
   };
 }
@@ -218,6 +223,7 @@ function kill(s: GameState) {
   const r = s.run, m = r.monster, st = stats(s);
   s.stats.kills++; Fi.count(s, 'kills');
   if (m.hunt) { endHunt(s, true); return; }
+  resourceDrop(s, m);
   if (m.kind === 'boss') {
     const gold = F.bossGold(r.floor) * st.goldMult;
     addGold(s, gold);
@@ -260,6 +266,19 @@ function kill(s: GameState) {
   } else {
     r.monster = spawnMob(s);
   }
+}
+
+/** Ressources de monstres (métier Chasseur). */
+function resourceDrop(s: GameState, m: Monster) {
+  if (!s.res) return;
+  const lv = Jb.level(s, 'chasseur');
+  if (m.story && STORY_RARES[m.story]) { Jb.give(s, STORY_RARES[m.story], 1); log(s, 'loot', `Ressource rare : ${STORY_RARES[m.story].replace(/_/g, ' ')}`); }
+  const chance = m.kind === 'boss' ? 1 : m.kind === 'golden' ? 0 : 0.08 * (1 + lv * 0.02);
+  if (rnd() >= chance) return;
+  const id = m.sprite.split('/').pop()!;
+  const res = FAMILY_DROPS.find(([re]) => re.test(id))?.[1] ?? DEFAULT_DROP;
+  Jb.give(s, res, m.kind === 'boss' ? 2 + Math.floor(lv / 25) : 1);
+  Jb.addXp(s, 'chasseur', m.kind === 'boss' ? 10 : 3);
 }
 
 const lootMult = (s: GameState) => (1 + arc(s, 'loot')) * (Sh.blessing(s, 'butin') ? 2 : 1);
@@ -542,6 +561,13 @@ function endHunt(s: GameState, won: boolean) {
   } else log(s, 'fail', `${h.name} vous échappe. La Chasseuse hausse les épaules : « Reviens plus fort. »`);
 }
 
+/** Récolte au Jardin (déclenche l'Ancre de la Création pour la Graine-Cœur). */
+export function gardenHarvest(s: GameState, i: number) {
+  const r = harvestPlot(s, i);
+  if (r?.anchor) { story(s, 'ancre:creation'); log(s, 'story', 'La Graine-Cœur a éclos : Ancre de la Création.'); }
+  return r;
+}
+
 export function harvestSeed(s: GameState): boolean {
   if (!Rz.harvestSeed(s)) return false;
   story(s, 'ancre:creation');
@@ -604,7 +630,7 @@ function automate(s: GameState) {
 
 // ---------------------------------------------------------------- Ascension
 export function ascensionGain(s: GameState): number {
-  return Math.floor(F.eclatsFor(s.run.maxFloor) * (1 + arc(s, 'eclats')) * Rz.symEclatsMult(s)) + (s.ascensions === 0 ? 6 : 0);
+  return Math.floor(F.eclatsFor(s.run.maxFloor) * (1 + arc(s, 'eclats')) * Rz.symEclatsMult(s) * (1 + potion(s, 'eclats'))) + (s.ascensions === 0 ? 6 : 0);
 }
 export function canAscend(s: GameState) { return s.ascensionUnlocked && s.run.maxFloor >= 30; }
 export function startFloor(s: GameState): number {
@@ -697,6 +723,8 @@ function migrate(raw: any): GameState {
   s.run.inventory ??= []; s.run.equipped ??= {};
   s.achievements ??= {}; s.achSeen ??= [];
   s.anchors = { ...Rz.newAnchors(), ...(s.anchors ?? {}) };
+  s.jobs ??= {}; s.res ??= {}; s.potions ??= {}; s.buffs ??= {}; s.expeditions ??= [];
+  s.garden = { ...newGarden(), ...(s.garden ?? {}) };
   s.resonance = { ...Rz.newResonance(), ...(s.resonance ?? {}) };
   s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
   s.messenger = null; s.nextMessengerAt ??= s.time + 240;

@@ -1,7 +1,7 @@
 // Fief : Primes quotidiennes (Tableau de la garde) et Auberge de Gaston.
 import { now } from './clock';
 import type { GameState } from './types';
-import { BOUNTY_TYPES, MEALS, MEAL_BY_ID, FIEF_UNLOCK, type Counter, type MealDef } from './data/fief';
+import { BOUNTY_TYPES, FIEF_UNLOCK, type Counter } from './data/fief';
 import { mobGold } from './formulas';
 
 export interface Bounty { c: Counter; target: number; reward: { kind: 'or' | 'metal' | 'eclats'; amount: number }; claimed: boolean }
@@ -63,17 +63,5 @@ export function claimBounty(s: GameState, i: number): boolean {
 }
 export const chestReady = (s: GameState) => !!s.daily && !s.daily.chestClaimed && s.daily.bounties.every(b => b.claimed);
 
-// ---- Auberge
-export const mealActive = (s: GameState): MealDef | null => (s.meal && s.meal.until > now() ? MEAL_BY_ID[s.meal.id] : null);
-export const mealCost = (s: GameState, m: MealDef) => mobGold(s.run.floor) * m.costKills;
-export const mealUnlocked = (s: GameState, m: MealDef) => s.bestFloor >= m.unlock;
-export function eat(s: GameState, id: string): boolean {
-  const m = MEAL_BY_ID[id];
-  if (!m || !mealUnlocked(s, m) || mealActive(s)) return false;
-  const c = mealCost(s, m);
-  if (c > s.run.gold) return false;
-  s.run.gold -= c; s.stats.meals++;
-  s.meal = { id, until: now() + m.hours * 3600_000 };
-  return true;
-}
-export { MEALS };
+// ---- Auberge : voir crafting.ts (repas aux ingrédients)
+export { mealActive, eat, mealUnlocked } from './crafting';

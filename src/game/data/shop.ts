@@ -27,7 +27,7 @@ export const BOUNTY_REROLL_COST = 15;
 export interface Pack { id: string; name: string; icon: string; price: string; gems: number; desc: string; once?: boolean; offer?: string }
 export const PACKS: Pack[] = [
   { id: 'starter', name: 'Pack du Voyageur', icon: 'packs/gem_pack_starter', price: '2,99 €', gems: 300, desc: '300 gemmes + 2 Bénédictions de Guerre', once: true, offer: 'ascension:1' },
-  { id: 'fief', name: 'Pack du Fief', icon: 'packs/gem_pack_monthly', price: '1,99 €', gems: 150, desc: '150 gemmes + 3 plats de Gaston offerts', once: true, offer: 'fief' },
+  { id: 'fief', name: 'Pack du Jardinier', icon: 'packs/gem_pack_monthly', price: '1,99 €', gems: 150, desc: '150 gemmes, 20 graines communes et 3 h de Bénédiction de Fortune', once: true, offer: 'fief' },
   { id: 'gems_80', name: 'Poignée de gemmes', icon: 'packs/gem_pack_1', price: '0,99 €', gems: 80, desc: '80 gemmes' },
   { id: 'gems_450', name: 'Bourse de gemmes', icon: 'packs/gem_pack_5', price: '4,99 €', gems: 450, desc: '450 gemmes' },
   { id: 'gems_1000', name: 'Coffret de gemmes', icon: 'packs/gem_pack_20', price: '9,99 €', gems: 1000, desc: '1 000 gemmes' },

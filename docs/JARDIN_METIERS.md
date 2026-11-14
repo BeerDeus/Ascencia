@@ -1,4 +1,14 @@
-# Jardin & Métiers — proposition (v0, à discuter)
+# Jardin & Métiers (v1 en jeu)
+
+> **Décisions du 15/11** : propositions validées ; Mineur + Bûcheron fusionnés en **Expéditionnaire** ;
+> **forgemagie / Enchanteur abandonnés** pour l'instant. Équipement fabriqué : perdu à l'Ascension comme le butin,
+> panoplies complètes = bonus permanent (à venir avec le Forgeron).
+>
+> **En jeu (v1)** : Coffre, drops par famille de monstres (Chasseur), Jardin (grille 3×3→6×6, saisons hebdo,
+> 8 croisements + Graine-Cœur = Ancre de la Création, traits, Dissonance contagieuse, nuisibles, Herbier),
+> Alchimiste (10 potions), Cuisinier (6 repas aux ingrédients), Expéditions (5 zones, 1/4/8 h).
+> Le Jardin s'ouvre en plein écran : le combat continue en arrière-plan (dégâts automatiques seulement).
+> **À venir** : Forgeron (fabrication ciblée, panoplies).
 
 > Inspiration Dofus / Wakfu : **métiers de récolte** qui alimentent des **métiers de fabrication**, chacun avec son niveau,
 > des ressources liées aux familles de monstres, des panoplies, la forgemagie.

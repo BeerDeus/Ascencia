@@ -12,7 +12,8 @@ import * as Rz from '../src/game/resonance';
 import { SYMPHONY, symCost, HUNTS } from '../src/game/data/resonance';
 import { COMPANIONS, PARTITIONS, MILESTONES } from '../src/game/data/heroes';
 import { STARS, starCost } from '../src/game/data/constellations';
-import { MEALS } from '../src/game/data/fief';
+import { MEALS } from '../src/game/data/crafting';
+import { canPay } from '../src/game/jobs';
 import type { ClassId, GameState } from '../src/game/types';
 
 const DAYS = Number(process.argv[2] ?? 30);
@@ -96,7 +97,7 @@ function fief() {
   s.daily.bounties.forEach((_, i) => Fi.claimBounty(s, i));
   E.claimChest(s);
   if (!Fi.mealActive(s)) {
-    const m = [...MEALS].reverse().find(x => Fi.mealUnlocked(s, x) && Fi.mealCost(s, x) < s.run.gold * 0.3);
+    const m = [...MEALS].reverse().find(x => Fi.mealUnlocked(s, x) && canPay(s, x.cost));
     if (m) Fi.eat(s, m.id);
   }
 }
@@ -125,8 +126,8 @@ function anchors() {
   if (!Rz.anchorsVisible(s)) return;
   for (const [k, ok] of [['création', Rz.creationDone(s)], ['chaos', Rz.chaosDone(s)], ['destinée', Rz.destinyDone(s)]] as const)
     if (ok && !anchorDay[k]) anchorDay[k] = `j${day}`;
-  if (!s.anchors.seedPlanted && s.metal >= 600) Rz.plantSeed(s);
-  if (s.anchors.seedPlanted && !s.anchors.seedDone) E.harvestSeed(s);
+  // Jardin non simulé : on suppose qu'un joueur engagé fait éclore la Graine-Cœur vers le 28e jour
+  if (day >= 28) s.anchors.seedDone = true;
   if (!Rz.chaosDone(s) && active > nextHuntTry && !s.run.monster.hunt) {
     const h = HUNTS.find(x => !s.anchors.hunts[x.id]);
     if (h) E.startHunt(s, h.id);

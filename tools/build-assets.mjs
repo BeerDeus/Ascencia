@@ -13,6 +13,8 @@ const RULES = [
   ['sprites/portraits', 'portraits', 200, null],
   ['sprites/classesicon', 'classes', 128, null],
   ['sprites/symphonie', 'partitions', 128, null],
+  ['sprites/garden/plants', 'garden', 112, null],
+  ['sprites/garden/seasons', 'seasons', 128, null],
   ['sprites/icons', 'icons', 96, null],
   ['sprites/ressources', 'res', 96, null],
   ['sprites/objets', 'obj', 96, null],

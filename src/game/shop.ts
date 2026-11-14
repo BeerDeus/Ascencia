@@ -76,7 +76,10 @@ export function grantPack(s: GameState, id: string): boolean {
   if (!p || (p.once && s.shop.owned.includes(id))) return false;
   s.gems += p.gems;
   if (id === 'starter') addBlessing(s, 'force', 120);
-  if (id === 'fief') addBlessing(s, 'or', 180);
+  if (id === 'fief') {
+    addBlessing(s, 'or', 180);
+    for (const p of ['herbe_robuste', 'fleur_rosee', 'racine_terreuse', 'champignon_terreux', 'graine_solaire']) s.garden.seeds[p] = (s.garden.seeds[p] ?? 0) + 4;
+  }
   if (id === 'pass') s.shop.passUntil = Math.max(now(), s.shop.passUntil) + 30 * 86_400_000;
   if (p.once) s.shop.owned.push(id);
   return true;

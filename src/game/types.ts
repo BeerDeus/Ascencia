@@ -2,6 +2,9 @@ import type { Slot, StatId } from './data/items';
 import type { Daily } from './fief';
 import type { ShopState } from './shop';
 import type { Anchors, Resonance } from './resonance';
+import type { Garden } from './garden';
+import type { Expedition } from './expeditions';
+import type { JobId } from './data/resources';
 
 export type ClassId = 'guerrier' | 'archer' | 'mage';
 export type CompType = 'melee' | 'distance' | 'magie';
@@ -99,6 +102,12 @@ export interface GameState {
   nextMessengerAt: number;
   anchors: Anchors;
   resonance: Resonance;
+  jobs: Partial<Record<JobId, number>>;   // XP par métier
+  res: Record<string, number>;            // Coffre de ressources
+  garden: Garden;
+  potions: Record<string, number>;
+  buffs: Record<string, number>;          // potions actives (fin, horodatage réel)
+  expeditions: Expedition[];
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
