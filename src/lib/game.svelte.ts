@@ -31,6 +31,7 @@ export const ui = $state({
   ritual: 0,
   conflict: null as CloudSave | null,
   shop: false,
+  echo: false,
   calendar: false,
   offer: null as Pack | null,
   messenger: false,
@@ -50,7 +51,7 @@ export function toast(text: string, kind = 'info') {
 }
 
 export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict
-  || ui.calendar || !!ui.offer || ui.messenger || adUi.open;
+  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {

@@ -27,6 +27,7 @@
   import OfferModal from './ui/OfferModal.svelte';
   import AdOverlay from './ui/AdOverlay.svelte';
   import MessengerModal from './ui/MessengerModal.svelte';
+  import EchoFight from './ui/EchoFight.svelte';
   import { adUi } from './lib/ads.svelte';
   import CloudConflict from './ui/CloudConflict.svelte';
   import OptionsPanel from './ui/OptionsPanel.svelte';
@@ -77,6 +78,7 @@
   {:else if ui.messenger}<MessengerModal />
   {:else if ui.calendar}<CalendarModal />
   {:else if ui.offer}<OfferModal />{/if}
+  {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}
 {/if}
 

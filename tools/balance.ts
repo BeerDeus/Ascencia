@@ -144,6 +144,8 @@ function anchors() {
   if (!Rz.anchorsVisible(s)) return;
   for (const [k, ok] of [['création', Rz.creationDone(s)], ['chaos', Rz.chaosDone(s)], ['destinée', Rz.destinyDone(s)]] as const)
     if (ok && !anchorDay[k]) anchorDay[k] = `j${day}`;
+  // le Chant (jeu de mémoire) n'est pas simulé : un joueur le réussit en quelques essais
+  if (E.echoAvailable(s)) { E.finishEcho(s, 'lier'); anchorDay['écho'] = `j${day}`; }
   if (!Rz.chaosDone(s) && active > nextHuntTry && !s.run.monster.hunt) {
     const h = HUNTS.find(x => !s.anchors.hunts[x.id]);
     if (h) E.startHunt(s, h.id);

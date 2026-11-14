@@ -32,6 +32,6 @@ export function claim(s: GameState, i: number) {
   for (const [id, n] of Object.entries(loot.res)) give(s, id, n);
   s.metal += loot.metal;
   addXp(s, 'expedition', loot.xp);
-  s.expeditions.splice(i, 1);
+  s.expeditions.splice(i, 1); s.stats.expeditions++;
   return loot;
 }

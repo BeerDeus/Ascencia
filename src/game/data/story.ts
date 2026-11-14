@@ -149,8 +149,18 @@ export const SCENES: Scene[] = [
     { who: 'narrateur', text: 'La prison de l’Écho Oublié se fissure, puis explose dans une vague de silence absolu.' },
   ] },
   { id: 'floor:401', title: 'Acte X — Le Silence', lines: [
-    { who: 'narrateur', text: 'Les étoiles ne meurent pas : elles s’effacent. Quelque part, une voix murmure : « …chante pour lui… »' },
-    { who: 'narrateur', text: '(Le face-à-face avec l’Écho Oublié arrive dans une prochaine version. Le Silence, lui, ne s’arrête jamais.)' },
+    { who: 'narrateur', text: 'Les étoiles ne meurent pas : elles s’effacent, comme une aquarelle sous la pluie. La réalité se dissout.' },
+    { who: 'lysandra', text: '…chante pour lui… Tes Fragments d’Écho sont une mélodie. Raconte-lui ton histoire.' },
+    { who: 'narrateur', text: '(Touchez « Chanter » en haut de l’écran de combat quand vous serez prêt.)' },
+  ] },
+  { id: 'echo:victoire', title: 'Le Chant', lines: [
+    { who: 'narrateur', text: 'Lentement, la tempête de néant se calme. L’Écho, qui n’avait connu que la solitude, se souvient. Il se souvient de la beauté du bruit.' },
+    { who: 'narrateur', text: 'Apaisé, il flotte devant vous : une entité de pur potentiel, aussi dangereuse qu’innocente. Le choix vous revient.' },
+  ] },
+  { id: 'epilogue', title: 'Épilogue — Le Gardien Éternel', lines: [
+    { who: 'narrateur', text: 'Quel que fût votre choix, la musique revint dans le cosmos. La Dissonance s’apaisa, les Brèches se stabilisèrent.' },
+    { who: 'lysandra', text: 'Ta quête est terminée. Ta garde, elle, ne fait que commencer. Le Silence s’étend encore, étage après étage.' },
+    { who: 'narrateur', text: 'Votre voie peut changer à chaque Résonance. Le jeu continue, car la garde d’un Gardien est éternelle.' },
   ] },
 ];
 

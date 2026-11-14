@@ -46,7 +46,9 @@ export function newGame(): GameState {
     mastery: { guerrier: 0, archer: 0, mage: 0 },
     constellations: {}, seenStory: [], chronicle: [],
     settings: { sound: true, haptics: true, notation: 'lettres', autoAdvance: true, notifications: true },
-    stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0, partitions: 0, items: 0, bestRarity: -1, bounties: 0, meals: 0, letters: 0, parries: 0 },
+    stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0, partitions: 0, items: 0, bestRarity: -1, bounties: 0, meals: 0, letters: 0, parries: 0,
+      harvests: 0, mutations: 0, brewed: 0, drunk: 0, expeditions: 0, orders: 0, pieces: 0, gathered: 0, calendar: 0, hunts: 0 },
+    ending: { done: false, path: null, attempts: 0 },
     achievements: {}, achSeen: [],
     nextLarryAt: 600, metal: 0, itemSeq: 0, heritage: null,
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
@@ -101,8 +103,8 @@ export function stats(s: GameState): Stats {
   const r = s.run, c = s.classId;
   const g = I.gearTotals(s), sb = wornSetBonus(s);
   const meal = Fi.mealActive(s);
-  const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1);
+  const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1);
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
   let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
@@ -115,10 +117,10 @@ export function stats(s: GameState): Stats {
     tap, dps: comp * global, power, global, seuilBlocked,
     critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
-    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or),
+    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
-    bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte) * 10) / 10,
+    bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
     autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0),
   };
 }
@@ -518,7 +520,7 @@ export function rerollBounties(s: GameState): boolean {
 export function claimCalendar(s: GameState): string | null {
   if (!Sh.calendarReady(s)) return null;
   const rw = CALENDAR[s.shop.calIndex % CALENDAR.length];
-  s.shop.calLast = Fi.dayKey();
+  s.shop.calLast = Fi.dayKey(); s.stats.calendar++;
   s.shop.calIndex++;
   if (rw.kind === 'gemmes') { s.gems += rw.amount; return `+${rw.amount} gemmes`; }
   if (rw.kind === 'metal') { s.metal += rw.amount; return `+${rw.amount} métal`; }
@@ -556,7 +558,7 @@ function endHunt(s: GameState, won: boolean) {
   r.monster = spawnMob(s);
   emit({ type: 'hunt', id, won });
   if (won) {
-    s.anchors.hunts[id] = true;
+    s.anchors.hunts[id] = true; s.stats.hunts++;
     log(s, 'boss', `${h.name} est vaincu. Sa fureur s’ancre en vous.`);
     if (Rz.chaosDone(s)) story(s, 'ancre:chaos');
   } else log(s, 'fail', `${h.name} vous échappe. La Chasseuse hausse les épaules : « Reviens plus fort. »`);
@@ -575,6 +577,17 @@ export function harvestSeed(s: GameState): boolean {
   log(s, 'story', 'La Graine-Cœur a éclos : Ancre de la Création.');
   return true;
 }
+
+// ---------------------------------------------------------------- Fin du jeu : l'Écho Oublié
+export const echoAvailable = (s: GameState) => s.bestFloor > 400 && !s.ending.done;
+/** Victoire au Chant : la voie choisie donne un bonus permanent (modifiable à chaque Résonance). */
+export function finishEcho(s: GameState, path: 'sceller' | 'lier') {
+  const first = !s.ending.done;
+  s.ending.done = true; s.ending.path = path;
+  log(s, 'story', path === 'lier' ? 'Vous vous liez à l’Écho Oublié : la Voie du Compagnon.' : 'Vous scellez l’Écho Oublié : la Voie du Geôlier.');
+  if (first) story(s, 'epilogue');
+}
+export function setPath(s: GameState, path: 'sceller' | 'lier') { if (s.ending.done) s.ending.path = path; }
 
 // ---------------------------------------------------------------- Résonance (couche 2)
 export function resonate(s: GameState, classId: ClassId = s.classId ?? 'guerrier'): number {
@@ -670,7 +683,7 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
   if (!s.classId || seconds < 60) return null;
   const r = s.run;
   const secs = Math.min(seconds, OFFLINE_CAP);
-  const eff = 0.25 + star(s, 'bourse_offline') + arc(s, 'offline');
+  const eff = 0.25 + star(s, 'bourse_offline') + arc(s, 'offline') + (s.ending?.path === 'sceller' ? 0.5 : 0);
   const saved = { activeUntil: r.activeUntil, crescendo: r.crescendoUntil };
   r.activeUntil = r.activeUntil.map(() => 0); r.crescendoUntil = 0;
   const st = stats(s);
@@ -725,6 +738,7 @@ function migrate(raw: any): GameState {
   s.achievements ??= {}; s.achSeen ??= [];
   s.anchors = { ...Rz.newAnchors(), ...(s.anchors ?? {}) };
   s.forge ??= { sets: {} };
+  s.ending = Object.assign({ done: false, path: null, attempts: 0 }, s.ending);
   s.jobs ??= {}; s.res ??= {}; s.potions ??= {}; s.buffs ??= {}; s.expeditions ??= [];
   s.garden = { ...newGarden(), ...(s.garden ?? {}) };
   s.resonance = { ...Rz.newResonance(), ...(s.resonance ?? {}) };

@@ -87,7 +87,10 @@ export interface GameState {
   chronicle: ChronicleEntry[];
   settings: Settings;
   stats: { kills: number; bossKills: number; taps: number; goldEarned: number; playSeconds: number; goldenKills: number;
-    partitions: number; items: number; bestRarity: number; bounties: number; meals: number; letters: number; parries: number };
+    partitions: number; items: number; bestRarity: number; bounties: number; meals: number; letters: number; parries: number;
+    harvests: number; mutations: number; brewed: number; drunk: number; expeditions: number; orders: number; pieces: number;
+    gathered: number; calendar: number; hunts: number };
+  ending: { done: boolean; path: 'sceller' | 'lier' | null; attempts: number };
   achievements: Record<string, 1>;   // hauts faits encaissés
   achSeen: string[];                  // hauts faits déjà annoncés
   nextLarryAt: number;

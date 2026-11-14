@@ -109,6 +109,7 @@ export function gardenTick(s: GameState): GardenEvent[] {
         g.plots[i] = { plant: m.result, progress: 0, trait: rollTrait(), mutant: true };
         if (!g.known.includes(m.result)) g.known.push(m.result);
         events.push({ kind: 'mutation', plant: m.result, at: i });
+        if (s.stats) s.stats.mutations++;
       }
     }
   }
@@ -153,6 +154,7 @@ export interface HarvestResult { plant: string; qty: number; seeds: number; gems
 export function harvest(s: GameState, i: number): HarvestResult | null {
   const g = s.garden, p = g.plots[i];
   if (!p || !mature(p)) return null;
+  s.stats.harvests++;
   const d = PLANT_BY_ID[p.plant];
   g.plots[i] = null;
   if (d.id === 'yggdrasil') {

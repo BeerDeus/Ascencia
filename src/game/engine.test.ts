@@ -18,6 +18,7 @@ import * as Cr from './crafting';
 import * as Ex from './expeditions';
 import * as Jb from './jobs';
 import * as Fo from './forge';
+import * as Ec from './echo';
 import { SETS } from './data/forge';
 import { PLANTS, plantSprite } from './data/garden';
 import { RESOURCES } from './data/resources';
@@ -309,5 +310,33 @@ describe('moteur', () => {
     // le bonus permanent survit à l'Ascension
     s.ascensionUnlocked = true; s.run.maxFloor = 40; E.ascend(s, 'mage');
     expect(Fo.permanentSetMult(s)).toBeCloseTo(1.1);
+  });
+
+  it('Le Chant : néant, îlots de mémoire, mélodie, victoire et voie', () => {
+    const f = Ec.newFight(); let x = 0.3;
+    const rnd = () => (x = (x * 9301 + 49297) % 233280 / 233280);
+    Ec.begin(f);
+    let islands = 0;
+    for (let k = 0; k < 6; k++) {
+      while ((f.phase as string) === 'void') { Ec.tick(f, 0.1, rnd); for (const i of [...f.islands]) if (Ec.tapIsland(f, i.id) >= 0) islands++; }
+      expect(f.phase).toBe('show');
+      while ((f.phase as string) === 'show') Ec.tick(f, 0.1, rnd);
+      expect(Ec.press(f, (f.seq[0] + 1) % 5)).toBe('fail');   // erreur : on rejoue la démonstration
+      while ((f.phase as string) === 'show') Ec.tick(f, 0.1, rnd);
+      for (const n of f.seq) Ec.press(f, n);
+    }
+    expect(islands).toBeGreaterThan(5);
+    expect(f.phase).toBe('won');
+    expect(f.silence).toBeCloseTo(0);
+    const s = E.newGame(); s.classId = 'mage'; s.bestFloor = 401;
+    expect(E.echoAvailable(s)).toBe(true);
+    const base = E.stats(s).tap;
+    E.finishEcho(s, 'lier');
+    expect(E.stats(s).tap).toBeCloseTo(base * 3);
+    expect(E.echoAvailable(s)).toBe(false);
+    // sans toucher les îlots, le Néant finit par gagner
+    const g = Ec.newFight(); Ec.begin(g);
+    for (let k = 0; k < 400 && g.phase !== 'lost'; k++) { Ec.tick(g, 0.1, rnd); if (g.phase === 'input') Ec.press(g, (g.seq[g.input] + 1) % 5); }
+    expect(g.phase).toBe('lost');
   });
 });

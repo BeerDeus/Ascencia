@@ -12,7 +12,7 @@ export function brew(s: GameState, id: string, n = 1): number {
   let made = 0;
   for (; made < n && take(s, r.cost); made++) {
     s.potions[id] = (s.potions[id] ?? 0) + 1;
-    addXp(s, 'alchimiste', r.xp);
+    addXp(s, 'alchimiste', r.xp); s.stats.brewed++;
   }
   return made;
 }
@@ -20,7 +20,7 @@ export const potionMinutes = (s: GameState, id: string) => POTION_BY_ID[id].minu
 export function drink(s: GameState, id: string): boolean {
   const r = POTION_BY_ID[id];
   if (!r || r.effect === 'purete' || (s.potions[id] ?? 0) <= 0) return false;
-  s.potions[id]--;
+  s.potions[id]--; s.stats.drunk++;
   s.buffs[id] = Math.max(now(), s.buffs[id] ?? 0) + potionMinutes(s, id) * 60_000;
   return true;
 }

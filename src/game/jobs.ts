@@ -15,7 +15,7 @@ export function addXp(s: GameState, j: JobId, xp: number): number | null {
 }
 
 export const has = (s: GameState, id: string) => s.res[id] ?? 0;
-export function give(s: GameState, id: string, n = 1) { s.res[id] = (s.res[id] ?? 0) + n; }
+export function give(s: GameState, id: string, n = 1) { s.res[id] = (s.res[id] ?? 0) + n; if (s.stats) s.stats.gathered += n; }
 export function take(s: GameState, cost: Record<string, number>): boolean {
   for (const [id, n] of Object.entries(cost)) if (has(s, id) < n) return false;
   for (const [id, n] of Object.entries(cost)) s.res[id] -= n;

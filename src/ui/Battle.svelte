@@ -85,6 +85,10 @@
     <img class:on={r.wave === 10} src={gfx('icons/elite')} alt="Boss" />
   </div>
 
+  {#if E.echoAvailable(s)}
+    <button class="echo btn" onpointerdown={stop(() => (ui.echo = true))}>✧ Chanter pour l’Écho</button>
+  {/if}
+
   {#if r.farming}
     <button class="challenge btn blood" onpointerdown={stop(() => act(E.challengeBoss))}>Défier le boss</button>
   {/if}
@@ -141,6 +145,8 @@
   .waves img { width: 18px; height: 18px; margin-left: 3px; filter: grayscale(1) brightness(.5); }
   .waves img.on { filter: none; animation: throb .6s steps(2) infinite; }
   @keyframes throb { 50% { transform: scale(1.2); } }
+  .echo { position: absolute; top: 38px; left: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; animation: call 1s steps(2) infinite; }
+  @keyframes call { 50% { filter: brightness(1.3); } }
   .challenge { position: absolute; top: 38px; right: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; }
   .stage { position: absolute; inset: 28px 0 76px; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; }
   .shadow { position: absolute; bottom: 2px; width: 120px; height: 16px; background: rgba(0,0,0,.45); border-radius: 50%; }

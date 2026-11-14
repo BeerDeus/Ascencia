@@ -59,3 +59,6 @@ export function sfxParry() { tone(key * 3, 0.15, 'square', 0.12); tone(key * 4.5
 export function sfxFail() { [5, 3, 1, 0].forEach((m, i) => tone(key * PENTA[m] / 2, 0.35, 'triangle', 0.2, i * 0.12)); }
 export function sfxPartition() { tone(key * 2, 0.6, 'sine', 0.2); tone(key * 3, 0.6, 'sine', 0.15, 0.05); tone(key * 5 / 2, 0.6, 'sine', 0.12, 0.1); }
 export function sfxAscend() { for (let i = 0; i < 12; i++) tone(key * PENTA[i % 8] * (1 + Math.floor(i / 8)), 0.8, 'sine', 0.14, i * 0.09); }
+/** Note d'une Partition (combat final : le Chant). */
+export function sfxNote(i: number) { const f = key * PENTA[(i * 2) % PENTA.length] * (i >= 4 ? 2 : 1); tone(f, 0.5, 'triangle', 0.3); tone(f * 2, 0.3, 'sine', 0.1); }
+export function sfxVoid() { tone(key / 4, 1.2, 'sawtooth', 0.08); tone(key / 4 * 1.06, 1.2, 'sawtooth', 0.08); }

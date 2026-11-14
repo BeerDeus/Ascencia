@@ -77,6 +77,11 @@
       {#if !confirm}
         <button class="btn go" disabled={!Rz.canResonate(s)} onclick={() => (confirm = true)}>{Rz.canResonate(s) ? (s.resonance.count ? 'Résonner' : 'L’Ascension Finale') : 'Il faut au moins 5 Fragments'}</button>
       {:else}
+        {#if s.ending.done}
+          <div class="paths"><span>Votre voie :</span>
+            <button class:on={s.ending.path === 'sceller'} onclick={() => act(g => E.setPath(g, 'sceller'))}>Geôlier (or ×3, Volonté, hors-ligne)</button>
+            <button class:on={s.ending.path === 'lier'} onclick={() => act(g => E.setPath(g, 'lier'))}>Compagnon (dégâts ×3, Partitions)</button></div>
+        {/if}
         <p class="warn">Tout redémarre : Éclats, Légende, Constellations, niveaux d’Arcanes (les cartes restent), équipement (sauf Héritage). Gardés : Fragments, Symphonie, Fief, gemmes, Hauts faits, Maîtrises.</p>
         <div class="row"><button class="btn blood" onclick={resonate}>Confirmer</button><button class="btn stone" onclick={() => (confirm = false)}>Annuler</button></div>
       {/if}
@@ -137,6 +142,9 @@
   .go { width: 100%; padding: 10px; font-size: 15px; }
   .warn { font-size: 12px; color: var(--text-2); margin: 0; }
   .row { display: flex; gap: 6px; justify-content: center; }
+  .paths { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: center; font-size: 12px; color: var(--text-3); }
+  .paths button { padding: 4px 8px; font-size: 12px; font-weight: 700; color: var(--text-3); background: var(--stone-2); border: 2px solid var(--ink-0); }
+  .paths button.on { color: var(--parch-ink); background: var(--parch-2); }
   .node { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--stone-3); }
   .node .mi em { color: var(--moss); }
   .max { font-size: 12px; color: var(--gold); text-transform: uppercase; }

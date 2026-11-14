@@ -14,7 +14,7 @@
     const seen = new Set<string>();
     const next = ACHIEVEMENTS.filter(a => {
       if (s.achievements[a.id] || achDone(s, a)) return false;
-      const serie = a.id.replace(/_\d+$/, '');
+      const serie = a.id.replace(/_[\d.e+]+$/, '');
       if (seen.has(serie)) return false;
       seen.add(serie); return true;
     });

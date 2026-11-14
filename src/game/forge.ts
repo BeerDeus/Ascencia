@@ -20,7 +20,7 @@ export function order(s: GameState, slot: Slot, stat: StatId, rnd: () => number 
   it.affixes[0] = { stat, v: affixValue(stat, it.ilvl, rar, 1) };
   it.affixes = it.affixes.filter((a, i) => i === 0 || a.stat !== stat);
   addItem(s, it);
-  addXp(s, 'forgeron', 20 + rar * 15);
+  addXp(s, 'forgeron', 20 + rar * 15); s.stats.orders++;
   return it;
 }
 
@@ -34,7 +34,7 @@ export function forgePiece(s: GameState, setId: string, slot: Slot, rnd: () => n
   addItem(s, it);
   const got = (s.forge.sets[setId] ??= []);
   if (!got.includes(slot)) got.push(slot);
-  addXp(s, 'forgeron', 80);
+  addXp(s, 'forgeron', 80); s.stats.pieces++;
   return it;
 }
 
