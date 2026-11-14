@@ -35,7 +35,7 @@
       <div class="tt">{cls?.name} · chaque coup</div>
       <div class="dps">{N(st.tap)} par frappe → +{N(st.tap * (frappeBase(s.run.heroLevel + hn) / frappeBase(s.run.heroLevel) - 1))}</div>
     </div>
-    <UpButton label={'+' + hn + ' niv.'} cost={N(hcost)} can={hcost <= s.run.gold} onclick={buyHero} />
+    <UpButton label={'+' + hn + ' niv.'} cost={N(hcost)} can={hcost <= s.run.gold} onclick={buyHero} tuto="hero-up" />
   </div>
   {#each visible as i (i)}
     {@const c = COMPANIONS[i]}
@@ -52,7 +52,7 @@
         <div class="dps">{lv ? N(compDps(i, lv) * mult) + ' DPS' : '+' + N(compDps(i, 1) * mult) + ' DPS'}</div>
         {#if lv && nm}<div class="ms"><div class="bar"><i style="width:{((lv - prev) / (nm - prev)) * 100}%"></i></div><span>{nm} : ×{nm < 200 ? '2,5' : '3'}</span></div>{/if}
       </div>
-      <UpButton label={lv ? '+' + n + ' niv.' : 'Recruter'} cost={N(cost)} can={cost <= s.run.gold} onclick={() => buy(i)} />
+      <UpButton label={lv ? '+' + n + ' niv.' : 'Recruter'} cost={N(cost)} can={cost <= s.run.gold} onclick={() => buy(i)} tuto={'comp-' + i} />
     </div>
   {/each}
   {#if visible.length < COMPANIONS.length}

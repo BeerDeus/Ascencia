@@ -2,6 +2,7 @@ import type { GameState } from './types';
 import { now } from './clock';
 import { ZONES, DURATION_BONUS } from './data/expeditions';
 import { addXp, give, level } from './jobs';
+import { fiefTabOpen } from './data/fief';
 
 export interface Expedition { zone: string; start: number; hours: number }
 
@@ -11,7 +12,7 @@ export const doneAt = (e: Expedition) => e.start + e.hours * 3600_000;
 export const isDone = (e: Expedition) => now() >= doneAt(e);
 
 export function send(s: GameState, zone: string, hours: number): boolean {
-  if (!zoneOpen(s, zone) || s.expeditions.length >= slots(s) || !DURATION_BONUS[hours]) return false;
+  if (!fiefTabOpen(s, 'expeditions') || !zoneOpen(s, zone) || s.expeditions.length >= slots(s) || !DURATION_BONUS[hours]) return false;
   s.expeditions.push({ zone, start: now(), hours });
   return true;
 }

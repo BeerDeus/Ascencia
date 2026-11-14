@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { G, ui, act, toast } from '../lib/game.svelte';
+  import { G, ui, act, toast, persist } from '../lib/game.svelte';
   import * as Sh from '../game/shop';
   import * as E from '../game/engine';
   import { BLESSINGS, PACKS, AD_LIMITS, AD_GEMS, BAG_COST, BAG_MAX_BONUS, PARTITION_REFILL_COST, BOUNTY_REROLL_COST, GEM_ICON } from '../game/data/shop';
   import { fiefUnlocked } from '../game/fief';
+  import { gardenUnlocked } from '../game/garden';
   import { rewarded } from '../lib/ads.svelte';
   import { purchase, billingReady, billingTest } from '../lib/billing.svelte';
   import { GEM_ITEMS, AUBE_BY_ID } from '../game/data/packs';
@@ -27,7 +28,7 @@
   async function buy(id: string) {
     if (!billingReady) { toast('Achats disponibles dans l’appli Play Store', 'info'); return; }
     const p = PACKS.find(x => x.id === id)!;
-    if (await purchase(id, `${p.name} (${p.price})`)) { act(g => E.grantPurchase(g, id)); sfxGold(); toast(`${p.name} reçu !`, 'crit'); }
+    if (await purchase(id, `${p.name} (${p.price})`)) { act(g => E.grantPurchase(g, id)); persist(); sfxGold(); toast(`${p.name} reçu !`, 'crit'); }
   }
 </script>
 
@@ -90,7 +91,7 @@
       {/each}
 
       <div class="label">Packs{billingTest ? ' · mode test (achats simulés)' : ''}</div>
-      {#each PACKS.filter(p => !(p.once && s.shop.owned.includes(p.id)) && Sh.packUnlocked(s, p, fiefUnlocked(s))) as p}
+      {#each PACKS.filter(p => !(p.once && s.shop.owned.includes(p.id)) && Sh.packUnlocked(s, p, gardenUnlocked(s))) as p}
         <div class="row frame pack" class:aube={!!p.items}>
           <img src={gfx(p.icon)} alt="" />
           <div class="mi"><b>{p.name}</b><span>{p.desc}</span>

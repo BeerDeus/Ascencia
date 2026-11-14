@@ -56,7 +56,7 @@ export function newGame(): GameState {
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
     gems: 0, shop: Sh.newShop(), messenger: null, nextMessengerAt: 240,
     anchors: Rz.newAnchors(), resonance: Rz.newResonance(),
-    jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} }, vault: [],
+    jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} }, vault: [], tuto: [],
   };
   s.run = newRun(s, 1);
   Fi.dailyCheck(s);
@@ -798,6 +798,7 @@ function migrate(raw: any): GameState {
   s.anchors = { ...Rz.newAnchors(), ...(s.anchors ?? {}) };
   s.forge ??= { sets: {} };
   s.vault ??= [];
+  s.tuto ??= [];
   // une seule instance par objet lié au compte (le Sac de la vie en cours pointe sur le coffre)
   s.run.inventory = s.run.inventory.map(it => (it.bound ? s.vault.find(v => v.id === it.id) ?? it : it));
   s.ending = Object.assign({ done: false, path: null, attempts: 0 }, s.ending);

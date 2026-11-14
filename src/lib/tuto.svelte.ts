@@ -1,0 +1,117 @@
+// Tutoriel en bulles : une étape à la fois, qui guide vers l'onglet puis vers l'élément (attribut data-tuto).
+import type { GameState } from '../game/types';
+import * as E from '../game/engine';
+import { lootUnlocked } from '../game/items';
+import { fiefUnlocked } from '../game/fief';
+import { fiefTabOpen } from '../game/data/fief';
+import { claimable } from '../game/achievements';
+import { owned, drawCost } from '../game/arcanes';
+import { anchorsVisible } from '../game/resonance';
+import { G, ui, paused, moment } from './game.svelte';
+
+type SubKey = 'heroTab' | 'fiefTab' | 'ascTab' | 'atelier';
+const PREFIX: Record<SubKey, string> = { heroTab: 'hero', fiefTab: 'fief', ascTab: 'asc', atelier: 'atelier' };
+
+export interface Step {
+  id: string;
+  /** Déclencheur. */
+  when: (s: GameState) => boolean;
+  /** Onglet et sous-onglets à ouvrir avant d'afficher la bulle finale. */
+  tab?: typeof ui.tab; sub?: [SubKey, string][];
+  target: string;
+  text: string;
+  /** Bulle affichée pendant le trajet vers l'onglet (sinon `text`). */
+  nav?: string;
+  /** Bouton « Compris » sur la bulle finale. */
+  ok?: boolean;
+  /** Fin automatique. */
+  done?: (s: GameState) => boolean;
+  /** Déjà connu (anciennes sauvegardes) : passé sans être montré. */
+  skip?: (s: GameState) => boolean;
+}
+
+const parryOpen = (s: GameState) => s.run.parryUntil > 0 && s.time <= s.run.parryUntil;
+
+export const STEPS: Step[] = [
+  { id: 'frappe', when: s => !!s.classId, target: 'battle', text: 'Touchez le monstre pour frapper !',
+    done: s => s.stats.taps >= 10 },
+  { id: 'heros', when: s => s.run.gold >= E.heroCostN(s, 1), tab: 'compagnons', target: 'hero-up',
+    nav: 'Vous avez de l’or ! Ouvrez les Alliés.', text: 'Montez votre héros : chaque niveau rend vos frappes plus fortes.',
+    done: s => s.run.heroLevel >= 2, skip: s => s.ascensions > 0 || s.run.heroLevel >= 5 },
+  { id: 'allie', when: s => s.run.gold >= E.compCostN(s, 0, 1), tab: 'compagnons', target: 'comp-0',
+    text: 'Recrutez un allié : il attaque tout seul, même quand vous ne touchez pas l’écran.',
+    done: s => s.run.companions[0] > 0, skip: s => s.ascensions > 0 || s.run.companions.some(l => l > 0) },
+  { id: 'boss', when: s => s.run.monster.kind === 'boss', target: 'hud', ok: true,
+    text: 'Un boss ! Battez-le avant que la Volonté tombe à zéro. Sinon, renforcez-vous et retentez.',
+    done: s => s.run.monster.kind !== 'boss', skip: s => s.stats.bossKills > 0 },
+  { id: 'partition', when: s => E.partitionUnlocked(s, 0), target: 'partition-0',
+    text: 'Nouvelle Partition ! Touchez-la pour lancer un sort. Elle coûte du mana (la barre bleue).',
+    done: s => s.stats.partitions > 0 },
+  { id: 'parade', when: parryOpen, target: 'parry', text: 'Le boss prépare un coup : touchez « Parer » à temps !',
+    done: s => s.stats.parries > 0 || !parryOpen(s) },
+  { id: 'sac', when: lootUnlocked, tab: 'heros', sub: [['heroTab', 'sac']], target: 'doll', ok: true,
+    nav: 'Kaelen est libre ! Les monstres lâchent maintenant de l’équipement : ouvrez le Sac.',
+    text: 'Votre équipement. Touchez un objet pour l’équiper ou le recycler en métal ; le métal sert à l’améliorer (+1, +2…).' },
+  { id: 'hautsfaits', when: s => s.bestFloor >= 12 && claimable(s).length > 0, tab: 'heros', sub: [['heroTab', 'hf']], target: 'hero-hf', ok: true,
+    nav: 'Haut fait accompli !', text: 'Les Hauts faits rapportent des gemmes : réclamez-les ici.' },
+  { id: 'marche', when: s => s.gems >= 30, target: 'gems', text: 'Vos gemmes. Touchez ici pour ouvrir le Marché : bénédictions, objets, récompenses.',
+    done: () => ui.shop },
+  { id: 'ascension', when: s => E.canAscend(s), tab: 'ascension', target: 'ascend', ok: true,
+    nav: 'L’Ascension est possible !',
+    text: 'Vous repartez de l’étage 1, mais vos Éclats renforcent tous vos dégâts, pour toujours. Faites-la quand vous bloquez.',
+    skip: s => s.ascensions > 0 },
+  { id: 'etoiles', when: s => s.ascensions > 0 && s.eclats > 0, tab: 'ascension', sub: [['ascTab', 'rituel']], target: 'stars', ok: true,
+    nav: 'Des Éclats à dépenser !', text: 'Les Constellations : dépensez vos Éclats en bonus permanents.', skip: s => s.ascensions > 1 },
+  { id: 'arcanes', when: s => s.ascensions > 0 && s.eclats >= drawCost(s), tab: 'ascension', sub: [['ascTab', 'arcanes']], target: 'asc-arcanes', ok: true,
+    nav: 'Les Arcanes sont ouverts !', text: 'Tirez des cartes d’Arcane avec vos Éclats : des effets permanents à collectionner.', skip: s => owned(s) > 0 },
+  { id: 'fief', when: fiefUnlocked, tab: 'fief', sub: [['fiefTab', 'village']], target: 'fief-village', ok: true,
+    nav: 'Pont-la-Croisée vous ouvre ses portes : le Fief est débloqué !',
+    text: 'Le Village : primes du jour, coffre quotidien et repas de Gaston. D’autres lieux ouvriront plus haut.' },
+  { id: 'coffre', when: s => fiefTabOpen(s, 'coffre') && Object.values(s.res).some(v => v > 0), tab: 'fief', sub: [['fiefTab', 'coffre']], target: 'fief-coffre', ok: true,
+    nav: 'Des ressources dans le Coffre !', text: 'Le Coffre garde les ressources lâchées par les monstres. Elles servent au Jardin et aux ateliers.' },
+  { id: 'jardin', when: s => fiefTabOpen(s, 'jardin'), tab: 'fief', sub: [['fiefTab', 'jardin']], target: 'fief-jardin', ok: true,
+    nav: 'Nouveau dans le Fief : le Jardin !',
+    text: 'Plantez, récoltez… et placez deux plantes mûres côte à côte : une mutation peut naître sur la case vide voisine.' },
+  { id: 'expeditions', when: s => fiefTabOpen(s, 'expeditions'), tab: 'fief', sub: [['fiefTab', 'expeditions']], target: 'fief-expeditions', ok: true,
+    nav: 'Nouveau dans le Fief : les Expéditions !', text: 'Vos alliés partent récolter bois, pierre et métal, même quand vous ne jouez pas.' },
+  { id: 'alchimie', when: s => fiefTabOpen(s, 'alchimie'), tab: 'fief', sub: [['fiefTab', 'alchimie'], ['atelier', 'alchimie']], target: 'atelier-alchimie', ok: true,
+    nav: 'Nouveau dans le Fief : l’atelier d’Alaric !', text: 'Alaric transforme vos récoltes en potions : de gros bonus pendant quelques minutes.' },
+  { id: 'forge', when: s => fiefTabOpen(s, 'forge'), tab: 'fief', sub: [['fiefTab', 'alchimie'], ['atelier', 'forge']], target: 'atelier-forge', ok: true,
+    nav: 'Kaelen ouvre sa forge !', text: 'Commandez l’objet de votre choix, au niveau de l’étage actuel, et forgez les panoplies d’Acte.' },
+  { id: 'resonance', when: anchorsVisible, tab: 'ascension', sub: [['ascTab', 'resonance']], target: 'asc-resonance', ok: true,
+    nav: 'Les Ancres se révèlent…', text: 'Réunissez les trois Ancres pour la Résonance : un nouveau cycle, bien plus puissant.' },
+];
+
+export const tuto = $state({ id: '' as string, target: '', text: '', ok: false });
+
+const OFFER_AFTER = ['sac', 'jardin'];
+const isDone = (s: GameState, id: string) => s.tuto.includes(id);
+function finish(id: string) {
+  if (!isDone(G.s, id)) G.s.tuto.push(id);
+  tuto.id = ''; tuto.target = '';
+  if (OFFER_AFTER.includes(id)) moment('palier'); // l'offre attendait la fin de ce tuto (Pack de l'Aube, Pack du Jardinier)
+}
+export function acknowledge() { if (tuto.id) finish(tuto.id); }
+
+/** Appelé ~4 fois par seconde. */
+export function tutoTick() {
+  const s = G.s;
+  if (!s.tuto || !s.classId) return;
+  let step = tuto.id ? STEPS.find(x => x.id === tuto.id) : undefined;
+  if (step?.done?.(s)) { finish(step.id); step = undefined; }
+  if (!step) {
+    for (const x of STEPS) {
+      if (isDone(s, x.id) || !x.when(s)) continue;
+      if (x.skip?.(s) || x.done?.(s)) { s.tuto.push(x.id); continue; }
+      step = x; break;
+    }
+    if (!step) { tuto.id = ''; return; }
+    tuto.id = step.id;
+  }
+  if (paused() || (ui.shop && step.id !== 'marche')) { tuto.target = ''; return; }
+  // trajet : onglet, puis sous-onglets, puis l'élément
+  if (step.tab && ui.tab !== step.tab) return show(`nav-${step.tab}`, step.nav ?? step.text, false);
+  for (const [k, v] of step.sub ?? []) if (ui[k] !== v) return show(`${PREFIX[k]}-${v}`, step.nav ?? step.text, false);
+  show(step.target, step.text, !!step.ok);
+}
+function show(target: string, text: string, ok: boolean) { tuto.target = target; tuto.text = text; tuto.ok = ok; }

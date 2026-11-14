@@ -17,7 +17,7 @@
   <div class="res">
     <span class="gold outline"><img src={gfx('obj/piece_or')} alt="Or" />{N(s.run.gold)}</span>
     {#if s.ascensions > 0 || s.eclats > 0}<span class="ecl outline"><img src={gfx('res/eclats_ascension')} alt="Éclats" />{N(s.eclats)}</span>{/if}
-    <button class="gem outline" onclick={() => (ui.shop = true)} aria-label="Marché"><img src={gfx(GEM_ICON)} alt="" />{s.gems}</button>
+    <button class="gem outline" data-tuto="gems" onclick={() => (ui.shop = true)} aria-label="Marché"><img src={gfx(GEM_ICON)} alt="" />{s.gems}</button>
     {#if s.metal > 0}<span class="met outline"><img src={gfx('res/metal')} alt="Métal" />{N(s.metal)}</span>{/if}
     <button class="opt" class:on={ui.tab === 'options'} onclick={() => (ui.tab = ui.tab === 'options' ? 'chronique' : 'options')} aria-label="Options"><img src={gfx('obj/cle')} alt="" /></button>
   </div>

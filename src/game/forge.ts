@@ -4,6 +4,7 @@ import { SETS, SET_BY_ID, ORDER_COST, orderMetal, type SetBonus } from './data/f
 import { STATS, type Slot, type StatId } from './data/items';
 import { addXp, canPay, level, take } from './jobs';
 import { addItem, affixValue, rollRarity, makeItem } from './items';
+import { fiefTabOpen } from './data/fief';
 
 export const minRarity = (s: GameState) => { const l = level(s, 'forgeron'); return l >= 50 ? 3 : l >= 25 ? 2 : 1; };
 export const setUnlocked = (s: GameState, id: string) => { const d = SET_BY_ID[id]; return s.bestFloor >= d.floor && level(s, 'forgeron') >= d.level; };
@@ -11,7 +12,7 @@ export const setUnlocked = (s: GameState, id: string) => { const d = SET_BY_ID[i
 /** Commande à Kaelen : emplacement et stat principale au choix, au niveau de l'étage actuel. */
 export function order(s: GameState, slot: Slot, stat: StatId, rnd: () => number = Math.random): Item | null {
   const metal = orderMetal(s.run.floor);
-  if (s.metal < metal || !canPay(s, ORDER_COST)) return null;
+  if (!fiefTabOpen(s, 'forge') || s.metal < metal || !canPay(s, ORDER_COST)) return null;
   s.metal -= metal; take(s, ORDER_COST);
   let rar = Math.max(minRarity(s), rollRarity(s.run.floor, rnd));
   if (level(s, 'forgeron') >= 80 && rnd() < 0.1) rar = Math.max(rar, 4);
@@ -27,7 +28,7 @@ export function order(s: GameState, slot: Slot, stat: StatId, rnd: () => number 
 /** Forge une pièce de panoplie (rareté Épique, niveau de l'étage actuel). */
 export function forgePiece(s: GameState, setId: string, slot: Slot, rnd: () => number = Math.random): Item | null {
   const d = SET_BY_ID[setId], p = d?.pieces.find(x => x.slot === slot);
-  if (!d || !p || !setUnlocked(s, setId) || s.metal < d.metal || !canPay(s, d.cost)) return null;
+  if (!d || !p || !fiefTabOpen(s, 'forge') || !setUnlocked(s, setId) || s.metal < d.metal || !canPay(s, d.cost)) return null;
   s.metal -= d.metal; take(s, d.cost);
   const it = makeItem(s, s.run.floor, 3, rnd, slot);
   it.base = p.base; it.name = p.name; it.set = setId;

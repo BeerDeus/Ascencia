@@ -10,3 +10,7 @@ export const BOUNTY_TYPES: { c: Counter; text: (n: number) => string; min: numbe
 ];
 
 export const FIEF_UNLOCK = 26;
+/** Le Fief s'ouvre par étapes (record d'étage). */
+export const FIEF_TABS = { village: 26, coffre: 26, jardin: 35, expeditions: 45, alchimie: 55, forge: 60 } as const;
+export type FiefTab = keyof typeof FIEF_TABS;
+export const fiefTabOpen = (s: { bestFloor: number }, id: FiefTab) => s.bestFloor >= FIEF_TABS[id];

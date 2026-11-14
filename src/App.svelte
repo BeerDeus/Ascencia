@@ -16,6 +16,11 @@
   import ChestPanel from './ui/ChestPanel.svelte';
   import ForgePanel from './ui/ForgePanel.svelte';
   import { fiefUnlocked } from './game/fief';
+  import { FIEF_TABS, fiefTabOpen } from './game/data/fief';
+  import Tuto from './ui/Tuto.svelte';
+  const FIEF_LABELS = { village: 'Village', coffre: 'Coffre', jardin: 'Jardin', expeditions: 'Expéd.', alchimie: 'Ateliers' } as const;
+  const fiefTabs = $derived((Object.keys(FIEF_LABELS) as (keyof typeof FIEF_LABELS)[]).map(id => ({ id, label: FIEF_LABELS[id],
+    locked: fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}` })));
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
   import AchievementsPanel from './ui/AchievementsPanel.svelte';
@@ -44,32 +49,33 @@
   <main>
     <TopBar />
     <!-- Jardin en plein écran : le combat continue en arrière-plan (dégâts automatiques seulement) -->
-    {#if !(ui.tab === 'fief' && ui.fiefTab === 'jardin' && fiefUnlocked(G.s))}
+    {#if !(ui.tab === 'fief' && ui.fiefTab === 'jardin' && fiefTabOpen(G.s, 'jardin'))}
       <Battle />
       <PartitionBar />
     {/if}
     <section class="panel">
       {#if ui.tab === 'chronique'}<Chronicle />
       {:else if ui.tab === 'heros'}
-        <SubTabs bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : '') }]} />
+        <SubTabs name="hero" bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : '') }]} />
         {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else}<AchievementsPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
       {:else if ui.tab === 'fief'}
-        {#if fiefUnlocked(G.s)}<SubTabs bind:value={ui.fiefTab} tabs={[{ id: 'village', label: 'Village' }, { id: 'jardin', label: 'Jardin' }, { id: 'alchimie', label: 'Ateliers' }, { id: 'expeditions', label: 'Expéd.' }, { id: 'coffre', label: 'Coffre' }]} />{/if}
-        {#if !fiefUnlocked(G.s) || ui.fiefTab === 'village'}<FiefPanel />
+        {#if fiefUnlocked(G.s)}<SubTabs name="fief" bind:value={ui.fiefTab} tabs={fiefTabs} />{/if}
+        {#if !fiefUnlocked(G.s) || ui.fiefTab === 'village' || !fiefTabOpen(G.s, ui.fiefTab)}<FiefPanel />
         {:else if ui.fiefTab === 'jardin'}<GardenPanel />
         {:else if ui.fiefTab === 'alchimie'}
-          <SubTabs bind:value={ui.atelier} tabs={[{ id: 'alchimie', label: 'Alchimie (Alaric)' }, { id: 'forge', label: 'Forge (Kaelen)' }]} />
-          {#if ui.atelier === 'forge'}<ForgePanel />{:else}<AlchemyPanel />{/if}
+          <SubTabs name="atelier" bind:value={ui.atelier} tabs={[{ id: 'alchimie', label: 'Alchimie (Alaric)' }, { id: 'forge', label: 'Forge (Kaelen)', locked: fiefTabOpen(G.s, 'forge') ? undefined : `étage ${FIEF_TABS.forge}` }]} />
+          {#if ui.atelier === 'forge' && fiefTabOpen(G.s, 'forge')}<ForgePanel />{:else}<AlchemyPanel />{/if}
         {:else if ui.fiefTab === 'expeditions'}<ExpeditionsPanel />
         {:else}<ChestPanel />{/if}
       {:else if ui.tab === 'ascension'}
-        {#if G.s.ascensions > 0}<SubTabs bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel' }, { id: 'arcanes', label: 'Arcanes' }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance' }] : [])]} />{/if}
+        {#if G.s.ascensions > 0}<SubTabs name="asc" bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel' }, { id: 'arcanes', label: 'Arcanes' }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance' }] : [])]} />{/if}
         {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else if ui.ascTab === 'resonance' && anchorsVisible(G.s)}<ResonancePanel />{:else}<AscensionPanel />{/if}
       {:else}<OptionsPanel />{/if}
     </section>
     <Nav />
   </main>
+  <Tuto />
   <Toasts />
   {#if ui.shop}<ShopSheet />{/if}
   {#if ui.ritual}<Ritual />

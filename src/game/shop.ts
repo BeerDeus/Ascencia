@@ -95,6 +95,7 @@ export function stuckOffer(s: GameState, fiefOpen: boolean, nowMs: number) {
 }
 /** Un pack d'étape est proposé (et visible au Marché) quand sa condition est remplie. */
 export function packUnlocked(s: GameState, p: (typeof PACKS)[number], fiefOpen = true) {
+  if (p.items && !(s.tuto ?? []).includes('sac')) return false; // après le tuto du Sac
   if (p.floor) return s.bestFloor >= p.floor;
   if (p.offer) return p.offer === 'fief' ? fiefOpen : s.seenStory.includes(p.offer);
   return true;

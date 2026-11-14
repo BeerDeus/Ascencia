@@ -275,7 +275,7 @@ describe('moteur', () => {
   it('Alchimie, expéditions et ressources de monstres', () => {
     let t = Date.UTC(2026, 10, 20);
     setClock(() => t);
-    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 50; E.newRun(s, 40);
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 40);
     Jb.give(s, 'herbe_robuste', 3); Jb.give(s, 'gelee_slime', 1);
     expect(Cr.brew(s, 'tisane', 2)).toBe(1);
     expect(s.jobs.alchimiste).toBeGreaterThan(0);
@@ -296,7 +296,7 @@ describe('moteur', () => {
   });
 
   it('Forge : commande ciblée, panoplie portée et bonus permanent', () => {
-    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 20; E.newRun(s, 20);
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 20);
     s.metal = 1000;
     for (const [id, n] of Object.entries({ bois: 50, pierre: 50, peau_gobelin: 50, queue_rat: 50, croc_loup: 50 })) Jb.give(s, id, n);
     const it = Fo.order(s, 'anneau', 'comp')!;
@@ -343,6 +343,8 @@ describe('moteur', () => {
 
   it('Packs d’étape : Aube liée au compte, record requis, survit à l’Ascension, niveau fixe', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 12; E.newRun(s, 12);
+    expect(Sh.pendingOffer(s, false)).toBeUndefined();               // pas avant le tuto du Sac
+    s.tuto.push('sac');
     expect(Sh.pendingOffer(s, false)?.id).toBe('aube1');
     const tap = E.stats(s).tap;
     expect(E.grantPurchase(s, 'aube1')).toBe(true);

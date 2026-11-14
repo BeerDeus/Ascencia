@@ -37,7 +37,7 @@
     </div>
     <div class="right">
       <BuyMult />
-      <UpButton label={'+' + n + ' niv.'} cost={N(cost)} can={cost <= s.run.gold} onclick={buy} />
+      <UpButton label={'+' + n + ' niv.'} cost={N(cost)} can={cost <= s.run.gold} onclick={buy} tuto="hero-up2" />
     </div>
   </div>
 

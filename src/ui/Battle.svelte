@@ -77,7 +77,7 @@
   const stop = (fn: () => void) => (ev: PointerEvent) => { ev.stopPropagation(); fn(); };
 </script>
 
-<div class="battle" bind:this={zone} onpointerdown={onDown} role="button" tabindex="-1" aria-label="Frapper"
+<div class="battle" data-tuto="battle" bind:this={zone} onpointerdown={onDown} role="button" tabindex="-1" aria-label="Frapper"
   style="background-image: url({gfx('bg/' + actNow.bg)}); background-position: 50% {(1 - progress) * 100}%;">
 
   <div class="waves">
@@ -106,14 +106,14 @@
   {/if}
 
   {#if parryOpen}
-    <button class="parry" onpointerdown={stop(() => act(E.parry))} aria-label="Parer"><img src={gfx('icons/defense')} alt="" /><span class="outline">Parer !</span></button>
+    <button class="parry" data-tuto="parry" onpointerdown={stop(() => act(E.parry))} aria-label="Parer"><img src={gfx('icons/defense')} alt="" /><span class="outline">Parer !</span></button>
   {/if}
 
   {#each pops as p (p.id)}
     <span class="pop outline {p.cls}" style="left:{p.x * 100}%; top:{p.y * 100}%; {p.color ? 'color:' + p.color : ''}">{p.text}</span>
   {/each}
 
-  <div class="hud frame">
+  <div class="hud frame" data-tuto="hud">
     <div class="line">
       <span class="name" class:boss={m.kind === 'boss'} class:golden={m.kind === 'golden'}>{m.name}{#if m.locked} · scellée{/if}{#if m.hunt} · chasse{/if}</span>
       <span class="hpnum">{isFinite(m.hp) ? N(Math.max(0, m.hp)) : '∞'}</span>

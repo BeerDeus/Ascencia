@@ -158,14 +158,14 @@ function daily() {
 const MOMENT_FLOORS = [10, 26, 50, 100, 180, 300];
 let bossFails = 0;
 let pendingMoment: null | { kind: 'palier' | 'histoire' | 'bloque'; at: number } = null;
-function moment(kind: 'palier' | 'histoire' | 'bloque') {
+export function moment(kind: 'palier' | 'histoire' | 'bloque') {
   if (!pendingMoment || kind !== 'bloque') pendingMoment = { kind, at: performance.now() };
 }
 function offerMomentCheck(now: number) {
   if (!pendingMoment || paused() || now - pendingMoment.at < 1200) return;
   const kind = pendingMoment.kind;
   pendingMoment = null;
-  const fief = fiefUnlocked(G.s);
+  const fief = gardenUnlocked(G.s);
   const offer = pendingOffer(G.s, fief) ?? (kind === 'bloque' ? stuckOffer(G.s, fief, Date.now()) : undefined);
   if (offer) { (G.s.shop.offersShownAt ??= {})[offer.id] = Date.now(); ui.offer = offer; }
 }

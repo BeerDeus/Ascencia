@@ -28,7 +28,7 @@
       <div class="label">Ascensionner maintenant</div>
       <div class="gain outline"><img src={gfx('res/eclats_ascension')} alt="" />+{N(gain)}</div>
       <div class="small">Record de cette vie : étage {s.run.maxFloor} · prochain Éclat à l’étage {nextAt}</div>
-      <button class="btn go" disabled={!E.canAscend(s)} onclick={() => (ui.classPicker = 'ascension')}>
+      <button class="btn go" data-tuto="ascend" disabled={!E.canAscend(s)} onclick={() => (ui.classPicker = 'ascension')}>
         {E.canAscend(s) ? 'Entamer le rituel' : 'Atteindre l’étage 30'}
       </button>
       <div class="small">Perdu : étage, or, niveaux, équipement (sauf Héritage). Gardé : Éclats, Légende, Constellations, Maîtrises, métal.</div>
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div class="tabs">
+    <div class="tabs" data-tuto="stars">
       {#each branches as b}
         <button class:on={branch === b} style="--c:{BRANCHES[b].color}" onclick={() => (branch = b)}>{BRANCHES[b].name}</button>
       {/each}

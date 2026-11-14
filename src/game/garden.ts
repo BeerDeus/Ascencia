@@ -4,13 +4,14 @@ import { now } from './clock';
 import { PLANTS, PLANT_BY_ID, MUTATIONS, MUTATION_CHANCE, PEST_CHANCE, DISSONANCE_CHANCE, INFECT_CHANCE, WITHER_HOURS, SEED_PRICE_KILLS, type Season } from './data/garden';
 import { addXp, give, level } from './jobs';
 import { mobGold } from './formulas';
+import { fiefTabOpen } from './data/fief';
 
 export type Trait = 'geante' | 'doree' | 'lumineuse';
 export interface Plot { plant: string; progress: number; trait?: Trait; dissonantSince?: number; pest?: boolean; mutant?: boolean }
 export interface Garden { plots: (Plot | null)[]; lastTick: number; known: string[]; seeds: Record<string, number> }
 
 export const newGarden = (): Garden => ({ plots: Array(36).fill(null), lastTick: 0, known: [], seeds: { herbe_robuste: 3, fleur_rosee: 3 } });
-export const gardenUnlocked = (s: GameState) => s.bestFloor >= 26 || s.ascensions > 0;
+export const gardenUnlocked = (s: GameState) => fiefTabOpen(s, 'jardin');
 export const gridSize = (s: GameState) => Math.min(6, 3 + Math.floor(level(s, 'jardinier') / 20));
 export const season = (t = now()): Season => (Math.floor(t / (7 * 86_400_000)) % 4) as Season;
 export const seasonEndsIn = (t = now()) => 7 * 86_400_000 - (t % (7 * 86_400_000));

@@ -21,7 +21,7 @@
 
 <nav>
   {#each tabs as t}
-    <button class:on={ui.tab === t.id} class:locked={t.locked} onclick={() => (ui.tab = t.id)}>
+    <button class:on={ui.tab === t.id} class:locked={t.locked} data-tuto={"nav-" + t.id} onclick={() => (ui.tab = t.id)}>
       <img src={gfx(t.icon)} alt="" />
       <span>{t.label}</span>
       {#if t.dot}<i class="dot"></i>{/if}

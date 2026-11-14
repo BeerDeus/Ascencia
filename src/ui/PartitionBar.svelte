@@ -16,7 +16,7 @@
       {@const isActive = s.time < s.run.activeUntil[i]}
       {@const ready = unlocked && !cdLeft && s.run.mana >= p.mana}
       <button class="p" class:active={isActive} class:ready class:dim={unlocked && !ready && !cdLeft}
-        disabled={!unlocked} onclick={() => act(g => E.castPartition(g, i))} aria-label={p.name}>
+        disabled={!unlocked} data-tuto={'partition-' + i} onclick={() => act(g => E.castPartition(g, i))} aria-label={p.name}>
         {#if unlocked}
           <img src={gfx(p.icon)} alt="" />
           {#if cdLeft > 0}<span class="cd" style="width:{(cdLeft / p.cd) * 100}%"></span><span class="t outline">{Math.ceil(cdLeft)}s</span>

@@ -116,7 +116,8 @@ export interface GameState {
   buffs: Record<string, number>;          // potions actives (fin, horodatage réel)
   expeditions: Expedition[];
   forge: { sets: Record<string, string[]> };
-  vault: Item[];          // équipements liés au compte (packs)   // pièces de panoplie déjà forgées (collection)
+  vault: Item[];          // équipements liés au compte (packs)
+  tuto: string[];         // étapes du tutoriel terminées
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

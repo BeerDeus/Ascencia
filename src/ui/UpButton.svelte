@@ -1,9 +1,9 @@
 <script lang="ts">
   import { gfx } from '../lib/gfx';
-  let { label, cost, can, onclick }: { label: string; cost: string; can: boolean; onclick: () => void } = $props();
+  let { label, cost, can, onclick, tuto }: { label: string; cost: string; can: boolean; onclick: () => void; tuto?: string } = $props();
 </script>
 
-<button class="up" class:can disabled={!can} {onclick}>
+<button class="up" class:can disabled={!can} {onclick} data-tuto={tuto}>
   <img src={gfx('icons/amelioration')} alt="" />
   <span class="txt"><b>{label}</b><span>{cost}</span></span>
 </button>

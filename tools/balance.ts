@@ -36,8 +36,13 @@ const PROFILES = {
   casual: { sessions: 2, minutes: 10, cps: [5, 7], boss: [8, 11], pause: 0.2, parry: 0.5 },
   engage: { sessions: 4, minutes: 12, cps: [5, 9], boss: [10, 13], pause: 0.15, parry: 0.75 },
   hardcore: { sessions: 6, minutes: 20, cps: [6, 10], boss: [12, 15], pause: 0.1, parry: 0.9 },
+  // mesuré sur un vrai test (16/11) : ~2,5 frappes/s en moyenne, pauses comprises
+  frappeur: { sessions: 4, minutes: 12, cps: [7, 10], boss: [10, 13], pause: 0.15, parry: 0.75 },
+  tranquille: { sessions: 4, minutes: 12, cps: [2, 3.5], boss: [4, 6], pause: 0.3, parry: 0.5 },
 };
 const P = PROFILES[PROFILE];
+/** STRAT=frappe : tout l'or dans le héros (aucun allié). */
+const STRAT = process.env.STRAT ?? '';
 if (process.env.TUNE) applyTuning(JSON.parse(process.env.TUNE));
 E.setStatsCache(true);
 const DT = 0.2;
@@ -52,6 +57,7 @@ const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7ffffff
 E.setRandom(rnd);
 
 const s: GameState = E.newGame();
+s.tuto.push('sac'); // le bot connaît déjà le Sac
 s.classId = CLASS;
 E.newRun(s, 1);
 
@@ -84,7 +90,7 @@ function buyOffers() {
     if (day === 1 && !s.shop.owned.includes('noads')) { pay('noads'); pay('gems_6000'); }
     if (!Sh.passActive(s)) pay('pass');
   }
-  const o = Sh.pendingOffer(s, Fi.fiefUnlocked(s));
+  const o = Sh.pendingOffer(s, Gd.gardenUnlocked(s));
   if (!o) return;
   s.shop.offersSeen.push(o.id);
   if ((WANT[PAYER] ?? []).includes(o.id)) pay(o.id);
@@ -116,7 +122,7 @@ function shop() {
       }
     }
     COMPANIONS.forEach((_, i) => {
-      if (!E.compUnlocked(s, i)) return;
+      if (STRAT === 'frappe' || !E.compUnlocked(s, i)) return;
       const l = s.run.companions[i];
       const nm = F.nextMilestone(l) ?? l + 1;
       for (const n of [1, nm - l]) {

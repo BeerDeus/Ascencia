@@ -3,12 +3,13 @@ import type { GameState } from './types';
 import { now } from './clock';
 import { POTIONS, POTION_BY_ID, MEALS, MEAL_BY_ID, type MealRecipe, type PotionEffect } from './data/crafting';
 import { addXp, canPay, level, take } from './jobs';
+import { fiefTabOpen } from './data/fief';
 
 // ---- Alchimie
 export const potionUnlocked = (s: GameState, id: string) => level(s, 'alchimiste') >= POTION_BY_ID[id].level;
 export function brew(s: GameState, id: string, n = 1): number {
   const r = POTION_BY_ID[id];
-  if (!r || !potionUnlocked(s, id)) return 0;
+  if (!r || !fiefTabOpen(s, 'alchimie') || !potionUnlocked(s, id)) return 0;
   let made = 0;
   for (; made < n && take(s, r.cost); made++) {
     s.potions[id] = (s.potions[id] ?? 0) + 1;

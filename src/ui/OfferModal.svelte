@@ -1,6 +1,6 @@
 <script lang="ts">
   import { guard } from '../lib/guard';
-  import { G, ui, toast } from '../lib/game.svelte';
+  import { G, ui, toast, act, persist } from '../lib/game.svelte';
   import { billingReady, purchase } from '../lib/billing.svelte';
   import * as E from '../game/engine';
   import { AUBE_BY_ID } from '../game/data/packs';
@@ -10,7 +10,7 @@
   function close() { G.s.shop.offersSeen.push(p.id); ui.offer = null; }
   async function buy() {
     if (!billingReady) { toast('Achats disponibles dans l’appli Play Store', 'info'); close(); return; }
-    if (await purchase(p.id, `${p.name} (${p.price})`)) { E.grantPurchase(G.s, p.id); sfxGold(); toast(`${p.name} reçu !`, 'crit'); }
+    if (await purchase(p.id, `${p.name} (${p.price})`)) { act(g => E.grantPurchase(g, p.id)); persist(); sfxGold(); toast(`${p.name} reçu !`, 'crit'); }
     close();
   }
 </script>

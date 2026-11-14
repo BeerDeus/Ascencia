@@ -30,7 +30,7 @@
   </div>
 {:else}
   <div class="scroll body">
-    <div class="doll">
+    <div class="doll" data-tuto="doll">
       {#each SLOTS as sl}
         {@const it = I.equippedIn(s, sl.id)}
         <button class="cell slot" style="--r:{it ? RARITIES[it.rarity].color : 'transparent'}" class:filled={!!it} onclick={() => it && (selId = it.id)}>
