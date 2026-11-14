@@ -8,7 +8,7 @@
 > 8 croisements + Graine-Cœur = Ancre de la Création, traits, Dissonance contagieuse, nuisibles, Herbier),
 > Alchimiste (10 potions), Cuisinier (6 repas aux ingrédients), Expéditions (5 zones, 1/4/8 h).
 > Le Jardin s'ouvre en plein écran : le combat continue en arrière-plan (dégâts automatiques seulement).
-> **À venir** : Forgeron (fabrication ciblée, panoplies).
+> Forgeron (Kaelen) : commandes ciblées (emplacement + stat principale) et 5 panoplies d’Acte (bonus 2/4 pièces + bonus permanent de collection : +10 à +30 % de dégâts chacune).
 
 > Inspiration Dofus / Wakfu : **métiers de récolte** qui alimentent des **métiers de fabrication**, chacun avec son niveau,
 > des ressources liées aux familles de monstres, des panoplies, la forgemagie.

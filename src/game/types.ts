@@ -32,6 +32,7 @@ export interface Item {
   ilvl: number;
   plus: number;          // améliorations de Forge
   affixes: { stat: StatId; v: number }[];
+  set?: string;          // pièce de panoplie
 }
 
 export interface RunState {
@@ -108,6 +109,7 @@ export interface GameState {
   potions: Record<string, number>;
   buffs: Record<string, number>;          // potions actives (fin, horodatage réel)
   expeditions: Expedition[];
+  forge: { sets: Record<string, string[]> };   // pièces de panoplie déjà forgées (collection)
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

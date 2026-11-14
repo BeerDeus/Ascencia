@@ -115,4 +115,5 @@ export function upgrade(s: GameState, id: number): boolean {
 
 export function setHeritage(s: GameState, id: number | null) { s.heritage = s.heritage === id ? null : id; }
 
+export type { Slot, StatId } from './data/items';
 export const rarityName = (r: number) => RARITIES[r].name;

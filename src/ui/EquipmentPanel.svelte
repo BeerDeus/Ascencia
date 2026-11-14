@@ -67,7 +67,7 @@
         <div class="big slot" style="--r:{RARITIES[sel.rarity].color}"><img src={gfx(sel.base)} alt="" /></div>
         <div>
           <div class="iname" style="color:{RARITIES[sel.rarity].color}">{sel.name}{sel.plus ? ' +' + sel.plus : ''}</div>
-          <div class="label">{RARITIES[sel.rarity].name} · {SLOTS.find(x => x.id === sel.slot)?.name} · niv. {sel.ilvl}</div>
+          <div class="label">{RARITIES[sel.rarity].name} · {SLOTS.find(x => x.id === sel.slot)?.name} · niv. {sel.ilvl}{sel.set ? ' · panoplie' : ''}</div>
         </div>
       </div>
       <ul>

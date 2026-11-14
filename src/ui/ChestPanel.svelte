@@ -37,7 +37,7 @@
 <style>
   .body { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
   section { padding: 8px; }
-  .jobs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 4px; }
+  .jobs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px; }
   .j { display: flex; flex-direction: column; align-items: center; padding: 3px 0; background: var(--stone-2); font-size: 10px; text-align: center; }
   .j img { width: 28px; height: 36px; object-fit: contain; object-position: top; }
   .j b { font-size: 10px; line-height: 1.1; }

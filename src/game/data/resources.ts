@@ -1,11 +1,12 @@
 // Ressources du Coffre (récolte) et métiers.
-export type JobId = 'chasseur' | 'jardinier' | 'expedition' | 'alchimiste' | 'cuisinier';
+export type JobId = 'chasseur' | 'jardinier' | 'expedition' | 'alchimiste' | 'cuisinier' | 'forgeron';
 
 export const JOBS: Record<JobId, { name: string; icon: string; npc: string; desc: string }> = {
   chasseur: { name: 'Chasseur', icon: 'res/marque_chasse', npc: 'portraits/chasseuse', desc: 'Les monstres lâchent leurs ressources plus souvent.' },
   jardinier: { name: 'Jardinier', icon: 'res/plante_sauvage', npc: 'portraits/elian', desc: 'Plus de parcelles, de récoltes et de mutations.' },
   expedition: { name: 'Expéditionnaire', icon: 'icons/carte', npc: 'portraits/garde', desc: 'Expéditions plus fructueuses, plus de places.' },
   alchimiste: { name: 'Alchimiste', icon: 'icons/naturaliste', npc: 'portraits/alaric', desc: 'Nouvelles potions, potions plus longues.' },
+  forgeron: { name: 'Forgeron', icon: 'icons/forge', npc: 'portraits/kaelen', desc: 'Meilleure rareté des commandes, nouvelles panoplies.' },
   cuisinier: { name: 'Cuisinier', icon: 'icons/cuisine', npc: 'portraits/gaston', desc: 'Nouveaux plats, repas plus longs.' },
 };
 export const JOB_MAX = 100;

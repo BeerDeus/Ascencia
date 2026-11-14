@@ -17,6 +17,8 @@ import * as Gd from './garden';
 import * as Cr from './crafting';
 import * as Ex from './expeditions';
 import * as Jb from './jobs';
+import * as Fo from './forge';
+import { SETS } from './data/forge';
 import { PLANTS, plantSprite } from './data/garden';
 import { RESOURCES } from './data/resources';
 import { POTIONS, MEALS } from './data/crafting';
@@ -53,7 +55,7 @@ describe('données', () => {
       ...CLASSES.flatMap(c => [c.icon, c.portrait]), ...Object.values(SPEAKERS).flatMap(s => s.sprite ? [s.sprite] : []),
       'mobs/gobelin_vulnerable', ...ARCANES.map(a => 'cards/' + a.id),
       ...PLANTS.flatMap(p => [1, 2, 3].map(k => plantSprite(p.id, k))), ...Object.values(RESOURCES).map(r => r.sprite),
-      ...POTIONS.map(p => p.sprite), ...MEALS.map(m => m.sprite), ...ZONES.map(z => z.icon), 'mobs/garden_beetle', 'mobs/garden_worm',
+      ...SETS.flatMap(d => d.pieces.map(p => p.base)), ...POTIONS.map(p => p.sprite), ...MEALS.map(m => m.sprite), ...ZONES.map(z => z.icon), 'mobs/garden_beetle', 'mobs/garden_worm',
     ];
     const missing = sprites.filter(k => !existsSync(gfx(k)));
     expect(missing).toEqual([]);
@@ -289,5 +291,23 @@ describe('moteur', () => {
     E.challengeBoss(s); E.damage(s, 1e300);
     expect(Object.values(s.res).reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
     setClock(() => Date.now());
+  });
+
+  it('Forge : commande ciblée, panoplie portée et bonus permanent', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 20; E.newRun(s, 20);
+    s.metal = 1000;
+    for (const [id, n] of Object.entries({ bois: 50, pierre: 50, peau_gobelin: 50, queue_rat: 50, croc_loup: 50 })) Jb.give(s, id, n);
+    const it = Fo.order(s, 'anneau', 'comp')!;
+    expect(it.slot).toBe('anneau');
+    expect(it.affixes[0].stat).toBe('comp');
+    expect(it.rarity).toBeGreaterThanOrEqual(1);
+    const base = E.stats(s);
+    for (const sl of ['tete', 'torse', 'mains', 'pieds'] as const) { const p = Fo.forgePiece(s, 'hameau', sl)!; expect(p.set).toBe('hameau'); I.equip(s, p.id); }
+    expect(Fo.setComplete(s, 'hameau')).toBe(true);
+    expect(Fo.permanentSetMult(s)).toBeCloseTo(1.1);
+    expect(E.stats(s).goldMult).toBeGreaterThan(base.goldMult * 1.4);   // 2 pièces : +50 % or
+    // le bonus permanent survit à l'Ascension
+    s.ascensionUnlocked = true; s.run.maxFloor = 40; E.ascend(s, 'mage');
+    expect(Fo.permanentSetMult(s)).toBeCloseTo(1.1);
   });
 });

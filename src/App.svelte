@@ -14,6 +14,7 @@
   import AlchemyPanel from './ui/AlchemyPanel.svelte';
   import ExpeditionsPanel from './ui/ExpeditionsPanel.svelte';
   import ChestPanel from './ui/ChestPanel.svelte';
+  import ForgePanel from './ui/ForgePanel.svelte';
   import { fiefUnlocked } from './game/fief';
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
@@ -51,10 +52,12 @@
         {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else}<AchievementsPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
       {:else if ui.tab === 'fief'}
-        {#if fiefUnlocked(G.s)}<SubTabs bind:value={ui.fiefTab} tabs={[{ id: 'village', label: 'Village' }, { id: 'jardin', label: 'Jardin' }, { id: 'alchimie', label: 'Alchimie' }, { id: 'expeditions', label: 'Expéd.' }, { id: 'coffre', label: 'Coffre' }]} />{/if}
+        {#if fiefUnlocked(G.s)}<SubTabs bind:value={ui.fiefTab} tabs={[{ id: 'village', label: 'Village' }, { id: 'jardin', label: 'Jardin' }, { id: 'alchimie', label: 'Ateliers' }, { id: 'expeditions', label: 'Expéd.' }, { id: 'coffre', label: 'Coffre' }]} />{/if}
         {#if !fiefUnlocked(G.s) || ui.fiefTab === 'village'}<FiefPanel />
         {:else if ui.fiefTab === 'jardin'}<GardenPanel />
-        {:else if ui.fiefTab === 'alchimie'}<AlchemyPanel />
+        {:else if ui.fiefTab === 'alchimie'}
+          <SubTabs bind:value={ui.atelier} tabs={[{ id: 'alchimie', label: 'Alchimie (Alaric)' }, { id: 'forge', label: 'Forge (Kaelen)' }]} />
+          {#if ui.atelier === 'forge'}<ForgePanel />{:else}<AlchemyPanel />{/if}
         {:else if ui.fiefTab === 'expeditions'}<ExpeditionsPanel />
         {:else}<ChestPanel />{/if}
       {:else if ui.tab === 'ascension'}

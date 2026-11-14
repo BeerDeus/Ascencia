@@ -22,6 +22,7 @@ export const ui = $state({
   tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
   heroTab: 'heros' as 'heros' | 'sac' | 'hf',
   ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
+  atelier: 'alchimie' as 'alchimie' | 'forge',
   fiefTab: 'village' as 'village' | 'jardin' | 'alchimie' | 'expeditions' | 'coffre',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
