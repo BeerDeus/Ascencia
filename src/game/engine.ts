@@ -102,7 +102,21 @@ export function companionsDps(s: GameState): number {
   return d * (1 + star(s, 'meute_dps'));
 }
 
+// Cache optionnel (simulateur uniquement) : valable tant que la vie, l'heure de jeu et l'étage ne changent pas.
+let statsCacheOn = false, cacheKey: [unknown, number, number] | null = null, cacheVal: Stats | null = null;
+export function setStatsCache(on: boolean) { statsCacheOn = on; cacheKey = null; }
+export function invalidateStats() { cacheKey = null; }
+
 export function stats(s: GameState): Stats {
+  if (statsCacheOn) {
+    if (cacheKey && cacheVal && cacheKey[0] === s.run && cacheKey[1] === s.time && cacheKey[2] === s.run.floor) return cacheVal;
+    cacheVal = computeStats(s); cacheKey = [s.run, s.time, s.run.floor];
+    return cacheVal;
+  }
+  return computeStats(s);
+}
+
+function computeStats(s: GameState): Stats {
   const r = s.run, c = s.classId;
   const g = I.gearTotals(s), sb = wornSetBonus(s);
   const meal = Fi.mealActive(s);
@@ -211,7 +225,7 @@ export function tap(s: GameState) {
   if (s.time >= r.crescendoUntil) {
     r.ferveur += (s.classId === 'guerrier' ? T.ferveurGainWar : T.ferveurGain) * (1 + arc(s, 'ferveur'));
     if (r.ferveur >= 100) {
-      r.ferveur = 0;
+      r.ferveur = 0; cacheKey = null;
       r.crescendoUntil = s.time + T.crescendoDur + star(s, 'glaive_ferveur');
       emit({ type: 'crescendo' });
       log(s, 'crit', 'CRESCENDO ! La Ferveur double vos frappes.');
@@ -227,6 +241,7 @@ export function tap(s: GameState) {
 
 function kill(s: GameState) {
   const r = s.run, m = r.monster, st = stats(s);
+  cacheKey = null;
   s.stats.kills++; Fi.count(s, 'kills');
   if (m.hunt) { endHunt(s, true); return; }
   resourceDrop(s, m);
@@ -461,7 +476,7 @@ export function partitionUnlocked(s: GameState, i: number) { return s.bestFloor 
 export function castPartition(s: GameState, i: number): boolean {
   const r = s.run, p = PARTITIONS[i], st = stats(s);
   if (!partitionUnlocked(s, i) || s.time < r.cooldowns[i] || r.mana < p.mana) return false;
-  r.mana -= p.mana;
+  r.mana -= p.mana; cacheKey = null;
   r.cooldowns[i] = s.time + p.cd * Math.max(0.3, 1 - star(s, 'grimoire_cd') - arc(s, 'cd'));
   const dur = p.duration * (s.classId === 'mage' ? 1.5 : 1);
   if (dur) r.activeUntil[i] = s.time + dur;

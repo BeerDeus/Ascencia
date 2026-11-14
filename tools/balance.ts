@@ -39,6 +39,7 @@ const PROFILES = {
 };
 const P = PROFILES[PROFILE];
 if (process.env.TUNE) applyTuning(JSON.parse(process.env.TUNE));
+E.setStatsCache(true);
 const DT = 0.2;
 const STALL_ASCEND = 240; // s actives sans nouveau record → Ascension
 
@@ -335,6 +336,7 @@ function playSession(seconds: number) {
       else if (rnd() < P.pause / 10) paused = 3 + Math.floor(rnd() * 8);
       base = Math.min(P.cps[1], Math.max(P.cps[0], base + (rnd() - 0.5)));
     }
+    E.invalidateStats();
     cps = paused > 0 ? 0 : s.run.monster.kind === 'boss' ? between(P.boss) : base;
     const taps = cps * DT;
     for (let k = 0; k < Math.floor(taps) + (rnd() < taps % 1 ? 1 : 0); k++) E.tap(s);
