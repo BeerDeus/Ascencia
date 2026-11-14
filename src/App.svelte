@@ -13,6 +13,8 @@
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
   import AchievementsPanel from './ui/AchievementsPanel.svelte';
+  import ResonancePanel from './ui/ResonancePanel.svelte';
+  import { anchorsVisible } from './game/resonance';
   import { claimable } from './game/achievements';
   import ShopSheet from './ui/ShopSheet.svelte';
   import CalendarModal from './ui/CalendarModal.svelte';
@@ -42,8 +44,8 @@
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
       {:else if ui.tab === 'fief'}<FiefPanel />
       {:else if ui.tab === 'ascension'}
-        {#if G.s.ascensions > 0}<SubTabs bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel & Constellations' }, { id: 'arcanes', label: 'Arcanes' }]} />{/if}
-        {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else}<AscensionPanel />{/if}
+        {#if G.s.ascensions > 0}<SubTabs bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel' }, { id: 'arcanes', label: 'Arcanes' }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance' }] : [])]} />{/if}
+        {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else if ui.ascTab === 'resonance' && anchorsVisible(G.s)}<ResonancePanel />{:else}<AscensionPanel />{/if}
       {:else}<OptionsPanel />{/if}
     </section>
     <Nav />

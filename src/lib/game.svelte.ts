@@ -11,6 +11,7 @@ import { shopCheck, calendarReady, pendingOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
 import { adUi } from './ads.svelte';
 import { newlyDone } from '../game/achievements';
+import { askNotifications, scheduleReturnHooks, cancelReturnHooks } from './notify';
 
 export const G = $state<{ s: GameState }>({ s: E.newGame() });
 
@@ -18,7 +19,7 @@ export const ui = $state({
   ready: false,
   tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
   heroTab: 'heros' as 'heros' | 'sac' | 'hf',
-  ascTab: 'rituel' as 'rituel' | 'arcanes',
+  ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
   offline: null as OfflineReport | null,
@@ -67,6 +68,8 @@ function handle(e: GameEvent) {
     case 'heavy': buzz('heavy'); break;
     case 'loot': if (e.item.rarity >= 3) { toast(`${RARITIES[e.item.rarity].name} : ${e.item.name}`, e.item.rarity >= 4 ? 'crit' : 'up'); A.sfxUp(); } break;
     case 'story': ui.scenes.push(e.id); break;
+    case 'hunt': toast(e.won ? 'Bête Primordiale vaincue !' : 'La Bête s’échappe…', e.won ? 'crit' : 'info'); if (e.won) A.sfxBoss(); break;
+    case 'auto-ascend': toast(`Ascension automatique : +${e.gain} Éclats`, 'up'); A.sfxAscend(); break;
   }
   if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') ui.tab = 'ascension';
   void s;
@@ -169,8 +172,11 @@ export async function boot() {
     checkOffline();
   }
   onAppState(active => {
-    if (!active) { hiddenAt = Date.now(); lastCloud = 0; persist(); }
-    else if (hiddenAt && Date.now() - hiddenAt > 60_000) { G.s.lastSave = hiddenAt; checkOffline(); }
+    if (!active) { hiddenAt = Date.now(); lastCloud = 0; persist(); scheduleReturnHooks(G.s); }
+    else {
+      cancelReturnHooks();
+      if (hiddenAt && Date.now() - hiddenAt > 60_000) { G.s.lastSave = hiddenAt; checkOffline(); }
+    }
   });
   window.addEventListener('pagehide', () => persist());
   onAuth(u => { if (u) reconcile(); });
@@ -187,6 +193,7 @@ export function chooseClass(id: 'guerrier' | 'archer' | 'mage') {
     G.s.classId = id;
     E.newRun(G.s, 1);
     E.log(G.s, 'story', '— Acte I : L’Éveil —');
+    askNotifications();
   } else if (mode === 'ascension') {
     ui.ritual = E.ascensionGain(G.s);
     A.sfxAscend();

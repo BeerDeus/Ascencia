@@ -81,9 +81,16 @@ export const ACTS: Act[] = [
     mobs: ['dragon_corrompu', 'griffon_corrompu', 'chevalier_eternel', 'esprit_ancien_tourmente', 'voyageur_sombre',
       'horreur_dimentionnelle', 'arme_de_larry', 'fragment_de_dissonance'],
     bosses: ['ouroboros', 'collectionneur', 'dieu_fou'] },
-  { id: 7, title: 'Acte VII', subtitle: 'Le Noyau du Silence', from: 251, to: Infinity, bg: 'dungeon', key: 207.65,
+  { id: 7, title: 'Acte VII', subtitle: 'Le Noyau du Silence', from: 251, to: 300, bg: 'dungeon', key: 207.65,
     mobs: ['heraut_du_silence', 'arme_de_larry', 'mimique_monstre', 'double_sombre', 'chevalier_neant', 'dieu_fou'],
     bosses: ['dieu_fou', 'collectionneur', 'heraut_du_silence'] },
+  { id: 9, title: 'Acte IX', subtitle: 'Le Miroir', from: 301, to: 400, bg: 'acte3', key: 185,
+    mobs: ['chevalier_neant', 'double_sombre', 'golem_sombre', 'spectre_sombre', 'archimage_dement', 'assassin_ombre',
+      'maitre_ombre', 'chevalier_eternel', 'voyageur_sombre', 'loup_dissonant', 'fragment_de_douleur', 'esprit_ancien_tourmente'],
+    bosses: ['chef_gobelin', 'golem_pierre', 'gardien_erode', 'hydre_marais', 'chimere', 'archange'] },
+  { id: 10, title: 'Acte X', subtitle: 'Le Silence', from: 401, to: Infinity, bg: 'dungeon', key: 174.61,
+    mobs: ['horreur_dimentionnelle', 'fragment_de_dissonance', 'heraut_du_silence', 'shoggoth', 'ouroboros', 'dieu_fou'],
+    bosses: ['dragon_ancien', 'archange', 'ouroboros', 'dieu_fou'] },
 ];
 
 export interface StoryBoss { floor: number; id: string; sprite: string; name: string; hpMult: number }
@@ -100,6 +107,9 @@ export const STORY_BOSSES: StoryBoss[] = [
   { floor: 170, id: 'champion', sprite: 'mobs/double_sombre', name: 'Le Champion Dissonant', hpMult: 2 },
   { floor: 180, id: 'seuil_harmonique', sprite: 'mobs/archange', name: 'Le Gardien Harmonique', hpMult: 2.5 },
   { floor: 250, id: 'dragon', sprite: 'mobs/dragon_ancien', name: 'Le Dragon Ancien', hpMult: 3 },
+  { floor: 300, id: 'porte_noyau', sprite: 'mobs/gardien_verrouille', name: 'La Porte du Noyau', hpMult: 3 },
+  { floor: 350, id: 'lieutenant', sprite: 'mobs/double_sombre', name: 'Le Lieutenant démultiplié', hpMult: 3 },
+  { floor: 400, id: 'larry', sprite: 'portraits/larry', name: 'Larry', hpMult: 4 },
 ];
 
 /** Poids de Légende requis pour percer le Seuil Harmonique. */

@@ -10,6 +10,8 @@ import * as I from './items';
 import { arc, familyMult } from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
+import * as Rz from './resonance';
+import { HUNTS, HUNT_TIME, COMPASS_FLOORS, NOYAU_FLOOR } from './data/resonance';
 import { CALENDAR, PARTITION_REFILL_COST, BOUNTY_REROLL_COST } from './data/shop';
 import { RARITIES } from './data/items';
 import { SCENE_BY_ID, LARRY_QUIPS, LARRY_ON, KILL_LINES, BOSS_LINES } from './data/story';
@@ -18,7 +20,8 @@ export const SAVE_VERSION = 1;
 const CHRONICLE_MAX = 60;
 const GOLDEN_FROM = 3;
 const GOLDEN_TIME = 6;
-const OFFLINE_CAP = 8 * 3600;
+export const OFFLINE_CAP_SECONDS = 8 * 3600;
+const OFFLINE_CAP = OFFLINE_CAP_SECONDS;
 
 // ---------------------------------------------------------------- événements
 let queue: GameEvent[] = [];
@@ -37,12 +40,13 @@ export function newGame(): GameState {
     eclats: 0, legende: 0, ascensions: 0, ascensionUnlocked: false, bestFloor: 1,
     mastery: { guerrier: 0, archer: 0, mage: 0 },
     constellations: {}, seenStory: [], chronicle: [],
-    settings: { sound: true, haptics: true, notation: 'lettres', autoAdvance: true },
+    settings: { sound: true, haptics: true, notation: 'lettres', autoAdvance: true, notifications: true },
     stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0, partitions: 0, items: 0, bestRarity: -1, bounties: 0, meals: 0, letters: 0, parries: 0 },
     achievements: {}, achSeen: [],
     nextLarryAt: 600, metal: 0, itemSeq: 0, heritage: null,
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
     gems: 0, shop: Sh.newShop(), messenger: null, nextMessengerAt: 240,
+    anchors: Rz.newAnchors(), resonance: Rz.newResonance(),
   };
   s.run = newRun(s, 1);
   Fi.dailyCheck(s);
@@ -92,7 +96,7 @@ export function stats(s: GameState): Stats {
   const g = I.gearTotals(s);
   const meal = Fi.mealActive(s);
   const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power')) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1);
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1);
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) : 0;
   let tapMult = (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (c === 'guerrier' ? 2 : 1);
@@ -105,7 +109,7 @@ export function stats(s: GameState): Stats {
     tap, dps: comp * global, power, global, seuilBlocked,
     critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (c === 'archer' ? 1.3 : 1),
-    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1),
+    goldMult: (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (c === 'mage' ? 2 : 1),
     bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0)) * 10) / 10,
@@ -162,7 +166,9 @@ function spawnBoss(s: GameState): Monster {
       return { sprite: sb.sprite, name: sb.name, kind: 'boss', hp: Infinity, maxHp: Infinity, story: sb.id };
     }
     const hp = F.bossHp(r.floor) * sb.hpMult * bossHpMult(s);
-    return { sprite: sb.sprite, name: sb.name, kind: 'boss', hp, maxHp: hp, story: sb.id };
+    const locked = sb.id === 'porte_noyau' && s.resonance.count === 0;
+    if (locked) log(s, 'fail', 'La Porte du Noyau est scellée de l’intérieur. Vos coups glissent sur elle sans laisser de trace.');
+    return { sprite: sb.sprite, name: sb.name, kind: 'boss', hp, maxHp: hp, story: sb.id, locked };
   }
   const sprite = 'mobs/' + pick(actFor(r.floor).bosses);
   const hp = F.bossHp(r.floor) * bossHpMult(s);
@@ -173,7 +179,8 @@ function spawnBoss(s: GameState): Monster {
 export function damage(s: GameState, amount: number, crit = false, isTap = false, auto = false) {
   const m = s.run.monster;
   if (!m || m.hp <= 0) return;
-  if (m.kind === 'boss' && s.run.floor === SEUIL_HARMONIQUE.floor) amount *= certitude(s); // la Certitude du Gardien absorbe les coups
+  if (m.locked) amount = 0;
+  else if (m.kind === 'boss' && !m.hunt && s.run.floor === SEUIL_HARMONIQUE.floor) amount *= certitude(s); // la Certitude du Gardien absorbe les coups
   m.hp -= amount;
   emit({ type: 'hit', amount, crit, tap: isTap, auto });
   if (m.hp <= 0) kill(s);
@@ -210,6 +217,7 @@ export function tap(s: GameState) {
 function kill(s: GameState) {
   const r = s.run, m = r.monster, st = stats(s);
   s.stats.kills++; Fi.count(s, 'kills');
+  if (m.hunt) { endHunt(s, true); return; }
   if (m.kind === 'boss') {
     const gold = F.bossGold(r.floor) * st.goldMult;
     addGold(s, gold);
@@ -217,6 +225,12 @@ function kill(s: GameState) {
     log(s, 'boss', pick(BOSS_LINES).replace('{m}', m.name) + ` (+${fmt(gold)} or)`);
     emit({ type: 'kill', monster: m, gold });
     if (m.story) story(s, `kill:${m.story}`);
+    const ci = COMPASS_FLOORS.indexOf(r.floor);
+    if (ci >= 0 && !s.anchors.compass[r.floor] && Rz.anchorsVisible(s)) {
+      s.anchors.compass[r.floor] = true;
+      log(s, 'story', `Pièce du Compas Stellaire (${Object.values(s.anchors.compass).filter(Boolean).length}/3)`);
+      if (Rz.destinyDone(s)) story(s, 'ancre:destinee');
+    }
     if (I.lootUnlocked(s) && (m.story || rnd() < 0.4 * lootMult(s))) drop(s, m.story ? 2 : 0, m.story ? 1 : 0);
     advanceFloor(s);
     return;
@@ -295,6 +309,8 @@ export function challengeBoss(s: GameState) {
 function bossFailed(s: GameState) {
   const r = s.run, m = r.monster;
   emit({ type: 'boss-fail' });
+  if (m.hunt) { endHunt(s, false); return; }
+  if (m.locked) story(s, 'noyau');
   if (r.scriptedDefeat) {
     r.scriptedDefeat = false;
     s.ascensionUnlocked = true;
@@ -363,6 +379,9 @@ export function tick(s: GameState, dt: number) {
     }
     if (r.bossTime <= 0) bossFailed(s);
   }
+
+  if (r.maxFloor !== r.lastRecord) { r.lastRecord = r.maxFloor; r.lastRecordAt = s.time; }
+  if (Math.floor(s.time / 2) !== Math.floor((s.time - dt) / 2)) automate(s);
 
   // Messager de Lysandra : une lettre traverse l'écran de temps en temps
   if (s.messenger && s.time > s.messenger.until) { s.messenger = null; s.nextMessengerAt = s.time + 150 + rnd() * 150; }
@@ -499,13 +518,97 @@ export function claimChest(s: GameState) {
   return it;
 }
 
+// ---------------------------------------------------------------- Chasses primordiales (Ancre du Chaos)
+export function startHunt(s: GameState, id: string): boolean {
+  const h = HUNTS.find(x => x.id === id), r = s.run;
+  if (!h || s.anchors.hunts[id] || r.monster.hunt || !Rz.anchorsVisible(s)) return false;
+  r.huntBack = { floor: r.floor, wave: r.wave === 10 ? 0 : r.wave, farming: r.farming };
+  const hp = F.bossHp(h.floor) * h.hpMult * bossHpMult(s);
+  r.monster = { sprite: h.sprite, name: h.name, kind: 'boss', hp, maxHp: hp, hunt: id, tint: h.tint };
+  r.wave = 10; r.bossTime = HUNT_TIME; r.bossAttackIn = 5;
+  log(s, 'story', `Chasse : ${h.name}`);
+  return true;
+}
+function endHunt(s: GameState, won: boolean) {
+  const r = s.run, id = r.monster.hunt!, h = HUNTS.find(x => x.id === id)!;
+  const back = r.huntBack ?? { floor: r.floor, wave: 0, farming: false };
+  r.huntBack = null; r.floor = back.floor; r.wave = back.wave; r.farming = back.farming;
+  r.monster = spawnMob(s);
+  emit({ type: 'hunt', id, won });
+  if (won) {
+    s.anchors.hunts[id] = true;
+    log(s, 'boss', `${h.name} est vaincu. Sa fureur s’ancre en vous.`);
+    if (Rz.chaosDone(s)) story(s, 'ancre:chaos');
+  } else log(s, 'fail', `${h.name} vous échappe. La Chasseuse hausse les épaules : « Reviens plus fort. »`);
+}
+
+export function harvestSeed(s: GameState): boolean {
+  if (!Rz.harvestSeed(s)) return false;
+  story(s, 'ancre:creation');
+  log(s, 'story', 'La Graine-Cœur a éclos : Ancre de la Création.');
+  return true;
+}
+
+// ---------------------------------------------------------------- Résonance (couche 2)
+export function resonate(s: GameState, classId: ClassId = s.classId ?? 'guerrier'): number {
+  if (!Rz.canResonate(s)) return 0;
+  const gain = Rz.fragmentsFor(s);
+  const first = s.resonance.count === 0;
+  s.resonance.fragments += gain; s.resonance.total += gain; s.resonance.count++;
+  s.eclats = Rz.startEclats(s); s.legende = 0;
+  s.constellations = {};
+  for (const id in s.arcanes) if (s.arcanes[id] > 0) s.arcanes[id] = 1;
+  s.classId = classId;
+  const keep = s.run.inventory.find(i => i.id === s.heritage);
+  newRun(s, startFloor(s));
+  if (keep) { s.run.inventory.push(keep); s.run.equipped[keep.slot] = keep.id; }
+  log(s, 'story', `✧ Résonance n°${s.resonance.count} : +${gain} Fragments d’Écho.`);
+  if (first) story(s, 'resonance:1');
+  return gain;
+}
+
+// ---------------------------------------------------------------- Automatisations (Symphonie)
+/** Achat automatique : meilleur rapport dégâts/coût entre Frappe et compagnons. */
+export function autoBuy(s: GameState) {
+  const st = stats(s);
+  const raw = s.run.companions.reduce((a, l, i) => a + F.compDps(i, l), 0);
+  const compMult = raw > 0 ? st.dps / raw : st.global;
+  const tapUnit = st.tap / F.frappeBase(s.run.heroLevel);
+  for (let guard = 0; guard < 40; guard++) {
+    let best: null | { ratio: number; act: () => boolean } = null;
+    const L = s.run.heroLevel, hc = heroCostN(s, 1);
+    if (hc <= s.run.gold) best = { ratio: (F.frappeBase(L + 1) - F.frappeBase(L)) * tapUnit * 3 / hc, act: () => buyHero(s, 1) };
+    s.run.companions.forEach((l, i) => {
+      if (!compUnlocked(s, i)) return;
+      const nm = F.nextMilestone(l) ?? l + 1;
+      for (const n of [1, nm - l]) {
+        const c = compCostN(s, i, n);
+        if (n <= 0 || c > s.run.gold) continue;
+        const g = (F.compDps(i, l + n) - F.compDps(i, l)) * compMult + (l === 0 ? 1e-9 : 0);
+        if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => buyComp(s, i, n) };
+      }
+    });
+    if (!best || !best.act()) break;
+  }
+}
+function automate(s: GameState) {
+  const a = s.resonance.auto, r = s.run;
+  if (a.buy && Rz.sym(s, 'auto_achat')) autoBuy(s);
+  if (a.partitions && Rz.sym(s, 'auto_partitions')) PARTITIONS.forEach((_, i) => castPartition(s, i));
+  if (a.ascend && Rz.sym(s, 'auto_ascension') && canAscend(s) && s.ascensions > 0 && !r.monster.hunt
+    && s.time - (r.lastRecordAt ?? s.time) > 180) {
+    const gain = ascend(s, s.classId!);
+    emit({ type: 'auto-ascend', gain });
+  }
+}
+
 // ---------------------------------------------------------------- Ascension
 export function ascensionGain(s: GameState): number {
-  return Math.floor(F.eclatsFor(s.run.maxFloor) * (1 + arc(s, 'eclats'))) + (s.ascensions === 0 ? 6 : 0);
+  return Math.floor(F.eclatsFor(s.run.maxFloor) * (1 + arc(s, 'eclats')) * Rz.symEclatsMult(s)) + (s.ascensions === 0 ? 6 : 0);
 }
 export function canAscend(s: GameState) { return s.ascensionUnlocked && s.run.maxFloor >= 30; }
 export function startFloor(s: GameState): number {
-  return Math.max(1, Math.floor(s.bestFloor * Math.min(0.5, star(s, 'sentier_memoire') + arc(s, 'start'))));
+  return Math.max(1, Rz.departFloor(s), Math.floor(s.bestFloor * Math.min(0.5, star(s, 'sentier_memoire') + arc(s, 'start'))));
 }
 export function ascend(s: GameState, classId: ClassId): number {
   if (!canAscend(s)) return 0;
@@ -593,6 +696,8 @@ function migrate(raw: any): GameState {
   while (s.run.companions.length < COMPANIONS.length) s.run.companions.push(0);
   s.run.inventory ??= []; s.run.equipped ??= {};
   s.achievements ??= {}; s.achSeen ??= [];
+  s.anchors = { ...Rz.newAnchors(), ...(s.anchors ?? {}) };
+  s.resonance = { ...Rz.newResonance(), ...(s.resonance ?? {}) };
   s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
   s.messenger = null; s.nextMessengerAt ??= s.time + 240;
   Fi.dailyCheck(s);

@@ -1,6 +1,7 @@
 import type { Slot, StatId } from './data/items';
 import type { Daily } from './fief';
 import type { ShopState } from './shop';
+import type { Anchors, Resonance } from './resonance';
 
 export type ClassId = 'guerrier' | 'archer' | 'mage';
 export type CompType = 'melee' | 'distance' | 'magie';
@@ -14,6 +15,9 @@ export interface Monster {
   maxHp: number;
   story?: string;       // id de boss scénarisé
   fleeAt?: number;      // temps de jeu où le monstre doré s'enfuit
+  hunt?: string;        // chasse primordiale en cours
+  tint?: string;        // filtre CSS (variantes de sprite)
+  locked?: boolean;     // invulnérable (Porte du Noyau avant la Résonance)
 }
 
 export interface Item {
@@ -47,6 +51,9 @@ export interface RunState {
   activeUntil: number[];  // fin d'effet par Partition
   tapsTotal: number;
   scriptedDefeat: boolean;
+  huntBack?: { floor: number; wave: number; farming: boolean } | null;
+  lastRecord?: number;     // dernier record de la vie (détection de stagnation)
+  lastRecordAt?: number;
   inventory: Item[];
   equipped: Partial<Record<Slot, number>>;
 }
@@ -56,6 +63,7 @@ export interface Settings {
   haptics: boolean;
   notation: 'lettres' | 'scientifique';
   autoAdvance: boolean;
+  notifications: boolean;
 }
 
 export interface GameState {
@@ -89,6 +97,8 @@ export interface GameState {
   shop: ShopState;
   messenger: { until: number } | null;   // Messager de Lysandra à l'écran (temps de jeu)
   nextMessengerAt: number;
+  anchors: Anchors;
+  resonance: Resonance;
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
@@ -108,4 +118,6 @@ export type GameEvent =
   | { type: 'story'; id: string }
   | { type: 'heavy' }
   | { type: 'loot'; item: Item }
-  | { type: 'messenger' };
+  | { type: 'messenger' }
+  | { type: 'auto-ascend'; gain: number }
+  | { type: 'hunt'; id: string; won: boolean };

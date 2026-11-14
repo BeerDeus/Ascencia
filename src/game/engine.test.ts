@@ -11,6 +11,8 @@ import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
 import * as Ach from './achievements';
+import * as Rz from './resonance';
+import { setClock } from './clock';
 import { ARCANES } from './data/arcanes';
 
 const gfx = (k: string) => `public/gfx/${k}.webp`;
@@ -179,5 +181,48 @@ describe('moteur', () => {
     expect(Ach.claimAch(s, 'etage_50')).toBe(10);
     expect(s.gems).toBe(g + 10);
     expect(Ach.claimAch(s, 'etage_50')).toBe(0);
+  });
+
+  it('Ancres, Porte du Noyau et Résonance', () => {
+    let t = Date.UTC(2026, 10, 20);
+    setClock(() => t);
+    const s = E.newGame(); s.classId = 'archer'; s.bestFloor = 299; s.ascensions = 30; s.ascensionUnlocked = true;
+    s.legende = 90000; s.eclats = 500; s.constellations = { glaive_frappe: 10 }; s.arcanes = { empereur: 7 };
+    E.newRun(s, 300); s.run.maxFloor = 300;
+    // Porte du Noyau : scellée avant la 1re Résonance
+    E.challengeBoss(s);
+    expect(s.run.monster.locked).toBe(true);
+    E.damage(s, 1e300);
+    expect(s.run.monster.hp).toBeGreaterThan(0);
+    // Création
+    s.metal = 1000;
+    expect(Rz.plantSeed(s)).toBe(true);
+    expect(E.harvestSeed(s)).toBe(false);
+    t += 49 * 3600_000;
+    expect(E.harvestSeed(s)).toBe(true);
+    // Chaos : on gagne les trois chasses
+    for (const id of ['leviathan', 'phenix', 'loup']) {
+      expect(E.startHunt(s, id)).toBe(true);
+      E.damage(s, 1e300);
+      expect(s.anchors.hunts[id]).toBe(true);
+      expect(s.run.floor).toBe(300);
+    }
+    // Destinée
+    s.anchors.compass = { 260: true, 280: true, 300: true };
+    expect(Rz.anchorsDone(s)).toBe(true);
+    const frag = E.resonate(s);
+    expect(frag).toBe(Math.floor(3 * Math.sqrt(90)));
+    expect(s.legende).toBe(0);
+    expect(s.constellations).toEqual({});
+    expect(s.arcanes.empereur).toBe(1);
+    expect(s.resonance.count).toBe(1);
+    // Harmoniques : ×2 par niveau
+    const before = E.stats(s).tap;
+    expect(Rz.buySym(s, 'harmonique')).toBe(true);
+    expect(E.stats(s).tap).toBeCloseTo(before * 2);
+    // Porte du Noyau franchissable après la Résonance
+    E.newRun(s, 300); E.challengeBoss(s);
+    expect(s.run.monster.locked).toBe(false);
+    setClock(() => Date.now());
   });
 });

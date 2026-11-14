@@ -49,6 +49,7 @@
   <section class="frame">
     <div class="label">Réglages</div>
     <label><span>Sons et notes des frappes</span><input type="checkbox" bind:checked={s.settings.sound} onchange={updateSettings} /></label>
+    <label><span>Notifications (Android)</span><input type="checkbox" bind:checked={s.settings.notifications} onchange={updateSettings} /></label>
     <label><span>Vibrations</span><input type="checkbox" bind:checked={s.settings.haptics} onchange={updateSettings} /></label>
     <label><span>Retenter le boss automatiquement</span><input type="checkbox" bind:checked={s.settings.autoAdvance} onchange={updateSettings} /></label>
     <label><span>Notation scientifique</span><input type="checkbox" checked={s.settings.notation === 'scientifique'}

@@ -110,7 +110,47 @@ export const SCENES: Scene[] = [
   ] },
   { id: 'floor:251', title: 'Acte VII — Le Noyau du Silence', lines: [
     { who: 'larry', text: 'Bienvenue dans la salle de montage. Ici, le script n’existe pas encore. Et c’est moi qui tiens la plume.' },
-    { who: 'narrateur', text: '(La suite de l’histoire — les Ancres et la Résonance — arrive dans une prochaine version.)' },
+  ] },
+  { id: 'floor:255', title: 'Les Ancres', lines: [
+    { who: 'lysandra', text: 'Larry s’est enfermé dans le Noyau. Pour y entrer, frapper ne suffira pas : tu dois devenir la clé.' },
+    { who: 'lysandra', text: 'Il te faut trois Ancres. La Création, le Chaos, la Destinée. Ton Fief, la Chasseuse et les étoiles t’y aideront.' },
+  ] },
+  { id: 'noyau', lines: [
+    { who: 'larry', text: '*toc toc* Qui est là ? Ah, c’est toi. Non. C’est fermé. Reviens quand tu seras… autre chose.' },
+    { who: 'lysandra', text: 'La Porte est scellée de l’intérieur. Réunis les trois Ancres (onglet Ascension) : l’Ascension Finale fera de toi la clé.' },
+  ] },
+  { id: 'ancre:creation', lines: [
+    { who: 'narrateur', text: 'La Graine-Cœur éclôt. Pas d’arbre : une vague de pure vitalité, qui s’ancre en vous. Ancre de la Création.' },
+  ] },
+  { id: 'ancre:chaos', lines: [
+    { who: 'chasseuse', text: 'Les trois Bêtes Primordiales. Toutes. Bon. Je crois que je te respecte, maintenant.' },
+    { who: 'narrateur', text: 'Leur fureur indomptable s’ancre en vous. Ancre du Chaos.' },
+  ] },
+  { id: 'ancre:destinee', lines: [
+    { who: 'silas', text: 'Le Compas Stellaire est complet. Il ne montre pas le nord : il montre ce que tu pourrais devenir. Ancre de la Destinée.' },
+  ] },
+  { id: 'resonance:1', title: 'Acte VIII — L’Ascension Finale', lines: [
+    { who: 'narrateur', text: 'Pas d’explosion de lumière, pas de dissolution. Juste un sentiment de plénitude.' },
+    { who: 'lysandra', text: 'Tu n’es plus un héros, ni même une légende. Tu es une certitude. Les Fragments d’Écho résonnent en toi : écoute la Symphonie.' },
+  ] },
+  { id: 'floor:301', title: 'Acte IX — Le Miroir', lines: [
+    { who: 'larry', text: 'Reprenons depuis le début, tu ne crois pas ? Mais cette fois, c’est moi qui écris le scénario.' },
+  ] },
+  { id: 'boss:350', lines: [
+    { who: 'narrateur', text: 'Le Lieutenant. Vous l’avez déjà vaincu. Mais cette fois, il se démultiplie.' },
+  ] },
+  { id: 'boss:400', lines: [
+    { who: 'larry', text: 'Assez joué. Tu n’es pas un simple jouet. Tu es une erreur. Une fausse note dans ma symphonie.' },
+    { who: 'larry', text: 'Il est temps de t’effacer.' },
+  ] },
+  { id: 'kill:larry', title: 'Le Final', lines: [
+    { who: 'larry', text: '*un filet de sang noir* Le public a adoré… mais chaque pièce doit avoir un final grandiose.' },
+    { who: 'larry', text: 'Si je ne peux pas réécrire la chanson… ALORS IL N’Y AURA PLUS DE MUSIQUE !' },
+    { who: 'narrateur', text: 'La prison de l’Écho Oublié se fissure, puis explose dans une vague de silence absolu.' },
+  ] },
+  { id: 'floor:401', title: 'Acte X — Le Silence', lines: [
+    { who: 'narrateur', text: 'Les étoiles ne meurent pas : elles s’effacent. Quelque part, une voix murmure : « …chante pour lui… »' },
+    { who: 'narrateur', text: '(Le face-à-face avec l’Écho Oublié arrive dans une prochaine version. Le Silence, lui, ne s’arrête jamais.)' },
   ] },
 ];
 
