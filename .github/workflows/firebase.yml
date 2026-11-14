@@ -5,7 +5,7 @@ name: Firebase (règles Firestore)
 on:
   push:
     branches: [main]
-    paths: [firestore.rules, firestore.indexes.json, firebase.json, .github/workflows/firebase.yml]
+    paths: [firestore.rules, firestore.indexes.json, firebase.json, .github/workflows/firebase.yml, tools/firebase-auth-domains.mjs]
   workflow_dispatch:
 
 jobs:
@@ -29,5 +29,13 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
         run: npx -y firebase-tools@15 deploy --only firestore:rules,firestore:indexes --project ascencia-app-off --non-interactive
+      - name: Domaines autorisés (Firebase Auth)
+        if: steps.key.outputs.ok == 'true'
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: |
+          mkdir -p "$RUNNER_TEMP/fa" && cp tools/firebase-auth-domains.mjs "$RUNNER_TEMP/fa/"
+          cd "$RUNNER_TEMP/fa" && npm init -y >/dev/null && npm i --silent google-auth-library@9
+          node firebase-auth-domains.mjs
       - if: always()
         run: rm -f "$RUNNER_TEMP/sa.json"
