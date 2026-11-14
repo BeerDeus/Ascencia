@@ -93,7 +93,7 @@
   </div>
 
   {#if E.echoAvailable(s)}
-    <button class="echo btn" onpointerdown={stop(() => (ui.echo = true))}>✧ Chanter pour l’Écho</button>
+    <button class="echo btn" class:low={!!stand} onpointerdown={stop(() => (ui.echo = true))}>✧ Chanter pour l’Écho</button>
   {/if}
 
   {#if r.farming}
@@ -160,6 +160,7 @@
   .waves img { width: 18px; height: 18px; margin-left: 3px; filter: grayscale(1) brightness(.5); }
   .waves img.on { filter: none; animation: throb .6s steps(2) infinite; }
   @keyframes throb { 50% { transform: scale(1.2); } }
+  .echo.low { top: 130px; }
   .echo { position: absolute; top: 38px; left: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; animation: call 1s steps(2) infinite; }
   @keyframes call { 50% { filter: brightness(1.3); } }
   .challenge { position: absolute; top: 38px; right: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; }
@@ -181,7 +182,7 @@
   .pop.loot { font-size: 14px; }
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
-  .stand { position: absolute; top: 34px; right: 6px; z-index: 6; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  .stand { position: absolute; top: 34px; left: 6px; z-index: 6; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 1px;
     padding: 3px 2px 2px; background: rgba(22,19,28,.82); border: 2px solid var(--gold); box-shadow: 0 0 0 2px var(--ink-0), 0 0 12px rgba(230,182,74,.55);
     animation: standPulse 1.4s steps(4) infinite; }
   .stand img { width: 42px; height: 42px; object-fit: contain; animation: standBob 1.4s steps(2) infinite; }
