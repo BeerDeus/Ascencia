@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { G, act } from '../lib/game.svelte';
+  import { G, act, ui } from '../lib/game.svelte';
+  import { longpress } from '../lib/guard';
   import * as E from '../game/engine';
   import { PARTITIONS } from '../game/data/heroes';
   import { gfx } from '../lib/gfx';
@@ -15,8 +16,9 @@
       {@const cdLeft = Math.max(0, s.run.cooldowns[i] - s.time)}
       {@const isActive = s.time < s.run.activeUntil[i]}
       {@const ready = unlocked && !cdLeft && s.run.mana >= p.mana}
-      <button class="p" class:active={isActive} class:ready class:dim={unlocked && !ready && !cdLeft}
-        disabled={!unlocked} data-tuto={'partition-' + i} onclick={() => act(g => E.castPartition(g, i))} aria-label={p.name}>
+      <button class="p" class:active={isActive} class:ready class:dim={unlocked && !ready && !cdLeft} class:locked={!unlocked}
+        data-tuto={'partition-' + i} use:longpress={() => { ui.spellNew = false; ui.spell = i; }}
+        onclick={() => unlocked && act(g => E.castPartition(g, i))} aria-label={p.name}>
         {#if unlocked}
           <img src={gfx(p.icon)} alt="" />
           {#if cdLeft > 0}<span class="cd" style="width:{(cdLeft / p.cd) * 100}%"></span><span class="t outline">{Math.ceil(cdLeft)}s</span>
@@ -41,7 +43,7 @@
   .p.active { background: #5a4a26; box-shadow: inset 0 0 0 2px var(--gold); animation: on .4s steps(2) infinite; }
   @keyframes on { 50% { box-shadow: inset 0 0 0 2px var(--gold-hi); } }
   .p.dim img { filter: grayscale(1) brightness(.55); }
-  .p:disabled { opacity: .55; }
+  .p.locked { opacity: .55; }
   .lock { font-size: 11px; color: var(--text-3); }
   .cd { position: absolute; right: 0; top: 0; bottom: 0; background: rgba(12,10,16,.75); z-index: 2; }
   .t { position: relative; z-index: 3; font-size: 11px; font-weight: 700; }

@@ -6,6 +6,7 @@ import * as A from './audio';
 import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
 import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from './cloud.svelte';
 import { RARITIES } from '../game/data/items';
+import { PARTITIONS } from '../game/data/heroes';
 import { dailyCheck, fiefUnlocked } from '../game/fief';
 import { shopCheck, calendarReady, pendingOffer, stuckOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
@@ -35,6 +36,8 @@ export const ui = $state({
   calendar: false,
   offer: null as Pack | null,
   messenger: false,
+  spell: null as number | null, // fiche d'une Partition (appui long ou déblocage)
+  spellNew: false,
   toasts: [] as { id: number; text: string; kind: string }[],
 });
 
@@ -51,7 +54,7 @@ export function toast(text: string, kind = 'info') {
 }
 
 export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict
-  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo;
+  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {
@@ -63,7 +66,7 @@ function handle(e: GameEvent) {
       else if (e.monster.kind === 'golden') { A.sfxGold(); buzz('medium'); toast('Gobelin doré ! Or ×20', 'gold'); }
       else A.sfxKill();
       break;
-    case 'floor': A.setKey(actFor(e.floor).key); bossFails = 0; if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
+    case 'floor': A.setKey(actFor(e.floor).key); bossFails = 0; spellUnlockCheck(s); if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
     case 'boss-attack': A.sfxAttack(); buzz('heavy'); break;
     case 'parry': A.sfxParry(); buzz('medium'); break;
     case 'boss-fail': A.sfxFail(); if (++bossFails >= 3) { bossFails = 0; moment('bloque'); } break;
@@ -158,6 +161,12 @@ function daily() {
 const MOMENT_FLOORS = [10, 26, 50, 100, 180, 300];
 let bossFails = 0;
 let pendingMoment: null | { kind: 'palier' | 'histoire' | 'bloque'; at: number } = null;
+/** Nouvelle Partition débloquée : sa fiche s'ouvre une fois. */
+function spellUnlockCheck(s: GameState) {
+  if (ui.spell !== null || !s.tuto) return;
+  const i = PARTITIONS.findIndex((p, k) => E.partitionUnlocked(s, k) && !s.tuto.includes('sort:' + p.id));
+  if (i >= 0) { s.tuto.push('sort:' + PARTITIONS[i].id); ui.spellNew = true; ui.spell = i; }
+}
 export function moment(kind: 'palier' | 'histoire' | 'bloque') {
   if (!pendingMoment || kind !== 'bloque') pendingMoment = { kind, at: performance.now() };
 }

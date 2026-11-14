@@ -18,6 +18,7 @@
   import { fiefUnlocked } from './game/fief';
   import { FIEF_TABS, fiefTabOpen } from './game/data/fief';
   import Tuto from './ui/Tuto.svelte';
+  import SpellModal from './ui/SpellModal.svelte';
   const FIEF_LABELS = { village: 'Village', coffre: 'Coffre', jardin: 'Jardin', expeditions: 'Expéd.', alchimie: 'Ateliers' } as const;
   const fiefTabs = $derived((Object.keys(FIEF_LABELS) as (keyof typeof FIEF_LABELS)[]).map(id => ({ id, label: FIEF_LABELS[id],
     locked: fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}` })));
@@ -85,6 +86,7 @@
   {:else if ui.offline}<OfflineModal />
   {:else if ui.messenger}<MessengerModal />
   {:else if ui.calendar}<CalendarModal />
+  {:else if ui.spell !== null}<SpellModal />
   {:else if ui.offer}<OfferModal />{/if}
   {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}

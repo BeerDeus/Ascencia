@@ -10,6 +10,9 @@ import App from './App.svelte';
 import { boot } from './lib/game.svelte';
 
 mount(App, { target: document.getElementById('app')! });
+// pas de menu d'appui long (enregistrer l'image, copier…) hors champs de saisie
+addEventListener('contextmenu', e => { if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) e.preventDefault(); });
+addEventListener('dragstart', e => { if (e.target instanceof HTMLImageElement) e.preventDefault(); });
 boot();
 
 // PWA (navigateur uniquement ; inutile dans l'appli Capacitor)
