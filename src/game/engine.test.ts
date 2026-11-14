@@ -208,18 +208,18 @@ describe('moteur', () => {
       expect(s.run.floor).toBe(300);
     }
     // Destinée
-    s.anchors.compass = { 260: true, 280: true, 300: true };
+    s.anchors.compass = { 255: true, 265: true, 275: true };
     expect(Rz.anchorsDone(s)).toBe(true);
     const frag = E.resonate(s);
-    expect(frag).toBe(Math.floor(3 * Math.sqrt(90)));
+    expect(frag).toBe(Math.floor(6 * Math.sqrt(90)));
     expect(s.legende).toBe(0);
     expect(s.constellations).toEqual({});
     expect(s.arcanes.empereur).toBe(1);
     expect(s.resonance.count).toBe(1);
-    // Harmoniques : ×2 par niveau
+    // Harmoniques : ×3 par niveau
     const before = E.stats(s).tap;
     expect(Rz.buySym(s, 'harmonique')).toBe(true);
-    expect(E.stats(s).tap).toBeCloseTo(before * 2);
+    expect(E.stats(s).tap).toBeCloseTo(before * 3);
     // Porte du Noyau franchissable après la Résonance
     E.newRun(s, 300); E.challengeBoss(s);
     expect(s.run.monster.locked).toBe(false);

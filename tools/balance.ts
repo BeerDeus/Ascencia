@@ -8,6 +8,8 @@ import * as Ar from '../src/game/arcanes';
 import * as Fi from '../src/game/fief';
 import { setClock } from '../src/game/clock';
 import { applyTuning, T } from '../src/game/tuning';
+import * as Rz from '../src/game/resonance';
+import { SYMPHONY, symCost, HUNTS } from '../src/game/data/resonance';
 import { COMPANIONS, PARTITIONS, MILESTONES } from '../src/game/data/heroes';
 import { STARS, starCost } from '../src/game/data/constellations';
 import { MEALS } from '../src/game/data/fief';
@@ -38,7 +40,9 @@ E.newRun(s, 1);
 
 let active = 0, runStart = 0, lastRecordAt = 0, lastRecord = 0;
 const firstReach: Record<number, string> = {};
-const MARKS = [10, 26, 50, 75, 100, 140, 180, 220, 250, 300];
+const MARKS = [10, 26, 50, 75, 100, 140, 180, 220, 250, 300, 350, 400];
+const resLog: string[] = [];
+let nextHuntTry = 0;
 const ascLog: string[] = [];
 const h = (sec: number) => (sec / 3600).toFixed(1) + 'h';
 
@@ -116,7 +120,41 @@ function spendEclats() {
   }
 }
 
+const anchorDay: Record<string, string> = {};
+function anchors() {
+  if (!Rz.anchorsVisible(s)) return;
+  for (const [k, ok] of [['création', Rz.creationDone(s)], ['chaos', Rz.chaosDone(s)], ['destinée', Rz.destinyDone(s)]] as const)
+    if (ok && !anchorDay[k]) anchorDay[k] = `j${day}`;
+  if (!s.anchors.seedPlanted && s.metal >= 600) Rz.plantSeed(s);
+  if (s.anchors.seedPlanted && !s.anchors.seedDone) E.harvestSeed(s);
+  if (!Rz.chaosDone(s) && active > nextHuntTry && !s.run.monster.hunt) {
+    const h = HUNTS.find(x => !s.anchors.hunts[x.id]);
+    if (h) E.startHunt(s, h.id);
+    nextHuntTry = active + 900;
+  }
+}
+
+function spendFragments() {
+  const prio = ['auto_achat', 'harmonique', 'depart', 'echo_eclats', 'auto_partitions', 'echo_or', 'souvenir', 'auto_ascension'];
+  for (let g = 0; g < 200; g++) {
+    const opts = prio.map(id => SYMPHONY.find(n => n.id === id)!).filter(n => Rz.sym(s, n.id) < n.max)
+      .map(n => ({ id: n.id, c: symCost(n, Rz.sym(s, n.id)) })).filter(o => o.c <= s.resonance.fragments).sort((a, b) => a.c - b.c);
+    if (!opts.length || !Rz.buySym(s, opts[0].id)) break;
+  }
+}
+
+function resonateMaybe(): boolean {
+  if (!Rz.canResonate(s) || Rz.fragmentsFor(s) < Math.max(5, s.resonance.total)) return false;
+  const gain = E.resonate(s, CLASS);
+  resLog.push(`R${s.resonance.count} j${day} ${h(active)} record ${s.bestFloor} +${gain} fragments`);
+  E.drainEvents();
+  spendFragments(); spendEclats();
+  runStart = active; lastRecordAt = active; lastRecord = s.run.floor;
+  return true;
+}
+
 function ascend() {
+  if (resonateMaybe()) return;
   const gain = E.ascensionGain(s);
   ascLog.push(`A${s.ascensions + 1} j${day} ${h(active)} étage ${s.run.maxFloor} +${gain}`);
   E.ascend(s, CLASS);
@@ -135,7 +173,7 @@ function playSession(seconds: number) {
     E.tick(s, DT);
     active += DT; wall += DT * 1000; acc += DT;
     if (acc >= 2) { acc = 0; shop(); }
-    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { gear(); fief(); }
+    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { gear(); fief(); anchors(); }
     const evs = E.drainEvents();
     for (const e of evs) if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') { ascend(); }
     if (s.run.maxFloor > lastRecord) {
@@ -166,7 +204,9 @@ for (; day <= DAYS; day++) {
     shop();
   }
   const stars = Object.values(s.constellations).reduce((a, b) => a + b, 0);
-  if ([1, 2, 3, 5, 7, 10, 14, 20, 25, 30, 40, 45, 60].includes(day)) console.log(`${String(day).padStart(4)} | ${h(active).padStart(5)} | ${String(s.bestFloor).padStart(6)} | ${String(s.ascensions).padStart(3)} | ${String(s.legende).padStart(7)} | ${String(Ar.owned(s)).padStart(7)} | ${stars}`);
+  if ([1, 2, 3, 5, 7, 10, 14, 20, 25, 30, 40, 45, 50, 60, 75, 90, 120].includes(day)) console.log(`${String(day).padStart(4)} | ${h(active).padStart(5)} | ${String(s.bestFloor).padStart(6)} | ${String(s.ascensions).padStart(3)} | ${String(s.legende).padStart(7)} | ${String(Ar.owned(s)).padStart(7)} | ${stars}`);
 }
 console.log('\nPremière arrivée :', MARKS.map(m => `${m}→${firstReach[m] ?? '—'}`).join('  '));
+console.log('\nRésonances :\n' + (resLog.join('\n') || '—'));
+console.log('Ancres terminées :', JSON.stringify(anchorDay));
 console.log('\nAscensions :\n' + ascLog.slice(0, 12).join('\n') + (ascLog.length > 12 ? `\n… (${ascLog.length})\n` + ascLog.slice(-4).join('\n') : ''));

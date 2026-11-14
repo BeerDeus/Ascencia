@@ -523,7 +523,7 @@ export function startHunt(s: GameState, id: string): boolean {
   const h = HUNTS.find(x => x.id === id), r = s.run;
   if (!h || s.anchors.hunts[id] || r.monster.hunt || !Rz.anchorsVisible(s)) return false;
   r.huntBack = { floor: r.floor, wave: r.wave === 10 ? 0 : r.wave, farming: r.farming };
-  const hp = F.bossHp(h.floor) * h.hpMult * bossHpMult(s);
+  const hp = F.bossHp(h.floor) * T.huntHpMult * bossHpMult(s);
   r.monster = { sprite: h.sprite, name: h.name, kind: 'boss', hp, maxHp: hp, hunt: id, tint: h.tint };
   r.wave = 10; r.bossTime = HUNT_TIME; r.bossAttackIn = 5;
   log(s, 'story', `Chasse : ${h.name}`);

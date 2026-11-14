@@ -183,7 +183,7 @@
   .will.golden > i { background: var(--gold); }
   .seuil { font-size: 11px; color: var(--sky); margin-top: 3px; }
   .ferveur { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
-  .ferveur .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); width: 82px; flex: none; }
+  .ferveur .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); width: 104px; flex: none; white-space: nowrap; }
   .ferveur .bar { flex: 1; height: 8px; }
   .ferveur .bar > i { background: var(--ember); box-shadow: inset 0 2px 0 #f5a46e; }
   .ferveur.full .lbl { color: var(--ember); }

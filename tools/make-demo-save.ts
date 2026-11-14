@@ -11,5 +11,12 @@ E.newRun(s, 62); s.run.maxFloor = 62; s.run.gold = 4.2e9; s.run.heroLevel = 140;
 s.run.companions = s.run.companions.map((_, i) => i < 9 ? 120 - i * 10 : 0);
 for (let k = 0; k < 18; k++) I.addItem(s, I.makeItem(s, 55 + k, Math.min(5, Math.floor(Math.random() * 5)), Math.random));
 for (let k = 0; k < 12; k++) E.log(s, (['kill','boss','loot','larry','gold'] as const)[k % 5], 'Entrée de chronique numéro ' + k);
+if (process.argv[3] === 'late') {
+  // fin de partie : Ancres en cours, 1 Résonance faite
+  s.bestFloor = 296; s.legende = 120000; s.metal = 900; s.gems = 80;
+  s.anchors.seedPlanted = Date.now() - 20 * 3600_000; s.anchors.hunts = { leviathan: true }; s.anchors.compass = { 255: true, 265: true };
+  s.resonance.count = 1; s.resonance.total = 25; s.resonance.fragments = 9; s.resonance.nodes = { harmonique: 4, auto_achat: 1 };
+  s.seenStory.push('floor:255', 'resonance:1', 'floor:251');
+}
 s.lastSave = Date.now();
 writeFileSync(process.argv[2] ?? 'demo-save.json', E.serialize(s));

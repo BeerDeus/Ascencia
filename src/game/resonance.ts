@@ -1,7 +1,8 @@
 // Ancres (Création, Chaos, Destinée) et Résonance.
 import type { GameState } from './types';
 import { now } from './clock';
-import { ANCHOR_FLOOR, SEED_COST_METAL, SEED_HOURS, SEED_SKIP_GEMS_PER_HOUR, SYMPHONY, symCost, souvenirEclats, HUNTS } from './data/resonance';
+import { T } from './tuning';
+import { ANCHOR_FLOOR, SEED_HOURS, SEED_SKIP_GEMS_PER_HOUR, SYMPHONY, symCost, souvenirEclats, HUNTS } from './data/resonance';
 
 export interface Anchors { seedPlanted: number; seedDone: boolean; hunts: Record<string, boolean>; compass: Record<number, boolean> }
 export interface Resonance { count: number; fragments: number; total: number; nodes: Record<string, number>;
@@ -20,8 +21,8 @@ export const anchorsDone = (s: GameState) => creationDone(s) && chaosDone(s) && 
 export const seedReadyAt = (s: GameState) => s.anchors.seedPlanted + SEED_HOURS * 3600_000;
 export const seedProgress = (s: GameState) => (s.anchors.seedPlanted ? Math.min(1, (now() - s.anchors.seedPlanted) / (SEED_HOURS * 3600_000)) : 0);
 export function plantSeed(s: GameState): boolean {
-  if (s.anchors.seedPlanted || s.metal < SEED_COST_METAL || !anchorsVisible(s)) return false;
-  s.metal -= SEED_COST_METAL; s.anchors.seedPlanted = now();
+  if (s.anchors.seedPlanted || s.metal < T.seedMetal || !anchorsVisible(s)) return false;
+  s.metal -= T.seedMetal; s.anchors.seedPlanted = now();
   return true;
 }
 export const seedSkipCost = (s: GameState) => Math.ceil(Math.max(0, seedReadyAt(s) - now()) / 3600_000) * SEED_SKIP_GEMS_PER_HOUR;
@@ -39,13 +40,13 @@ export function harvestSeed(s: GameState): boolean {
 
 // ---- Résonance
 export const sym = (s: GameState, id: string) => s.resonance?.nodes[id] ?? 0;
-export const harmonicMult = (s: GameState) => 2 ** sym(s, 'harmonique');
+export const harmonicMult = (s: GameState) => T.harmMult ** sym(s, 'harmonique');
 export const symGoldMult = (s: GameState) => 1 + 0.5 * sym(s, 'echo_or');
 export const symEclatsMult = (s: GameState) => 1 + 0.25 * sym(s, 'echo_eclats');
 export const departFloor = (s: GameState) => [1, 10, 25, 50, 100][sym(s, 'depart')] ?? 1;
 
 /** Fragments d'Écho gagnés en résonnant maintenant : selon la Légende accumulée dans le cycle. */
-export function fragmentsFor(s: GameState) { return Math.floor(3 * Math.sqrt(s.legende / 1000)); }
+export function fragmentsFor(s: GameState) { return Math.floor(T.fragK * Math.sqrt(s.legende / 1000)); }
 export const resonanceUnlocked = (s: GameState) => s.resonance.count > 0 || anchorsDone(s);
 export const canResonate = (s: GameState) => resonanceUnlocked(s) && fragmentsFor(s) >= 5;
 

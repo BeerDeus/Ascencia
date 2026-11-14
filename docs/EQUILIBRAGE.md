@@ -53,6 +53,26 @@ Record d'étage selon le jour :
 Première arrivée (Guerrier engagé) : étage 50 → J1 (12 min de jeu) · 100 → J3 · 180 → J12 · 250 → J20.
 La courbe ralentit doucement vers 280–300 : c'est le palier prévu pour la Résonance (couche 2).
 
+## Couche 2 : Ancres et Résonance (ajout du 15/11)
+- Ancres visibles après l'étage 250 : Graine-Cœur (400 métal + 48 h réelles), 3 chasses (boss de puissance ≈ étages 258/266/274),
+  Compas Stellaire (boss des étages 255/265/275). La Porte du Noyau (300) est scellée jusqu'à la 1re Résonance.
+- Fragments d'Écho = `6 × √(Légende / 1000)` ; Harmoniques : tous les dégâts **×3 par niveau**, coût ×1,25 par niveau.
+- Le bot résonne quand le gain atteint au moins le total de Fragments déjà obtenus (doublement).
+
+Simulation 90 jours (Guerrier engagé) :
+
+| | Jour |
+|---|---|
+| Ancres terminées | ~J35 |
+| 1re Résonance (record 282) | J37 |
+| Étage 300 franchi | J43 |
+| 2e Résonance (record 328) | J49 |
+| Étage 350 | J61 |
+| 3e Résonance (record 366) | J68 |
+| Record au J90 | 394 → Larry (400) vers J90–95 |
+
+Écarté : Fragments `3 × √` et Harmoniques ×2 (coût ×1,6) — après la remise à zéro, il fallait plus de 20 jours pour retrouver son record.
+
 ## Points à surveiller
 - La 1re Ascension arrive vite (~12–25 min) : bon pour l'accroche, à confirmer en test réel.
 - Le joueur occasionnel progresse ~2× moins vite ; la Constellation *Somnambule* (montée hors-ligne) est son meilleur levier.

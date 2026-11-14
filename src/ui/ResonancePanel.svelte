@@ -2,7 +2,9 @@
   import { G, ui, act, toast, persist } from '../lib/game.svelte';
   import * as Rz from '../game/resonance';
   import * as E from '../game/engine';
-  import { HUNTS, COMPASS_FLOORS, SEED_COST_METAL, SEED_HOURS, SYMPHONY, symCost } from '../game/data/resonance';
+  import { HUNTS, COMPASS_FLOORS, SEED_HOURS, SYMPHONY, symCost } from '../game/data/resonance';
+  import { T } from '../game/tuning';
+  const SEED_COST_METAL = T.seedMetal;
   import { GEM_ICON } from '../game/data/shop';
   import { fmt, fmtTime } from '../game/format';
   import { gfx } from '../lib/gfx';

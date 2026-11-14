@@ -10,6 +10,9 @@ export const T = {
   // Prestige : Éclats = 0,12 × (étage/10)^2,5 ; chaque Éclat de Légende = +3 % dégâts
   eclatsMin: 30, eclatsK: 0.12, eclatsMode: 'poly' as 'exp' | 'poly', eclatsExp: 1.03, eclatsPow: 2.5,
   legendPer: 0.03, seuilLegende: 4000,
+  // Résonance
+  // Fragments = 6 × √(Légende/1000) ; Harmoniques ×3 par niveau, coût ×1,25 ; Graine-Cœur 400 métal ; chasses = boss ×4
+  fragK: 6, harmBase: 1, harmGrowth: 1.25, harmMult: 3, seedMetal: 400, huntHpMult: 4,
   // Équipement
   gearBase: 0.5, gearIlvlDiv: 12,
   // Ferveur
