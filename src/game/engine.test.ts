@@ -10,6 +10,7 @@ import * as I from './items';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
+import * as Ach from './achievements';
 import { ARCANES } from './data/arcanes';
 
 const gfx = (k: string) => `public/gfx/${k}.webp`;
@@ -165,5 +166,18 @@ describe('moteur', () => {
     const migrated = E.deserialize(JSON.stringify({ ...JSON.parse(E.serialize(s)), shop: undefined, gems: undefined }))!;
     expect(migrated.gems).toBe(0);
     expect(migrated.shop.ads).toEqual({});
+  });
+
+  it('Hauts faits : détection, annonce unique, encaissement', () => {
+    const s = E.newGame(); s.classId = 'guerrier';
+    s.bestFloor = 60; s.stats.kills = 1500;
+    const ready = Ach.claimable(s).map(a => a.id);
+    expect(ready).toEqual(expect.arrayContaining(['etage_25', 'etage_50', 'kills_100', 'kills_1000']));
+    expect(Ach.newlyDone(s).length).toBe(ready.length);
+    expect(Ach.newlyDone(s).length).toBe(0);
+    const g = s.gems;
+    expect(Ach.claimAch(s, 'etage_50')).toBe(10);
+    expect(s.gems).toBe(g + 10);
+    expect(Ach.claimAch(s, 'etage_50')).toBe(0);
   });
 });

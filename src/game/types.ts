@@ -74,7 +74,10 @@ export interface GameState {
   seenStory: string[];
   chronicle: ChronicleEntry[];
   settings: Settings;
-  stats: { kills: number; bossKills: number; taps: number; goldEarned: number; playSeconds: number; goldenKills: number };
+  stats: { kills: number; bossKills: number; taps: number; goldEarned: number; playSeconds: number; goldenKills: number;
+    partitions: number; items: number; bestRarity: number; bounties: number; meals: number; letters: number; parries: number };
+  achievements: Record<string, 1>;   // hauts faits encaissés
+  achSeen: string[];                  // hauts faits déjà annoncés
   nextLarryAt: number;
   metal: number;
   itemSeq: number;

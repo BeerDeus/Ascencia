@@ -10,13 +10,14 @@ import { dailyCheck, fiefUnlocked } from '../game/fief';
 import { shopCheck, calendarReady, pendingOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
 import { adUi } from './ads.svelte';
+import { newlyDone } from '../game/achievements';
 
 export const G = $state<{ s: GameState }>({ s: E.newGame() });
 
 export const ui = $state({
   ready: false,
   tab: 'chronique' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
-  heroTab: 'heros' as 'heros' | 'sac',
+  heroTab: 'heros' as 'heros' | 'sac' | 'hf',
   ascTab: 'rituel' as 'rituel' | 'arcanes',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
   scenes: [] as string[],
@@ -132,6 +133,7 @@ function checkOffline() {
 
 // ---------------------------------------------------------------- quotidien, offres
 function daily() {
+  for (const a of newlyDone(G.s)) toast(`Haut fait : ${a.name} !`, 'crit');
   const pass = shopCheck(G.s);
   if (pass) toast(`Bénédiction de Lysandra : +${pass} gemmes`, 'gold');
   if (paused() || !G.s.classId) return;

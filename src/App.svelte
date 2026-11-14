@@ -12,6 +12,8 @@
   import FiefPanel from './ui/FiefPanel.svelte';
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
+  import AchievementsPanel from './ui/AchievementsPanel.svelte';
+  import { claimable } from './game/achievements';
   import ShopSheet from './ui/ShopSheet.svelte';
   import CalendarModal from './ui/CalendarModal.svelte';
   import OfferModal from './ui/OfferModal.svelte';
@@ -35,8 +37,8 @@
     <section class="panel">
       {#if ui.tab === 'chronique'}<Chronicle />
       {:else if ui.tab === 'heros'}
-        <SubTabs bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }]} />
-        {#if ui.heroTab === 'heros'}<HeroPanel />{:else}<EquipmentPanel />{/if}
+        <SubTabs bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : '') }]} />
+        {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else}<AchievementsPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
       {:else if ui.tab === 'fief'}<FiefPanel />
       {:else if ui.tab === 'ascension'}

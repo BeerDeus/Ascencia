@@ -38,7 +38,8 @@ export function newGame(): GameState {
     mastery: { guerrier: 0, archer: 0, mage: 0 },
     constellations: {}, seenStory: [], chronicle: [],
     settings: { sound: true, haptics: true, notation: 'lettres', autoAdvance: true },
-    stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0 },
+    stats: { kills: 0, bossKills: 0, taps: 0, goldEarned: 0, playSeconds: 0, goldenKills: 0, partitions: 0, items: 0, bestRarity: -1, bounties: 0, meals: 0, letters: 0, parries: 0 },
+    achievements: {}, achSeen: [],
     nextLarryAt: 600, metal: 0, itemSeq: 0, heritage: null,
     arcanes: {}, daily: null as unknown as Fi.Daily, meal: null,
     gems: 0, shop: Sh.newShop(), messenger: null, nextMessengerAt: 240,
@@ -253,7 +254,7 @@ function drop(s: GameState, minRarity = 0, bonus = 0) {
   const rar = Math.min(5, I.rollRarity(s.run.floor, rnd, minRarity) + (rnd() < 0.5 ? bonus : 0));
   const it = I.makeItem(s, s.run.floor, rar, rnd);
   const lost = I.addItem(s, it);
-  Fi.count(s, 'loot');
+  Fi.count(s, 'loot'); s.stats.items++; s.stats.bestRarity = Math.max(s.stats.bestRarity, it.rarity);
   emit({ type: 'loot', item: it });
   log(s, rar >= 3 ? 'crit' : 'loot', `Butin : ${it.name} [${RARITIES[rar].name}]`);
   if (lost) log(s, 'info', `Sac plein : ${lost.name} recyclé en métal.`);
@@ -312,7 +313,7 @@ function bossFailed(s: GameState) {
 export function parry(s: GameState): boolean {
   const r = s.run;
   if (!r.parryUntil || s.time > r.parryUntil) return false;
-  r.parryUntil = 0;
+  r.parryUntil = 0; s.stats.parries++;
   emit({ type: 'parry' });
   log(s, 'crit', 'Parade ! Riposte dévastatrice.');
   rollTap(s, stats(s), 10, false);
@@ -420,7 +421,7 @@ export function castPartition(s: GameState, i: number): boolean {
   r.cooldowns[i] = s.time + p.cd * Math.max(0.3, 1 - star(s, 'grimoire_cd') - arc(s, 'cd'));
   const dur = p.duration * (s.classId === 'mage' ? 1.5 : 1);
   if (dur) r.activeUntil[i] = s.time + dur;
-  emit({ type: 'partition', index: i }); Fi.count(s, 'partitions');
+  emit({ type: 'partition', index: i }); Fi.count(s, 'partitions'); s.stats.partitions++;
   log(s, 'info', `♪ ${p.name} !`);
   if (p.id === 'trille') {
     damage(s, 10 * (st.dps + st.tap * 5) * st.power * (s.classId === 'mage' ? 2 : 1), true, false);
@@ -436,7 +437,7 @@ export type MessengerReward = { kind: 'or' | 'metal' | 'gemmes' | 'mana'; amount
 /** Ouvre la lettre du Messager. `mult` = 3 si le joueur a regardé une pub. */
 export function claimMessenger(s: GameState, mult = 1): MessengerReward | null {
   if (!s.messenger) return null;
-  s.messenger = null;
+  s.messenger = null; s.stats.letters++;
   s.nextMessengerAt = s.time + 150 + rnd() * 150;
   const x = rnd();
   let rw: MessengerReward;
@@ -591,6 +592,7 @@ function migrate(raw: any): GameState {
   // compagnons ajoutés après coup
   while (s.run.companions.length < COMPANIONS.length) s.run.companions.push(0);
   s.run.inventory ??= []; s.run.equipped ??= {};
+  s.achievements ??= {}; s.achSeen ??= [];
   s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
   s.messenger = null; s.nextMessengerAt ??= s.time + 240;
   Fi.dailyCheck(s);

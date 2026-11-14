@@ -54,7 +54,7 @@ export function rewardValue(s: GameState, b: Bounty) { return b.reward.kind === 
 export function claimBounty(s: GameState, i: number): boolean {
   const b = s.daily?.bounties[i];
   if (!b || b.claimed || s.daily.c[b.c] < b.target) return false;
-  b.claimed = true;
+  b.claimed = true; s.stats.bounties++;
   const v = rewardValue(s, b);
   if (b.reward.kind === 'or') { s.run.gold += v; s.stats.goldEarned += v; }
   else if (b.reward.kind === 'metal') s.metal += v;
@@ -72,7 +72,7 @@ export function eat(s: GameState, id: string): boolean {
   if (!m || !mealUnlocked(s, m) || mealActive(s)) return false;
   const c = mealCost(s, m);
   if (c > s.run.gold) return false;
-  s.run.gold -= c;
+  s.run.gold -= c; s.stats.meals++;
   s.meal = { id, until: now() + m.hours * 3600_000 };
   return true;
 }
