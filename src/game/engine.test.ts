@@ -378,7 +378,7 @@ describe('moteur', () => {
     expect(E.stats(s).global).toBeCloseTo(before * (1 + Ev.TROPHY_BONUS));
   });
   it('Profondeurs : une clé par descente, enchaînement, récompenses, arbre', () => {
-    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 120; s.ascensions = 1; E.newRun(s, 60);
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 260; s.ascensions = 1; E.newRun(s, 60);
     Dp.depthsCheck(s);
     expect(E.startDepths(s)).toBe(true);
     expect(s.depths!.keys).toBe(Dp.KEYS_PER_DAY - 1);
