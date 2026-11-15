@@ -60,11 +60,13 @@ export const SLOT_RECIPE: Record<string, { mob: [number, number][]; exp?: [strin
   jambes: { mob: [[2, 5]], exp: ['bois', 3] },
   amulette: { mob: [[1, 4]], exp: ['gemme_verte', 1] },
 };
+/** Les ressources de monstres tombent en abondance (Chasseur) : on en demande nettement plus. */
+export const MOB_QTY = 3;
 /** Coût en ressources d'une commande (emplacement, étage) : grandit doucement avec l'étage. */
 export function orderCost(slot: string, floor: number): Record<string, number> {
   const tier = [...TIER_MATS].reverse().find(t => floor >= t.from)!, r = SLOT_RECIPE[slot], k = 1 + floor / 120;
   const out: Record<string, number> = {};
-  for (const [m, q] of r.mob) out[tier.mats[m]] = (out[tier.mats[m]] ?? 0) + Math.ceil(q * k);
+  for (const [m, q] of r.mob) out[tier.mats[m]] = (out[tier.mats[m]] ?? 0) + Math.ceil(q * k * MOB_QTY);
   if (r.exp) out[r.exp[0]] = Math.ceil(r.exp[1] * k);
   return out;
 }
