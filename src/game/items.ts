@@ -6,8 +6,8 @@ import { T } from './tuning';
 import { BASES, EPITHETS, RARITIES, SECONDARY, SLOTS, SLOT_PRIMARY, STATS, type Slot, type StatId } from './data/items';
 
 export const PLUS_MAX = 10;
-const RARITY_MULT = [1, 1.4, 1.9, 2.6, 3.5, 5];
-const AFFIX_COUNT = [1, 2, 2, 3, 3, 4];
+export const RARITY_MULT = [1, 1.4, 1.9, 2.6, 3.5, 5];
+export const AFFIX_COUNT = [1, 2, 2, 3, 3, 4];
 
 export function lootUnlocked(s: GameState) { return s.bestFloor > 10 || s.ascensions > 0; }
 
@@ -17,6 +17,14 @@ export function affixValue(stat: StatId, ilvl: number, rarity: number, roll: num
 }
 export const effective = (it: Item, v: number) => v * (1 + 0.12 * it.plus);
 
+/** Chances de chaque rareté (mêmes poids que rollRarity), les raretés sous le minimum étant ramenées au minimum. */
+export function rarityOdds(floor: number, min = 0): number[] {
+  const luck = Math.min(0.6, floor / 300);
+  const w = [70, 22, 6, 1.6, 0.3, 0.04].map((x, i) => x * (1 + luck * i)), tot = w.reduce((a, b) => a + b, 0);
+  const p = w.map(x => x / tot);
+  for (let i = 0; i < min; i++) { p[min] += p[i]; p[i] = 0; }
+  return p;
+}
 export function rollRarity(floor: number, rnd: () => number, min = 0): number {
   // hautes raretés plus rares (16/11) : le butin courant sert surtout à faire du métal
   const luck = Math.min(0.6, floor / 300);

@@ -11,7 +11,8 @@ import { FAMILY_DROPS, DEFAULT_DROP, STORY_RARES } from './data/resources';
 import { STORY_BOSSES } from './data/world';
 import { ZONES } from './data/expeditions';
 import { POTIONS, MEALS } from './data/crafting';
-import { SETS, ORDER_COST } from './data/forge';
+import { SETS, TIER_MATS, SLOT_RECIPE } from './data/forge';
+import { SLOTS } from './data/items';
 
 const KIND_LABEL = { monstre: 'Ressource de monstre', plante: 'Plante', recolte: 'Récolte d’expédition', rare: 'Ressource rare' } as const;
 export function resKind(id: string): string {
@@ -40,6 +41,12 @@ export function resUses(id: string): string[] {
   for (const r of POTIONS) if (r.cost[id]) out.push(`Potion : ${r.name} (×${r.cost[id]})`);
   for (const m of MEALS) if (m.cost[id]) out.push(`Repas : ${m.name} (×${m.cost[id]})`);
   for (const d of SETS) if (d.cost[id]) out.push(`Panoplie : ${d.name} (×${d.cost[id]})`);
-  if ((ORDER_COST as Record<string, number>)[id]) out.push(`Commande à la Forge (×${(ORDER_COST as Record<string, number>)[id]})`);
+  // commandes à la Forge : matériau d'expédition (tous paliers) ou de monstre (un palier)
+  const slotsExp = SLOTS.filter(x => SLOT_RECIPE[x.id].exp === id).map(x => x.name);
+  if (slotsExp.length) out.push(`Forge : ${slotsExp.join(', ')}`);
+  for (const t of TIER_MATS) {
+    const sl = SLOTS.filter(x => t.mats[SLOT_RECIPE[x.id].mob] === id).map(x => x.name);
+    if (sl.length) out.push(`Forge (dès l’étage ${t.from}) : ${sl.join(', ')}`);
+  }
   return out;
 }

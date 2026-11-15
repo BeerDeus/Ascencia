@@ -39,6 +39,30 @@ export const SETS: ForgeSet[] = [
 export const SET_BY_ID = Object.fromEntries(SETS.map(s => [s.id, s]));
 
 /** Commande ciblée : coût en métal et en matériaux selon l'étage. */
-export const ORDER_COST = { bois: 3, pierre: 3 };
+export const ORDER_COST = { bois: 3, pierre: 3 };   // (ancien coût fixe, gardé pour compatibilité)
+
+/** Matériaux de monstre selon le palier d'étage : ce que le Chasseur ramène à ce moment-là. */
+export const TIER_MATS: { from: number; mats: [string, string, string] }[] = [
+  { from: 0, mats: ['peau_gobelin', 'croc_loup', 'queue_rat'] },
+  { from: 50, mats: ['soie_arraignee', 'chitine', 'gelee_slime'] },
+  { from: 100, mats: ['ecaille_profond', 'plume_griffon', 'totem_orc'] },
+  { from: 150, mats: ['essence_spectrale', 'ame_demon', 'oeil_chimere'] },
+];
+/** Recette par emplacement : matériau de monstre (index dans le palier) + matériau d'expédition. */
+export const SLOT_RECIPE: Record<string, { mob: number; mobQty: number; exp: string; expQty: number }> = {
+  arme: { mob: 1, mobQty: 4, exp: 'bois', expQty: 4 },
+  tete: { mob: 0, mobQty: 3, exp: 'pierre', expQty: 3 },
+  torse: { mob: 0, mobQty: 5, exp: 'pierre', expQty: 3 },
+  mains: { mob: 0, mobQty: 3, exp: 'bois', expQty: 2 },
+  jambes: { mob: 2, mobQty: 4, exp: 'bois', expQty: 3 },
+  pieds: { mob: 2, mobQty: 3, exp: 'pierre', expQty: 2 },
+  amulette: { mob: 1, mobQty: 3, exp: 'gemme_verte', expQty: 1 },
+  anneau: { mob: 2, mobQty: 3, exp: 'gemme_verte', expQty: 1 },
+};
+/** Coût en ressources d'une commande (emplacement, étage) : grandit doucement avec l'étage. */
+export function orderCost(slot: string, floor: number): Record<string, number> {
+  const tier = [...TIER_MATS].reverse().find(t => floor >= t.from)!, r = SLOT_RECIPE[slot], k = 1 + floor / 120;
+  return { [tier.mats[r.mob]]: Math.ceil(r.mobQty * k), [r.exp]: Math.ceil(r.expQty * k) };
+}
 export const orderMetal = (floor: number) => Math.ceil(8 * (1 + floor / 20));
 export const ORDER_STATS: StatId[] = ['frappe', 'comp', 'critdmg', 'or', 'crit', 'mana', 'volonte'];

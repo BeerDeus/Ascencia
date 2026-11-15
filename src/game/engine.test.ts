@@ -27,7 +27,7 @@ import * as Jb from './jobs';
 import * as Fo from './forge';
 import * as Ec from './echo';
 import { AUBE } from './data/packs';
-import { SETS } from './data/forge';
+import { SETS, orderCost } from './data/forge';
 import { PLANTS, plantSprite } from './data/garden';
 import { RESOURCES } from './data/resources';
 import { POTIONS, MEALS } from './data/crafting';
@@ -307,7 +307,7 @@ describe('moteur', () => {
   it('Forge : commande ciblée, panoplie portée et bonus permanent', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 20);
     s.metal = 1000;
-    for (const [id, n] of Object.entries({ bois: 50, pierre: 50, peau_gobelin: 50, queue_rat: 50, croc_loup: 50 })) Jb.give(s, id, n);
+    for (const [id, n] of Object.entries({ bois: 50, pierre: 50, peau_gobelin: 50, queue_rat: 50, croc_loup: 50, gemme_verte: 50 })) Jb.give(s, id, n);
     const it = Fo.order(s, 'anneau', 'comp')!;
     expect(it.slot).toBe('anneau');
     expect(it.affixes[0].stat).toBe('comp');
@@ -472,7 +472,7 @@ describe('moteur', () => {
     const low = I.affixNow(s, lame, lame.affixes[0]);
     E.newRun(s, 120);
     expect(I.affixNow(s, lame, lame.affixes[0])).toBe(low);           // niveau fixe : la Forge le dépasse plus haut
-    s.metal = 1e5; for (const [id, n] of Object.entries({ bois: 9, pierre: 9 })) Jb.give(s, id, n);
+    s.metal = 1e5; for (const [id, n] of Object.entries(orderCost('arme', s.run.floor))) Jb.give(s, id, n);
     const forged = Fo.order(s, 'arme', 'frappe')!;
     expect(I.affixNow(s, forged, forged.affixes[0])).toBeGreaterThan(low);
     // sérialisation : une seule instance (la Forge +1 se retrouve dans le coffre)
