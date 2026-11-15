@@ -22,8 +22,8 @@
   const crescendo = $derived(s.time < r.crescendoUntil);
   let clock = $state(Date.now());
   onMount(() => { const t = setInterval(() => (clock = Date.now()), 1000); return () => clearInterval(t); });
-  const stand = $derived(standingOffers(G.s, clock)[0]);
-  const standLeft = $derived(stand ? Math.max(0, ((s.shop.offerUntil?.[stand.id] ?? 0) - clock) / 1000) : 0);
+  const stands = $derived(standingOffers(G.s, clock).slice(0, 3));
+  const leftOf = (id: string) => Math.max(0, ((s.shop.offerUntil?.[id] ?? 0) - clock) / 1000);
   const left = (t: number) => { const d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), mn = Math.floor((t % 3600) / 60), sc = Math.floor(t % 60);
     return d ? `${d}j ${h}h` : h ? `${h}h ${String(mn).padStart(2, '0')}` : `${mn}:${String(sc).padStart(2, '0')}`; };
   const goldenLeft = $derived(m.kind === 'golden' && m.fleeAt ? Math.max(0, m.fleeAt - s.time) : 0);
@@ -93,7 +93,7 @@
   </div>
 
   {#if E.echoAvailable(s)}
-    <button class="echo btn" class:low={!!stand} onpointerdown={stop(() => (ui.echo = true))}>✧ Chanter pour l’Écho</button>
+    <button class="echo btn" class:low={stands.length > 0} onpointerdown={stop(() => (ui.echo = true))}>✧ Chanter pour l’Écho</button>
   {/if}
 
   {#if r.farming}
@@ -108,12 +108,15 @@
     {/key}
   </div>
 
-  {#if stand}
-    <button class="stand" class:urgent={standLeft < 6 * 3600} onpointerdown={stop(() => (ui.offer = stand))} aria-label="Offre : {stand.name}">
-      <span class="medal"><img src={gfx(stand.icon)} alt="" /><i class="shine"></i></span>
-      <span class="price">{stand.price.replace(' €', '')}<b class="eur">€</b></span>
-      <span class="timer outline">{left(standLeft)}</span>
-    </button>
+  {#if stands.length}
+    <div class="stands">
+      {#each stands as o, k (o.id)}
+        <button class="stand" class:urgent={leftOf(o.id) < 6 * 3600} style="--d:{k * 0.45}s" onpointerdown={stop(() => (ui.offer = o))} aria-label="Offre : {o.name}">
+          <span class="medal"><img src={gfx(o.icon)} alt="" /><i class="shine"></i></span>
+          <span class="tags"><span class="price">{o.price.replace(' €', '')}<b class="eur">€</b></span><span class="timer outline">{left(leftOf(o.id))}</span></span>
+        </button>
+      {/each}
+    </div>
   {/if}
 
   {#if s.messenger}
@@ -160,7 +163,7 @@
   .waves img { width: 18px; height: 18px; margin-left: 3px; filter: grayscale(1) brightness(.5); }
   .waves img.on { filter: none; animation: throb .6s steps(2) infinite; }
   @keyframes throb { 50% { transform: scale(1.2); } }
-  .echo.low { top: 88px; }
+  .echo.low { left: 50%; top: 38px; transform: translateX(-50%); } /* offres à gauche : l'Écho passe au centre */
   .echo { position: absolute; top: 38px; left: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; animation: call 1s steps(2) infinite; }
   @keyframes call { 50% { filter: brightness(1.3); } }
   .challenge { position: absolute; top: 38px; right: 8px; z-index: 3; font-size: 13px; padding: 6px 10px; }
@@ -183,18 +186,21 @@
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
   /* offre en vitrine : petit médaillon discret, reflet + balancement toutes les 6 s */
-  .stand { position: absolute; top: 32px; left: 6px; z-index: 6; display: flex; flex-direction: column; align-items: center; animation: float 1.6s ease-in-out infinite; }
-  .stand .medal { animation: nudge 4s infinite, halo 1.6s ease-in-out infinite; }
+  /* jusqu'à 3 offres en colonne, animations décalées */
+  .stands { position: absolute; top: 30px; left: 6px; z-index: 6; display: flex; flex-direction: column; gap: 4px; max-height: calc(100% - 96px); overflow: hidden; padding: 4px 6px 0 2px; }
+  .stand { display: flex; align-items: center; animation: float 1.6s ease-in-out infinite; animation-delay: var(--d); }
+  .tags { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-left: -4px; }
+  .stand .medal { animation: nudge 4s infinite, halo 1.6s ease-in-out infinite; animation-delay: calc(var(--d) * 3), var(--d); }
   .eur { font-family: system-ui, Roboto, sans-serif; font-weight: 800; font-size: 11px; margin-left: 2px; }
-  .medal { position: relative; width: 40px; height: 40px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
+  .medal { position: relative; z-index: 1; width: 36px; height: 36px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
     background: radial-gradient(circle at 50% 40%, rgba(247,218,139,.28), rgba(22,19,28,.85) 70%);
     box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px rgba(11,9,14,.85), 0 0 10px rgba(230,182,74,.45); }
-  .medal img { width: 30px; height: 30px; object-fit: contain; }
+  .medal img { width: 27px; height: 27px; object-fit: contain; }
   .shine { position: absolute; inset: -20%; background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
     transform: translateX(-120%); animation: shine 4s infinite; }
-  .price { margin-top: -6px; padding: 1px 5px; font-size: 10px; font-weight: 700; line-height: 1.2; color: var(--parch-ink); white-space: nowrap;
+  .price { padding: 1px 5px 1px 8px; font-size: 10px; font-weight: 700; line-height: 1.2; color: var(--parch-ink); white-space: nowrap;
     background: var(--gold); border: 1px solid var(--ink-0); position: relative; }
-  .timer { margin-top: 1px; font-size: 10px; font-weight: 700; line-height: 1; color: var(--text); }
+  .timer { margin-left: 6px; font-size: 10px; font-weight: 700; line-height: 1; color: var(--text); }
   .stand.urgent .medal { animation: nudge 2s infinite; box-shadow: 0 0 0 2px var(--blood), 0 0 0 4px rgba(11,9,14,.85), 0 0 10px rgba(196,71,63,.6); }
   .stand.urgent .timer { color: #ff8a7a; }
   @keyframes float { 50% { transform: translateY(-3px); } }
