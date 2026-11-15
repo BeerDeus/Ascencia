@@ -10,7 +10,7 @@ import { QUEST_TOKENS } from './events';
 type Stat = keyof GameState['stats'];
 export interface QuestDef { stat: Stat; text: (n: number) => string; min: number; max: number; open: (s: GameState) => boolean }
 export interface Quest { stat: Stat; target: number; base: number; gems: number; seeds?: number; claimed: boolean }
-export interface Quests { day: string; week: string; daily: Quest[]; weekly: Quest | null }
+export interface Quests { day: string; week: string; daily: Quest[]; weekly: Quest | null; v?: number }
 
 const always = () => true;
 // Objectifs calés sur ~30 min de jeu actif d'un joueur engagé (mesuré au simulateur, hors-ligne exclu).
@@ -48,7 +48,8 @@ const target = (d: QuestDef, r: () => number) => { const v = d.min + r() * (d.ma
 
 export function questsCheck(s: GameState) {
   const day = dayKey(), week = weekKey();
-  const q = (s.quests ??= { day: '', week: '', daily: [], weekly: null });
+  const q = (s.quests ??= { day: '', week: '', daily: [], weekly: null, v: 2 });
+  if (q.v !== 2) { q.day = ''; q.week = ''; q.v = 2; } // objectifs revus (v2) : on régénère une fois
   if (q.day !== day) {
     const r = seeded('q' + day);
     const pool = QUEST_DEFS.filter(d => d.open(s)).sort(() => r() - 0.5).slice(0, 3);
