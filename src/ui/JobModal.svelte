@@ -3,7 +3,8 @@
   import { G, ui } from '../lib/game.svelte';
   import { JOBS, JOB_MAX } from '../game/data/resources';
   import { jobLevel, xpForLevel } from '../game/jobs';
-  import { JOB_INFO } from '../game/jobinfo';
+  import { JOB_INFO, permanentPerk } from '../game/jobinfo';
+  import { JOB_STAT } from '../game/data/resources';
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
   const id = $derived(ui.job!);
@@ -31,8 +32,9 @@
 
       <div class="label">Ce qu’il vous apporte</div>
       <div class="perks">
-        {#each info.perks(G.s) as p}<div class="perk"><span>{p.label}</span><b>{p.value}</b></div>{/each}
+        {#each [permanentPerk(G.s, id), ...info.perks(G.s)] as p, k}<div class="perk" class:main={k === 0}><span>{p.label}</span><b>{p.value}</b></div>{/each}
       </div>
+      <p class="note">Chaque niveau : +1 % {JOB_STAT[id].label.toLowerCase()}, pour toujours.</p>
 
       <div class="label">Comment le monter</div>
       <ul>{#each info.how as h}<li>{h}</li>{/each}</ul>
@@ -72,6 +74,8 @@
   .perks { display: flex; flex-direction: column; gap: 2px; }
   .perk { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; font-size: 13px; background: var(--stone-2); }
   .perk b { color: var(--gold); white-space: nowrap; }
+  .perk.main { background: #3b3020; box-shadow: inset 2px 0 0 var(--gold); }
+  .note { margin: 0; font-size: 11.5px; color: var(--text-3); }
   ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--text-2); display: flex; flex-direction: column; gap: 2px; }
   .ms { display: flex; flex-direction: column; gap: 2px; }
   .m { display: flex; gap: 8px; align-items: baseline; padding: 3px 6px; font-size: 12.5px; color: var(--text-3); }

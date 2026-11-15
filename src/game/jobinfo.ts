@@ -2,6 +2,7 @@
 import type { GameState } from './types';
 import type { JobId } from './data/resources';
 import { level } from './jobs';
+import { JOB_STAT } from './data/resources';
 import { POTIONS, MEALS } from './data/crafting';
 import { SETS } from './data/forge';
 import { RARITIES } from './data/items';
@@ -24,6 +25,9 @@ export interface JobInfo {
 }
 
 const pct = (x: number) => `+${Math.round(x * 100)} %`;
+
+/** Bonus permanent du métier (affiché en tête des bonus). */
+export const permanentPerk = (s: GameState, j: JobId) => ({ label: `${JOB_STAT[j].label} (permanent)`, value: pct(level(s, j) * JOB_STAT[j].per) });
 
 export const JOB_INFO: Record<JobId, JobInfo> = {
   chasseur: {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { G, ui } from '../lib/game.svelte';
-  import { JOBS, type JobId } from '../game/data/resources';
+  import { JOBS, JOB_STAT, type JobId } from '../game/data/resources';
   import { jobLevel, xpForLevel } from '../game/jobs';
   import { gfx } from '../lib/gfx';
   let { job }: { job: JobId } = $props();
@@ -13,7 +13,7 @@
   <div class="mi">
     <div class="t"><b>{JOBS[job].name}</b><span>niv. {lv}</span></div>
     <div class="bar"><i style="width:{pct}%"></i></div>
-    <small>{JOBS[job].desc}</small>
+    <small><b class="pb">+{lv} % {JOB_STAT[job].label.toLowerCase()}</b> · {JOBS[job].desc}</small>
   </div>
   <span class="more">i</span>
 </button>
@@ -27,4 +27,5 @@
   .bar { height: 7px; margin: 2px 0; }
   .bar > i { background: var(--moss); }
   small { font-size: 11px; color: var(--text-3); }
+  .pb { color: var(--moss); font-weight: 700; }
 </style>

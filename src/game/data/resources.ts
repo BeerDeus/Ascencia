@@ -10,6 +10,15 @@ export const JOBS: Record<JobId, { name: string; icon: string; npc: string; desc
   cuisinier: { name: 'Cuisinier', icon: 'icons/cuisine', npc: 'portraits/gaston', desc: 'Nouveaux plats, repas plus longs.' },
 };
 export const JOB_MAX = 100;
+/** Bonus permanent de chaque niveau de métier (+1 % par niveau, jusqu'à +100 % au niveau 100). */
+export const JOB_STAT: Record<JobId, { label: string; per: number }> = {
+  chasseur: { label: 'Tous les dégâts', per: 0.01 },
+  jardinier: { label: 'Or gagné', per: 0.01 },
+  expedition: { label: 'Dégâts des alliés', per: 0.01 },
+  alchimiste: { label: 'Dégâts critiques', per: 0.01 },
+  forgeron: { label: 'Frappe', per: 0.01 },
+  cuisinier: { label: 'Gains hors-ligne', per: 0.01 },
+};
 
 export interface ResDef { name: string; sprite: string; kind: 'monstre' | 'plante' | 'recolte' | 'rare' }
 export const RESOURCES: Record<string, ResDef> = {
