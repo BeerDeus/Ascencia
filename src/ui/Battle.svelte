@@ -187,7 +187,8 @@
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
   /* offre en vitrine : petit médaillon discret, reflet + balancement toutes les 6 s */
   /* jusqu'à 3 offres en colonne, animations décalées */
-  .stands { position: absolute; top: 30px; left: 6px; z-index: 6; display: flex; flex-direction: column; gap: 4px; max-height: calc(100% - 96px); overflow: hidden; padding: 4px 6px 0 2px; }
+  .stands { position: absolute; top: 34px; left: 8px; z-index: 6; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+  .stands .stand { pointer-events: auto; }
   .stand { display: flex; align-items: center; animation: float 1.6s ease-in-out infinite; animation-delay: var(--d); }
   .tags { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-left: -4px; }
   .stand .medal { animation: nudge 4s infinite, halo 1.6s ease-in-out infinite; animation-delay: calc(var(--d) * 3), var(--d); }
