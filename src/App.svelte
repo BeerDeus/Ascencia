@@ -18,6 +18,7 @@
   import { fiefUnlocked } from './game/fief';
   import { FIEF_TABS, fiefTabOpen } from './game/data/fief';
   import Tuto from './ui/Tuto.svelte';
+  import Banner from './ui/Banner.svelte';
   import { dots, ateliersDot } from './lib/dots';
   import SpellModal from './ui/SpellModal.svelte';
   import JobsPanel from './ui/JobsPanel.svelte';
@@ -85,6 +86,7 @@
     <Nav />
   </main>
   <Tuto />
+  <Banner />
   <Toasts />
   {#if ui.shop}<ShopSheet />{/if}
   {#if ui.ritual}<Ritual />

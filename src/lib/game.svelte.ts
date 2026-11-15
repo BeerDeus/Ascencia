@@ -9,6 +9,9 @@ import { RARITIES } from '../game/data/items';
 import { PARTITIONS } from '../game/data/heroes';
 import { dailyCheck, fiefUnlocked } from '../game/fief';
 import { questsCheck } from '../game/quests';
+import { JOBS, JOB_STAT, type JobId } from '../game/data/resources';
+import { level } from '../game/jobs';
+import { JOB_INFO } from '../game/jobinfo';
 import { shopCheck, calendarReady, pendingOffer, stuckOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
 import { adUi } from './ads.svelte';
@@ -42,13 +45,20 @@ export const ui = $state({
   job: null as null | import('../game/data/resources').JobId, // fiche d'un métier
   info: null as null | { kind: 'res' | 'potion' | 'meal'; id: string }, // fiche d'un objet (appui long)
   toasts: [] as { id: number; text: string; kind: string }[],
+  banner: null as null | { id: number; title: string; sub: string; kind: 'victoire' | 'crescendo' | 'record' | 'metier' },
 });
 
 type Listener = (e: GameEvent) => void;
 const listeners = new Set<Listener>();
 export function onGameEvent(fn: Listener) { listeners.add(fn); return () => listeners.delete(fn); }
 
-let toastId = 0;
+let toastId = 0, lastCrescendo = -1e9; // la bannière Crescendo au plus toutes les 20 s
+/** Grande bannière non bloquante pour les moments forts. */
+export function banner(title: string, sub: string, kind: NonNullable<typeof ui.banner>['kind']) {
+  const id = ++toastId;
+  ui.banner = { id, title, sub, kind };
+  setTimeout(() => { if (ui.banner?.id === id) ui.banner = null; }, kind === 'crescendo' ? 1400 : 2400);
+}
 export function toast(text: string, kind = 'info') {
   const id = ++toastId;
   ui.toasts.push({ id, text, kind });
@@ -65,15 +75,16 @@ function handle(e: GameEvent) {
   switch (e.type) {
     case 'hit': if (e.tap || e.crit) A.noteTap(e.crit); if (e.crit) buzz('light'); break;
     case 'kill':
-      if (e.monster.kind === 'boss') { A.sfxBoss(); buzz('medium'); }
+      if (e.monster.kind === 'boss') { A.sfxBoss(); buzz('medium'); if (e.monster.story) banner('Victoire !', e.monster.name, 'victoire'); }
       else if (e.monster.kind === 'golden') { A.sfxGold(); buzz('medium'); toast('Gobelin doré ! Or ×20', 'gold'); }
       else A.sfxKill();
       break;
-    case 'floor': A.setKey(actFor(e.floor).key); bossFails = 0; spellUnlockCheck(s); if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
+    case 'floor': A.setKey(actFor(e.floor).key); bossFails = 0; spellUnlockCheck(s);
+      if (e.floor === s.bestFloor && e.floor % 25 === 0 && e.floor > 25) banner(`Étage ${e.floor}`, 'Nouveau record !', 'record'); if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
     case 'boss-attack': A.sfxAttack(); buzz('heavy'); break;
     case 'parry': A.sfxParry(); buzz('medium'); break;
     case 'boss-fail': A.sfxFail(); if (++bossFails >= 3) { bossFails = 0; moment('bloque'); } break;
-    case 'crescendo': A.sfxCrescendo(); buzz('heavy'); toast('CRESCENDO !', 'crit'); break;
+    case 'crescendo': A.sfxCrescendo(); buzz('heavy'); if (performance.now() - lastCrescendo > 20000) { lastCrescendo = performance.now(); banner('Crescendo !', 'Frappes ×2', 'crescendo'); } break;
     case 'partition': A.sfxPartition(); break;
     case 'milestone': A.sfxUp(); toast(`Palier ${e.level} atteint !`, 'up'); break;
     case 'heavy': buzz('heavy'); break;
@@ -194,8 +205,25 @@ function frame(now: number) {
     flush();
   }
   offerMomentCheck(now);
+  jobWatch(now);
   if (now - lastPersist > 10000) { dailyCheck(G.s); questsCheck(G.s); daily(); persist(); }
   requestAnimationFrame(frame);
+}
+
+// Métiers : annonce chaque niveau, en grand quand un palier se débloque
+const jobSeen: Partial<Record<JobId, number>> = {};
+let lastJobCheck = 0;
+function jobWatch(now: number) {
+  if (now - lastJobCheck < 1000) return;
+  lastJobCheck = now;
+  for (const j of Object.keys(JOBS) as JobId[]) {
+    const lv = level(G.s, j), before = jobSeen[j];
+    jobSeen[j] = lv;
+    if (before === undefined || lv <= before) continue;
+    const ms = JOB_INFO[j].milestones.find(m => m.lv > before && m.lv <= lv);
+    if (ms) banner(`${JOBS[j].name} niv. ${lv}`, ms.text, 'metier');
+    else toast(`${JOBS[j].name} niv. ${lv} · +${Math.round(lv * JOB_STAT[j].per * 100)} % ${JOB_STAT[j].label.toLowerCase()}`, 'up');
+  }
 }
 
 export async function boot() {
