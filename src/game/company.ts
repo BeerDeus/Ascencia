@@ -114,6 +114,8 @@ export function autoSquad(s: GameState, raw: (i: number) => number) {
   comp(s).squad = [best[0] ?? -1, best[1] ?? -1, best[2] ?? -1];
 }
 
+/** Compagnons recrutés dans cette vie (banc compris). */
+export const recruited = (s: GameState) => s.run?.companions.filter(l => l > 0).length ?? 0;
 export const squadLevel = (s: GameState) => activeSquad(s).reduce((t, i) => t + (i >= 0 ? s.run.companions[i] : 0), 0);
 /** Cohésion : +1 par paire d'amis, -1 par paire de rivaux (de -3 à +3). */
 export function cohesion(s: GameState) {
@@ -142,6 +144,7 @@ export function effects(s: GameState): Effects {
   for (const x of activeSynergies(s)) add(x.fx);
   const combo = activeCombo(s); if (combo) add(combo.fx);
   e.frappe += 0.15 * rivalPairs(s);                 // émulation entre rivaux
+  e.squad += T.renownPer * recruited(s);              // Renommée : chaque compagnon recruté (banc compris) renforce l'escouade
   // bonus de place de chaque membre (Meneur et Soutien amplifiés par les paliers)
   const amp = [1 + e.aura, 1, 1 + e.support];
   activeSquad(s).forEach((i, k) => { if (i >= 0) e[SLOT_BONUS[i][k]] += slotBonusValue(i, k, s.run.companions[i]) * amp[k]; });

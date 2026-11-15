@@ -77,6 +77,7 @@
       {#if nextTier}<div class="bar"><i style="width:{((lvl - prevTier) / (nextTier.lv - prevTier)) * 100}%"></i></div><span class="nt">{nextTier.lv} : {nextTier.label}</span>{/if}
     </div>
     <div class="chips">
+      <span class="chip pos">Renommée : {Co.recruited(s)} recrutés · +{Math.round(Co.recruited(s) * T.renownPer * 100)} %</span>
       <span class="chip" class:pos={coh > 0} class:neg={coh < 0}>Cohésion {coh > 0 ? '+' : ''}{coh} · paliers ×{Co.cohesionMult(s).toFixed(2).replace('.', ',')}</span>
       {#if Co.rivalPairs(s)}<span class="chip neg">Émulation : frappe +{15 * Co.rivalPairs(s)} %</span>{/if}
       {#each syn as x}<span class="chip syn">✦ {x.name} · {x.desc}</span>{/each}

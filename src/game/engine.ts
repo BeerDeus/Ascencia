@@ -118,7 +118,8 @@ export function squadDeltaIf(s: GameState, i: number, n: number): number {
     const v = s.run.companions.map((l, k) => (l + (k === i ? bump : 0) > 0 ? memberRaw(s, k, l + (k === i ? bump : 0)) : 0)).sort((a, b) => b - a);
     return (v[0] ?? 0) * T.slotLead + (v[1] ?? 0) * T.slotRight + (v[2] ?? 0) * T.slotSupport;
   };
-  return val(n) - val(0);
+  // recruter un nouveau compagnon ajoute aussi sa Renommée à toute l'escouade
+  return val(n) - val(0) + (s.run.companions[i] === 0 && n > 0 ? val(0) * T.renownPer : 0);
 }
 
 // Cache optionnel (simulateur uniquement) : valable tant que la vie, l'heure de jeu et l'étage ne changent pas.
