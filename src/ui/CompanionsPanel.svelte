@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { TALENTS, TALENT_TIERS, talentsOf, pendingTalent } from '../game/talents';
   import { G, ui, act } from '../lib/game.svelte';
   import * as E from '../game/engine';
   import { COMPANIONS, MILESTONES } from '../game/data/heroes';
@@ -47,7 +48,8 @@
     <div class="c frame" class:hired={lv > 0}>
       <div class="pic slot"><img src={gfx(c.sprite)} alt="" /></div>
       <div class="mid">
-        <div class="nm">{c.name}{#if lv}&nbsp;<b>{lv}</b>{/if}</div>
+        <div class="nm">{c.name}{#if lv}&nbsp;<b>{lv}</b>{/if}{#each talentsOf(s, i) as p, k}{#if p && lv >= TALENT_TIERS[k]}<i class="tl" title={TALENTS[k][p === 'a' ? 0 : 1].name}>★</i>{/if}{/each}</div>
+        {#if pendingTalent(s, i) >= 0}<button class="talent" onclick={() => (ui.talent = i)}>★ Talent à choisir</button>{/if}
         <div class="tt"><span class="t-{c.type}">{TYPE[c.type]}</span> · {c.title}</div>
         <div class="dps">{lv ? N(compDps(i, lv) * mult) + ' DPS' : '+' + N(compDps(i, 1) * mult) + ' DPS'}</div>
         {#if lv && nm}<div class="ms"><div class="bar"><i style="width:{((lv - prev) / (nm - prev)) * 100}%"></i></div><span>{nm} : ×{nm < 200 ? '2,5' : '3'}</span></div>{/if}
@@ -79,4 +81,7 @@
   .ms span { font-size: 10px; color: var(--text-3); }
   .hero { background: #2a2333; box-shadow: inset 0 0 0 2px var(--gold-lo); }
   .ghost { opacity: .5; }
+  .tl { margin-left: 3px; font-style: normal; font-size: 11px; color: var(--gold); }
+  .talent { margin: 2px 0; padding: 2px 6px; font-size: 11px; font-weight: 700; color: var(--parch-ink); background: var(--gold); border: 1px solid var(--ink-0); animation: tpulse 1s steps(2) infinite; }
+  @keyframes tpulse { 50% { background: var(--gold-hi); } }
 </style>

@@ -13,6 +13,7 @@ import * as Sh from './shop';
 import * as Rz from './resonance';
 import * as Jb from './jobs';
 import * as Q from './quests';
+import * as Tl from './talents';
 import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
 import { newGarden, harvest as harvestPlot } from './garden';
@@ -99,7 +100,7 @@ export function masteryBonus(s: GameState): number {
 
 export function companionsDps(s: GameState): number {
   let d = 0;
-  s.run.companions.forEach((l, i) => { d += F.compDps(i, l); });
+  s.run.companions.forEach((l, i) => { d += F.compDps(i, l) * Tl.ownMult(s, i); });
   return d * (1 + star(s, 'meute_dps'));
 }
 
@@ -119,13 +120,13 @@ export function stats(s: GameState): Stats {
 
 function computeStats(s: GameState): Stats {
   const r = s.run, c = s.classId;
-  const g = I.gearTotals(s), sb = wornSetBonus(s);
+  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s);
   const meal = Fi.mealActive(s);
   const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
   let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur');
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
-  const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
-  let tapMult = Jb.jobMult(s, 'forgeron') * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
+  const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + tb.comp) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
+  let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
   if (r && active(s, 'crescendo')) tapMult *= 1 + 2 * power;
   if (r && s.time < r.crescendoUntil) tapMult *= T.crescendoMult;
   const share = 0.03 + star(s, 'meute_frappe');
@@ -133,12 +134,12 @@ function computeStats(s: GameState): Stats {
   const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < T.seuilLegende;
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
-    critChance: Math.min(0.75, 0.02 + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
+    critChance: Math.min(0.75, 0.02 + tb.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
     goldMult: Jb.jobMult(s, 'jardinier') * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
-    bossTime: Math.round((T.bossTime + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
+    bossTime: Math.round((T.bossTime + tb.volonte + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
     autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0) + (s.shop && Sh.blessing(s, 'frenesie') ? 20 : 0),
   };
 }

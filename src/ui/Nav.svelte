@@ -5,12 +5,13 @@
   import { claimable } from '../game/achievements';
   import { gfx } from '../lib/gfx';
   import { fiefDot, ascDot } from '../lib/dots';
+  import { anyPendingTalent } from '../game/talents';
   const s = $derived(G.s);
   const tabs = $derived([
     { id: 'chronique', label: 'Chronique', icon: 'icons/grimoire', dot: false },
     { id: 'heros', label: 'Héros', icon: 'classes/' + (s.classId ?? 'guerrier'), dot: claimable(s).length > 0 },
     { id: 'compagnons', label: 'Alliés', icon: 'icons/standard',
-      dot: E.heroCostN(s, 1) <= s.run.gold || s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
+      dot: anyPendingTalent(s) || E.heroCostN(s, 1) <= s.run.gold || s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
     { id: 'fief', label: 'Fief', icon: 'icons/village', locked: !fiefUnlocked(s),
       dot: fiefDot(s) },
     { id: 'ascension', label: 'Ascension', icon: 'icons/harmonie', dot: ascDot(s) },

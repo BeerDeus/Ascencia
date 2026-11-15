@@ -25,6 +25,7 @@
   import CuisinePanel from './ui/CuisinePanel.svelte';
   import JobModal from './ui/JobModal.svelte';
   import InfoModal from './ui/InfoModal.svelte';
+  import TalentModal from './ui/TalentModal.svelte';
   const FIEF_LABELS = { village: 'Village', metiers: 'Métiers', jardin: 'Jardin', expeditions: 'Expéd.', ateliers: 'Ateliers', coffre: 'Coffre' } as const;
   const lockAt = (id: keyof typeof FIEF_TABS) => (fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}`);
   const FIEF_DOT: Partial<Record<keyof typeof FIEF_LABELS, (s: typeof G.s) => boolean>> = { village: dots.village, jardin: dots.jardin, expeditions: dots.expeditions, ateliers: ateliersDot };
@@ -99,6 +100,7 @@
   {:else if ui.spell !== null}<SpellModal />
   {:else if ui.job}<JobModal />
   {:else if ui.info}<InfoModal />
+  {:else if ui.talent !== null}<TalentModal />
   {:else if ui.offer}<OfferModal />{/if}
   {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}

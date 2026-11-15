@@ -8,6 +8,7 @@ import { mobHp, eclatsFor, geomMax, geomSum } from './formulas';
 import { fmt } from './format';
 import * as I from './items';
 import * as Q from './quests';
+import * as Tl from './talents';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
@@ -344,6 +345,17 @@ describe('moteur', () => {
     expect(g.phase).toBe('lost');
   });
 
+  it('Talents des alliés : choix au niveau 100, définitif, actif seulement au-delà du palier', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);
+    s.run.companions[0] = 120;
+    const before = E.companionsDps(s);
+    expect(Tl.pendingTalent(s, 0)).toBe(0);
+    expect(Tl.chooseTalent(s, 0, 0, 'a')).toBe(true);
+    expect(Tl.pendingTalent(s, 0)).toBe(-1);
+    expect(E.companionsDps(s)).toBeCloseTo(before * 1.5);
+    s.run.companions[0] = 50;                          // nouvelle vie : talent inactif sous le palier
+    expect(Tl.ownMult(s, 0)).toBe(1);
+  });
   it('Quêtes de Lysandra : 3 du jour + 1 de la semaine, progression et récompense', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);
     Q.questsCheck(s);

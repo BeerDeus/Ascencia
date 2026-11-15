@@ -4,6 +4,7 @@
 // Le bot joue « comme un humain » : frappes variables (5–9/s, 10–15/s contre les boss, pauses dans les menus),
 // Jardin (croisements visés jusqu'à la Graine-Cœur), Alchimie, Cuisine, Expéditions, Forge et panoplies.
 import * as E from '../src/game/engine';
+import * as Tl from '../src/game/talents';
 import * as F from '../src/game/formulas';
 import * as I from '../src/game/items';
 import * as Ar from '../src/game/arcanes';
@@ -138,6 +139,8 @@ function shop() {
 }
 
 function gear() {
+  // talents : le bot prend toujours « renforce cet allié »
+  s.run.companions.forEach((_, i) => { const k = Tl.pendingTalent(s, i); if (k >= 0) Tl.chooseTalent(s, i, k, 'a'); });
   if (!I.lootUnlocked(s)) return;
   I.equipBest(s);
   if (s.run.inventory.length > 28) I.recycleBelow(s, 3);

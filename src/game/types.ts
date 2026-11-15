@@ -120,6 +120,7 @@ export interface GameState {
   vault: Item[];          // équipements liés au compte (packs)
   tuto: string[];         // étapes du tutoriel terminées
   quests?: import('./quests').Quests; // quêtes de Lysandra
+  talents?: Record<number, ('a' | 'b')[]>; // talents choisis par allié (définitifs)
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';
