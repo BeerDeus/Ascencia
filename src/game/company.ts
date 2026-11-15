@@ -16,7 +16,7 @@ export const SLOT_DESC = ['Mène l’attaque (dégâts renforcés) et donne son 
 // ---- Bonus de place : chaque compagnon a un bonus différent selon sa place (Meneur, Bras droit, Soutien).
 //      Ils grandissent avec les paliers de niveau du compagnon (×(1 + paliers atteints)).
 export type SlotStat = 'frappe' | 'comp' | 'gold' | 'crit' | 'critdmg' | 'volonte' | 'power';
-export const STAT_PER: Record<SlotStat, number> = { frappe: 0.12, comp: 0.12, gold: 0.15, crit: 0.004, critdmg: 0.1, volonte: 0.25, power: 0.08 };
+export const STAT_PER: Record<SlotStat, number> = { frappe: 0.1, comp: 0.1, gold: 0.15, crit: 0.004, critdmg: 0.1, volonte: 0.25, power: 0.08 };
 export const STAT_NAME: Record<SlotStat, string> = { frappe: 'Frappe', comp: 'Dégâts des compagnons', gold: 'Or', crit: 'Critique', critdmg: 'Dégâts critiques', volonte: 'Volonté', power: 'Partitions' };
 export const fmtStat = (k: SlotStat, v: number) => k === 'volonte' ? `+${v.toFixed(1).replace('.', ',')} s de Volonté` : k === 'crit' ? `+${(v * 100).toFixed(1).replace('.', ',')} % de critique` : `${STAT_NAME[k]} +${Math.round(v * 100)} %`;
 export const SLOT_BONUS: [SlotStat, SlotStat, SlotStat][] = [
@@ -31,7 +31,7 @@ export const SLOT_BONUS: [SlotStat, SlotStat, SlotStat][] = [
 ];
 const msCount = (lv: number) => MILESTONES.filter(t => lv >= t).length;
 /** Valeur du bonus de place du compagnon i (niveau lv) à la place k. */
-export const slotBonusValue = (i: number, k: number, lv: number) => STAT_PER[SLOT_BONUS[i][k]] * (1 + msCount(lv));
+export const slotBonusValue = (i: number, k: number, lv: number) => STAT_PER[SLOT_BONUS[i][k]] * (1 + 0.5 * msCount(lv));
 
 /** Étage (record) où chaque compagnon rejoint le roster, au fil de l'histoire. */
 export const COMP_UNLOCK = [1, 3, 8, 15, 22, 29, 36, 43, 50, 57, 64, 71, 78, 86, 94, 102, 110, 118, 127, 136, 145, 155, 165, 175, 185, 195, 205, 215, 230, 250];
@@ -130,8 +130,8 @@ export function cohesion(s: GameState) {
   return c;
 }
 export const rivalPairs = (s: GameState) => { const q = activeSquad(s).filter(i => i >= 0); let n = 0; for (let a = 0; a < q.length; a++) for (let b = a + 1; b < q.length; b++) if (relation(q[a], q[b]) < 0) n++; return n; };
-/** Les paliers valent ×(1 + 25 % par paire d'amis) ou ×(1 - 25 % par paire de rivaux). */
-export const cohesionMult = (s: GameState) => Math.max(0.25, 1 + 0.25 * cohesion(s));
+/** Les paliers valent ×(1 + 15 % par paire d'amis) ou ×(1 - 15 % par paire de rivaux). */
+export const cohesionMult = (s: GameState) => Math.max(0.55, 1 + 0.15 * cohesion(s));
 export const tiersReached = (s: GameState) => SQUAD_TIERS.filter(t => squadLevel(s) >= t.lv);
 export const activeSynergies = (s: GameState) => { const q = activeSquad(s); return SYNERGIES.filter(x => x.ids.every(id => q.includes(id))); };
 export const activeCombo = (s: GameState) => {

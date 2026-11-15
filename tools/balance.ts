@@ -125,7 +125,7 @@ function gems() {
 
 /** Escouade : meilleure composition réelle (bonus de place, synergies, frappe), hors combat de boss. */
 function squad() {
-  if (!Co.canChangeSquad(s)) return;
+  if (!Co.canChangeSquad(s) || process.env.NOBEST) return;
   Co.bestSquad(s, i => E.memberRaw(s, i), () => { E.invalidateStats(); const x = E.stats(s); return x.dps + x.tap * cps; });
   E.invalidateStats();
 }
@@ -134,7 +134,7 @@ function squad() {
 function dailyFights() {
   if (s.run.monster.hunt || s.run.monster.kind === 'boss') return;
   Dp.depthsCheck(s);
-  if (Dp.depthsUnlocked(s) && s.ascensions > 0 && (s.depths?.keys ?? 0) > 0) { E.startDepths(s); return; }
+  if (!process.env.NODEPTH && Dp.depthsUnlocked(s) && s.ascensions > 0 && (s.depths?.keys ?? 0) > 0) { E.startDepths(s); return; }
   if ((s.event?.tries ?? 0) > 0 && Ev.eventOpen(s)) E.startSeasonBoss(s);
 }
 

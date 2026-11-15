@@ -3,7 +3,7 @@
 import type { GameState } from './types';
 import { dayKey } from './fief';
 
-export const DEPTHS_UNLOCK = 100;          // record d'étage requis
+export const DEPTHS_UNLOCK = 250;          // record d'étage requis
 export const KEYS_PER_DAY = 3;
 export const KEY_GEMS = 30;                 // clé supplémentaire
 
