@@ -8,6 +8,7 @@ import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from '
 import { RARITIES } from '../game/data/items';
 import { PARTITIONS } from '../game/data/heroes';
 import { dailyCheck, fiefUnlocked } from '../game/fief';
+import { questsCheck } from '../game/quests';
 import { shopCheck, calendarReady, pendingOffer, stuckOffer } from '../game/shop';
 import type { Pack } from '../game/data/shop';
 import { adUi } from './ads.svelte';
@@ -193,7 +194,7 @@ function frame(now: number) {
     flush();
   }
   offerMomentCheck(now);
-  if (now - lastPersist > 10000) { dailyCheck(G.s); daily(); persist(); }
+  if (now - lastPersist > 10000) { dailyCheck(G.s); questsCheck(G.s); daily(); persist(); }
   requestAnimationFrame(frame);
 }
 

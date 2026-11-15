@@ -5,7 +5,8 @@
   import { actFor, SEUIL_HARMONIQUE } from '../game/data/world';
   import { RARITIES } from '../game/data/items';
   import { fmt } from '../game/format';
-  import { standingOffers } from '../game/shop';
+  import { standingOffers, calendarReady } from '../game/shop';
+  import { CALENDAR } from '../game/data/shop';
   import { T } from '../game/tuning';
   import { gfx } from '../lib/gfx';
   import { unlockAudio } from '../lib/audio';
@@ -108,6 +109,18 @@
     {/key}
   </div>
 
+  <!-- série de connexion : en face des offres -->
+  {#if s.classId}
+    {@const ready = calendarReady(s)}
+    {@const L = CALENDAR.length}
+    {@const done = ready ? s.shop.calIndex % L : (s.shop.calIndex % L || (s.shop.calIndex ? L : 0))}
+    <button class="streak" class:ready onpointerdown={stop(() => (ui.calendar = true))} aria-label="Récompense du jour">
+      <span class="sk-ic"><img src={gfx('obj/parchemin_scelle')} alt="" /></span>
+      <span class="sk-t"><b>{ready ? `Jour ${done + 1}/${L}` : `Série ${done}/${L}`}</b>
+        <span class="sk-bar">{#each Array(L) as _, k}<i class:on={k < done} class:now={ready && k === done}></i>{/each}</span></span>
+    </button>
+  {/if}
+
   {#if stands.length}
     <div class="stands">
       {#each stands as o, k (o.id)}
@@ -186,6 +199,17 @@
   @keyframes rise { 0% { opacity: 0; transform: translate(-50%, -20%); } 10% { opacity: 1; transform: translate(-50%, -70%); }
     75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -250%); } }
   /* offre en vitrine : petit médaillon discret, reflet + balancement toutes les 6 s */
+  .streak { position: absolute; top: 34px; right: 8px; z-index: 6; display: flex; align-items: center; gap: 4px; padding: 3px 6px 3px 3px;
+    background: rgba(22,19,28,.82); border: 2px solid var(--ink-0); box-shadow: inset 0 0 0 1px var(--stone-3); }
+  .streak.ready { box-shadow: inset 0 0 0 1px var(--gold), 0 0 10px rgba(230,182,74,.5); animation: float 1.6s ease-in-out infinite; }
+  .sk-ic img { width: 22px; height: 22px; object-fit: contain; display: block; }
+  .sk-t { display: flex; flex-direction: column; gap: 2px; }
+  .sk-t b { font-size: 10px; line-height: 1; color: var(--gold-hi); white-space: nowrap; }
+  .sk-bar { display: flex; gap: 2px; }
+  .sk-bar i { width: 6px; height: 5px; background: var(--stone-3); }
+  .sk-bar i.on { background: var(--gold); }
+  .sk-bar i.now { background: var(--gold-hi); animation: blink .8s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
   /* jusqu'à 3 offres en colonne, animations décalées */
   .stands { position: absolute; top: 34px; left: 8px; z-index: 6; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
   .stands .stand { pointer-events: auto; }

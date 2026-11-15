@@ -11,9 +11,10 @@ import { drawCost, owned } from '../game/arcanes';
 import { ARCANES } from '../game/data/arcanes';
 import { canResonate, anchorsVisible } from '../game/resonance';
 import { STARS, starCost } from '../game/data/constellations';
+import { questsClaimable } from '../game/quests';
 
 export const dots = {
-  village: (s: GameState) => fiefUnlocked(s) && (chestReady(s) || !!s.daily?.bounties.some(b => !b.claimed && s.daily.c[b.c] >= b.target)),
+  village: (s: GameState) => fiefUnlocked(s) && (chestReady(s) || questsClaimable(s) || !!s.daily?.bounties.some(b => !b.claimed && s.daily.c[b.c] >= b.target)),
   jardin: (s: GameState) => gardenUnlocked(s) && s.garden.plots.some(p => mature(p)),
   expeditions: (s: GameState) => fiefTabOpen(s, 'expeditions') && s.expeditions.some(isDone),
   cuisine: (s: GameState) => fiefUnlocked(s) && MEALS.some(m => canCook(s, m)), // aucun repas actif et un plat faisable

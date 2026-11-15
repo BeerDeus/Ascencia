@@ -7,6 +7,7 @@ import { SPEAKERS } from './data/story';
 import { mobHp, eclatsFor, geomMax, geomSum } from './formulas';
 import { fmt } from './format';
 import * as I from './items';
+import * as Q from './quests';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
@@ -343,6 +344,19 @@ describe('moteur', () => {
     expect(g.phase).toBe('lost');
   });
 
+  it('Quêtes de Lysandra : 3 du jour + 1 de la semaine, progression et récompense', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);
+    Q.questsCheck(s);
+    expect(s.quests!.daily.length).toBe(3);
+    expect(s.quests!.weekly).not.toBeNull();
+    const q = s.quests!.daily[0];
+    expect(Q.questDone(s, q)).toBe(false);
+    (s.stats[q.stat] as number) += q.target;
+    expect(Q.questsClaimable(s)).toBe(true);
+    const gems = s.gems, r = Q.claimQuest(s, q)!;
+    expect(s.gems).toBe(gems + r.gems);
+    expect(Q.claimQuest(s, q)).toBeNull();
+  });
   it('Verrouillage : « Recycler tout » épargne équipé, héritage et verrouillé', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 20; E.newRun(s, 20);
     const r = () => 0.5;

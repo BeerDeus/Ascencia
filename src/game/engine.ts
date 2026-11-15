@@ -12,6 +12,7 @@ import * as Fi from './fief';
 import * as Sh from './shop';
 import * as Rz from './resonance';
 import * as Jb from './jobs';
+import * as Q from './quests';
 import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
 import { newGarden, harvest as harvestPlot } from './garden';
@@ -59,7 +60,7 @@ export function newGame(): GameState {
     jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} }, vault: [], tuto: [],
   };
   s.run = newRun(s, 1);
-  Fi.dailyCheck(s);
+  Fi.dailyCheck(s); Q.questsCheck(s);
   return s;
 }
 
@@ -738,7 +739,7 @@ export function buyStar(s: GameState, id: string): boolean {
 }
 
 // ---------------------------------------------------------------- hors-ligne
-export interface OfflineReport { seconds: number; gold: number; floors: number }
+export interface OfflineReport { seconds: number; gold: number; floors: number; kills: number; items: number; bestRarity: number; metal: number; res: Record<string, number> }
 export function applyOffline(s: GameState, seconds: number): OfflineReport | null {
   if (!s.classId || seconds < 60) return null;
   const r = s.run;
@@ -771,10 +772,31 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
     if (floors) { r.wave = 0; r.farming = false; r.monster = spawnMob(s); }
   }
   const f = r.floor;
+  const farmKills = Math.floor(left / (F.mobHp(f) / dmg + 0.4));
   gold += left * F.mobGold(f) * st.goldMult / (F.mobHp(f) / dmg + 0.4);
   gold *= eff;
   addGold(s, gold);
-  return { seconds: secs, gold, floors };
+  // butin ramassé pendant l'absence (objets, ressources de Chasseur), au même rendement que les gains
+  const kills = Math.floor((floors * (F.MOBS_PER_FLOOR + 1) + farmKills) * eff);
+  s.stats.kills += kills;
+  let items = 0, bestRarity = -1, metal = 0;
+  if (I.lootUnlocked(s)) {
+    const n = Math.min(20, Math.floor((floors * 0.5 + kills * 0.03) * lootMult(s)));
+    const m0 = s.metal;
+    for (let k = 0; k < n; k++) {
+      const it = I.makeItem(s, r.floor, I.rollRarity(r.floor, rnd), rnd);
+      I.addItem(s, it); items++; s.stats.items++; bestRarity = Math.max(bestRarity, it.rarity);
+    }
+    metal = s.metal - m0; // sac plein : le moins bon est recyclé
+  }
+  const res: Record<string, number> = {};
+  if (s.res) {
+    const id = r.monster.sprite.split('/').pop()!;
+    const rid = FAMILY_DROPS.find(([re]) => re.test(id))?.[1] ?? DEFAULT_DROP;
+    const nRes = Math.min(200, Math.floor(kills * 0.08 * (1 + Jb.level(s, 'chasseur') * 0.02)));
+    if (nRes > 0) { Jb.give(s, rid, nRes); Jb.addXp(s, 'chasseur', nRes); res[rid] = nRes; }
+  }
+  return { seconds: secs, gold, floors, kills, items, bestRarity, metal, res };
 }
 
 // ---------------------------------------------------------------- sauvegarde
@@ -810,7 +832,7 @@ function migrate(raw: any): GameState {
   s.resonance = { ...Rz.newResonance(), ...(s.resonance ?? {}) };
   s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
   s.messenger = null; s.nextMessengerAt ??= s.time + 240;
-  Fi.dailyCheck(s);
+  Fi.dailyCheck(s); Q.questsCheck(s);
   while (s.run.cooldowns.length < PARTITIONS.length) { s.run.cooldowns.push(0); s.run.activeUntil.push(0); }
   s.version = SAVE_VERSION;
   return s;

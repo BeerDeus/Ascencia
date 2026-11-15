@@ -119,6 +119,7 @@ export interface GameState {
   forge: { sets: Record<string, string[]> };
   vault: Item[];          // équipements liés au compte (packs)
   tuto: string[];         // étapes du tutoriel terminées
+  quests?: import('./quests').Quests; // quêtes de Lysandra
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

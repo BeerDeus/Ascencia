@@ -10,11 +10,18 @@
   import { sfxUp, sfxGold } from '../lib/audio';
 
   const s = $derived(G.s);
-  const inv = $derived([...s.run.inventory].sort((a, b) => b.rarity - a.rarity || I.score(b, s) - I.score(a, s)));
+  // filtres et tri du Sac
+  let fSlot = $state<string>('tous');
+  let sortBy = $state<'score' | 'rarete' | 'niveau'>('score');
+  const SORTS = { score: 'Puissance', rarete: 'Rareté', niveau: 'Niveau' } as const;
+  const inv = $derived([...s.run.inventory].filter(it => fSlot === 'tous' || it.slot === fSlot)
+    .sort((a, b) => sortBy === 'rarete' ? b.rarity - a.rarity || I.score(b, s) - I.score(a, s)
+      : sortBy === 'niveau' ? b.ilvl - a.ilvl || b.rarity - a.rarity : I.score(b, s) - I.score(a, s)));
+  /** Écart de puissance avec l'objet porté au même emplacement (en %). */
+  const delta = (it: Item) => { const e = I.equippedIn(s, it.slot); if (!e || e.id === it.id || !I.canWear(s, it)) return null; const a = I.score(it, s), b = I.score(e, s); return b > 0 ? (a - b) / b : null; };
   let selId = $state<number | null>(null);
   const sel = $derived(s.run.inventory.find(i => i.id === selId) ?? null);
   const cur = $derived(sel ? I.equippedIn(s, sel.slot) : undefined);
-  const better = (it: Item) => { const e = I.equippedIn(s, it.slot); return I.canWear(s, it) && (!e || (e.id !== it.id && I.score(it, s) > I.score(e, s))); };
   const N = (x: number) => fmt(x, s.settings.notation);
 
   function equipBest() { const n = act(I.equipBest); toast(n ? `${n} objet(s) équipé(s)` : 'Déjà au mieux', 'up'); }
@@ -58,13 +65,20 @@
       <button class="btn" onclick={equipBest}>Équiper le mieux</button>
     </div>
 
-    <div class="label">Sac · {s.run.inventory.length}/{invMax(s)}</div>
+    <div class="sacbar">
+      <span class="label">Sac · {s.run.inventory.length}/{invMax(s)}</span>
+      <button class="sort" onclick={() => (sortBy = sortBy === 'score' ? 'rarete' : sortBy === 'rarete' ? 'niveau' : 'score')}>Tri : {SORTS[sortBy]}</button>
+    </div>
+    <div class="filters">
+      <button class:on={fSlot === 'tous'} onclick={() => (fSlot = 'tous')}>Tous</button>
+      {#each SLOTS as x}<button class:on={fSlot === x.id} onclick={() => (fSlot = x.id)}>{x.name}</button>{/each}
+    </div>
     <div class="inv">
       {#each inv as it (it.id)}
         <button class="cell slot" class:sel={selId === it.id} class:eq={I.isEquipped(s, it)} style="--r:{RARITIES[it.rarity].color}" onclick={() => (selId = it.id)} use:longpress={() => (selId = it.id)}>
           <img src={gfx(it.base)} alt="" />
           {#if it.plus}<b class="outline">+{it.plus}</b>{/if}
-          {#if better(it)}<i class="up">▲</i>{/if}
+          {#if delta(it) !== null && Math.abs(delta(it)!) >= 0.01}<i class="dl" class:pos={delta(it)! > 0}>{delta(it)! > 0 ? '▲' : '▼'}{Math.min(999, Math.round(Math.abs(delta(it)!) * 100))}%</i>{/if}
           {#if it.id === s.heritage}<i class="her">★</i>{/if}
           {#if it.bound}<i class="bnd">◆</i>{/if}
           {#if it.locked}<i class="lk">🔒</i>{/if}
@@ -119,7 +133,6 @@
   .cell.sel { outline: 2px solid var(--gold-hi); outline-offset: -2px; }
   .cell.eq::after { content: 'E'; position: absolute; left: 3px; top: 1px; font-size: 10px; color: var(--gold); }
   .cell b { position: absolute; right: 3px; bottom: 1px; font-size: 11px; color: var(--sky); }
-  .up { position: absolute; right: 3px; top: 1px; font-size: 10px; color: var(--moss); font-style: normal; }
   .bnd { position: absolute; right: 3px; top: 1px; font-size: 10px; color: var(--ember); font-style: normal; }
   .lk { position: absolute; left: 2px; top: 12px; font-size: 10px; font-style: normal; }
   .req { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0 3px; font-size: 10px; font-style: normal; font-weight: 700; color: #fff; background: var(--blood); }
@@ -144,4 +157,11 @@
   .acts .btn { font-size: 12px; padding: 6px 9px; }
   .acts img { width: 16px; height: 16px; }
   .hint { margin: 6px 0 0; font-size: 11px; color: var(--text-3); }
+  .sacbar { display: flex; justify-content: space-between; align-items: center; }
+  .sort { font-size: 11px; padding: 3px 7px; color: var(--text-2); background: var(--stone-2); border: 1px solid var(--ink-0); }
+  .filters { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .filters button { flex: none; font-size: 11px; padding: 3px 7px; color: var(--text-3); background: var(--stone-1); border: 1px solid var(--ink-0); }
+  .filters button.on { color: var(--parch-ink); background: var(--gold); }
+  .dl { position: absolute; right: 2px; top: 1px; font-size: 9px; font-style: normal; font-weight: 700; color: #e07a6f; text-shadow: 1px 1px 0 #000; }
+  .dl.pos { color: var(--moss); }
 </style>

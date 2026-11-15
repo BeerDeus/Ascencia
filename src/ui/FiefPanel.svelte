@@ -1,6 +1,8 @@
 <script lang="ts">
   import { G, act, toast, ui } from '../lib/game.svelte';
   import * as Fi from '../game/fief';
+  import * as Q from '../game/quests';
+  import { GEM_ICON } from '../game/data/shop';
   import * as E from '../game/engine';
   import { BOUNTY_TYPES } from '../game/data/fief';
   import { RARITIES } from '../game/data/items';
@@ -16,6 +18,10 @@
   const nextReset = $derived.by(() => { const t = new Date(now); t.setHours(24, 0, 0, 0); return (t.getTime() - now) / 1000; });
   const ICON = { or: 'obj/piece_or', metal: 'res/metal', eclats: 'res/eclats_ascension' };
 
+  function claimQ(q: Q.Quest) {
+    const r = act(g => Q.claimQuest(g, q));
+    if (r) { sfxGold(); toast(`+${r.gems} gemmes${r.seed ? ` · 2 graines : ${r.seed}` : ''}`, 'gold'); }
+  }
   function claim(i: number) { if (act(g => Fi.claimBounty(g, i))) { sfxGold(); toast('Prime encaissée !', 'gold'); } }
   function chest() { const it = act(E.claimChest); if (it) { sfxUp(); toast(`Coffre : ${it.name} [${RARITIES[it.rarity].name}]`, 'crit'); } }
 </script>
@@ -57,10 +63,39 @@
       </div>
     </section>
 
-
-
+    {#if s.quests}
+      <section class="frame">
+        <div class="hd">
+          <img class="pt" src={gfx('portraits/lysandra')} alt="" />
+          <div>
+            <div class="gothic h">Quêtes de Lysandra</div>
+            <div class="label">Nouvelles quêtes dans {fmtTime(nextReset)} · la quête de la semaine change le lundi</div>
+          </div>
+        </div>
+        {#each s.quests.daily as q}
+          {@render quest(q, false)}
+        {/each}
+        {#if s.quests.weekly}
+          <div class="label wk">Quête de la semaine</div>
+          {@render quest(s.quests.weekly, true)}
+        {/if}
+      </section>
+    {/if}
   </div>
 {/if}
+
+{#snippet quest(q: Q.Quest, weekly: boolean)}
+  {@const cur = Math.max(0, Q.progress(s, q))}
+  <div class="bounty" class:claimed={q.claimed} class:weekly>
+    <div class="bt">
+      <span>{Q.defFor(q, weekly).text(q.target)}</span>
+      <div class="bar"><i style="width:{(cur / q.target) * 100}%"></i></div>
+      <span class="pr">{N(cur)} / {N(q.target)}</span>
+    </div>
+    {#if q.claimed}<span class="ok">✓</span>
+    {:else}<button class="btn" disabled={!Q.questDone(s, q)} onclick={() => claimQ(q)}><img src={gfx(GEM_ICON)} alt="" />{q.gems}{#if q.seeds}<small>+graines</small>{/if}</button>{/if}
+  </div>
+{/snippet}
 
 <style>
   .locked { text-align: center; padding: 16px; color: var(--text-2); }
@@ -80,6 +115,9 @@
   .bounty .btn { gap: 3px; font-size: 12px; padding: 5px 7px; min-width: 74px; }
   .btn img { width: 16px; height: 16px; }
   .ok { color: var(--moss); font-size: 18px; padding: 0 12px; }
+  .bounty.weekly { border-color: var(--gold); background: #2f2a1f; }
+  .wk { margin-top: 2px; color: var(--gold); }
+  .bounty .btn small { font-size: 9px; margin-left: 2px; }
   .chest { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-3); }
   .chest img { width: 34px; height: 34px; filter: grayscale(.8) brightness(.6); }
   .chest.ready { color: var(--gold); }
