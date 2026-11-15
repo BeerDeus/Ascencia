@@ -411,6 +411,7 @@ function playSession(seconds: number) {
       lastRecord = s.run.maxFloor; lastRecordAt = active;
     }
     if (s.bestFloor > (Object.keys(firstReach).length ? 0 : 0)) for (const m of MARKS) if (!firstReach[m] && s.bestFloor >= m) firstReach[m] = `j${day} (${h(active)})`;
+    if (s.run.monster.hunt) lastRecordAt = active;   // Profondeurs / boss de saison : ce n'est pas de la stagnation
     if (E.canAscend(s) && s.ascensions > 0 && active - lastRecordAt > STALL_ASCEND && !s.run.monster.hunt) ascend();
   }
 }
