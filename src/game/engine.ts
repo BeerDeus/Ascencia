@@ -15,6 +15,7 @@ import * as Jb from './jobs';
 import * as Q from './quests';
 import * as Tl from './talents';
 import * as Be from './bestiary';
+import * as Dp from './depths';
 import * as Ev from './events';
 import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
@@ -63,7 +64,7 @@ export function newGame(): GameState {
     jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} }, vault: [], tuto: [],
   };
   s.run = newRun(s, 1);
-  Fi.dailyCheck(s); Q.questsCheck(s); Ev.eventCheck(s);
+  Fi.dailyCheck(s); Q.questsCheck(s); Ev.eventCheck(s); Dp.depthsCheck(s);
   return s;
 }
 
@@ -125,7 +126,7 @@ function computeStats(s: GameState): Stats {
   const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s);
   const meal = Fi.mealActive(s);
   const power = (1 + sy.power + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s) * Ev.trophyMult(s);
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s) * Ev.trophyMult(s) * (1 + Dp.depthNode(s, 'degats'));
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + tb.comp) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
   let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + sy.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
@@ -138,10 +139,10 @@ function computeStats(s: GameState): Stats {
     tap, dps: comp * global, power, global, seuilBlocked,
     critChance: Math.min(0.75, 0.02 + tb.crit + sy.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + sy.critdmg) * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
-    goldMult: Jb.jobMult(s, 'jardinier') * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
+    goldMult: Jb.jobMult(s, 'jardinier') * (1 + Dp.depthNode(s, 'or')) * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
-    bossTime: Math.round((T.bossTime + tb.volonte + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
+    bossTime: Math.round((T.bossTime + tb.volonte + Dp.depthNode(s, 'volonte') + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
     autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0) + (s.shop && Sh.blessing(s, 'frenesie') ? 20 : 0),
   };
 }
@@ -307,7 +308,7 @@ function resourceDrop(s: GameState, m: Monster) {
   Jb.addXp(s, 'chasseur', m.kind === 'boss' ? 4 : 1);
 }
 
-const lootMult = (s: GameState) => (1 + arc(s, 'loot')) * (Sh.blessing(s, 'butin') ? 2 : 1);
+const lootMult = (s: GameState) => (1 + arc(s, 'loot') + Dp.depthNode(s, 'butin')) * (Sh.blessing(s, 'butin') ? 2 : 1);
 
 function drop(s: GameState, minRarity = 0, bonus = 0) {
   const rar = Math.min(5, I.rollRarity(s.run.floor, rnd, minRarity) + (rnd() < 0.25 ? bonus : 0));
@@ -574,6 +575,34 @@ export function startHunt(s: GameState, id: string): boolean {
   log(s, 'story', `Chasse : ${h.name}`);
   return true;
 }
+// ---------------------------------------------------------------- Les Profondeurs
+function spawnAbyss(s: GameState) {
+  const r = s.run, d = s.depths!, mod = Dp.pickModifier(d.depth, rnd);
+  d.mod = mod.id;
+  const hp = Dp.depthHp(d.ref ?? 1, d.depth) * mod.hp;
+  r.monster = { sprite: pick(Dp.ABYSS_MOBS), name: `Profondeur ${d.depth} · ${mod.name}`, kind: 'boss', hp, maxHp: hp, hunt: 'abysse' };
+  r.wave = 10; r.bossTime = Math.max(8, stats(s).bossTime * (1 + mod.time)); r.bossAttackIn = 6;
+}
+/** Descendre : coûte une clé ; on enchaîne les profondeurs jusqu'à la défaite (ou l'abandon). */
+export function startDepths(s: GameState): boolean {
+  Dp.depthsCheck(s);
+  const r = s.run, d = s.depths!;
+  if (!Dp.depthsUnlocked(s) || d.keys <= 0 || r.monster.hunt) return false;
+  d.keys--; d.depth = 1;
+  const st = stats(s);
+  d.ref = st.dps + st.tap * (5 + st.autoTaps);                // dégâts/s de référence (5 frappes/s)
+  r.huntBack = { floor: r.floor, wave: r.wave === 10 ? 0 : r.wave, farming: r.farming };
+  spawnAbyss(s);
+  log(s, 'story', 'Vous descendez dans les Profondeurs…');
+  return true;
+}
+/** Remonter de soi-même (les récompenses déjà gagnées sont gardées). */
+export function leaveDepths(s: GameState): boolean {
+  if (s.run.monster.hunt !== 'abysse') return false;
+  endHunt(s, false);
+  return true;
+}
+
 /** Boss de l'événement de saison : 3 essais par jour, 15 jetons par victoire. */
 export function startSeasonBoss(s: GameState): boolean {
   Ev.eventCheck(s);
@@ -593,6 +622,21 @@ function endHunt(s: GameState, won: boolean) {
   r.huntBack = null; r.floor = back.floor; r.wave = back.wave; r.farming = back.farming;
   r.monster = spawnMob(s);
   emit({ type: 'hunt', id, won });
+  if (id === 'abysse') {
+    const d = s.depths!;
+    if (won) {
+      const rw = Dp.depthReward(d.depth);
+      d.shards += rw.shards; s.gems += rw.gems; s.metal += rw.metal;
+      d.best = Math.max(d.best, d.depth);
+      log(s, 'boss', `Profondeur ${d.depth} franchie : +${rw.shards} Éclat${rw.shards > 1 ? 's' : ''} d’abysse, +${rw.gems} gemmes.`);
+      d.depth++;
+      r.huntBack = back; spawnAbyss(s);          // on continue la descente
+    } else {
+      log(s, 'fail', `Vous remontez des Profondeurs. Record : ${d.best}.`);
+      d.depth = 0;
+    }
+    return;
+  }
   if (id === 'saison') {
     const ev = Ev.currentEvent();
     if (won) { Ev.eventCheck(s); s.event!.tokens += Ev.BOSS_TOKENS; s.event!.wins++; log(s, 'boss', `${ev.bossName} est vaincu : +${Ev.BOSS_TOKENS} jetons de saison.`); }
@@ -854,7 +898,7 @@ function migrate(raw: any): GameState {
   s.resonance = { ...Rz.newResonance(), ...(s.resonance ?? {}) };
   s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
   s.messenger = null; s.nextMessengerAt ??= s.time + 240;
-  Fi.dailyCheck(s); Q.questsCheck(s); Ev.eventCheck(s);
+  Fi.dailyCheck(s); Q.questsCheck(s); Ev.eventCheck(s); Dp.depthsCheck(s);
   while (s.run.cooldowns.length < PARTITIONS.length) { s.run.cooldowns.push(0); s.run.activeUntil.push(0); }
   s.version = SAVE_VERSION;
   return s;

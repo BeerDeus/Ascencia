@@ -97,7 +97,9 @@
     <button class="echo btn" class:low={stands.length > 0} onpointerdown={stop(() => (ui.echo = true))}>✧ Chanter pour l’Écho</button>
   {/if}
 
-  {#if r.farming}
+  {#if m.hunt === 'abysse'}
+    <button class="challenge btn stone" onpointerdown={stop(() => act(E.leaveDepths))}>Remonter</button>
+  {:else if r.farming}
     <button class="challenge btn blood" onpointerdown={stop(() => act(E.challengeBoss))}>Défier le boss</button>
   {/if}
 
@@ -146,7 +148,7 @@
 
   <div class="hud frame" data-tuto="hud">
     <div class="line">
-      <span class="name" class:boss={m.kind === 'boss'} class:golden={m.kind === 'golden'}>{m.name}{#if m.locked} · scellée{/if}{#if m.hunt === 'saison'} · événement{:else if m.hunt} · chasse{/if}</span>
+      <span class="name" class:boss={m.kind === 'boss'} class:golden={m.kind === 'golden'}>{m.name}{#if m.locked} · scellée{/if}{#if m.hunt === 'saison'} · événement{:else if m.hunt && m.hunt !== 'abysse'} · chasse{/if}</span>
       <span class="hpnum">{isFinite(m.hp) ? N(Math.max(0, m.hp)) : '∞'}</span>
     </div>
     <div class="bar hp"><i style="width:{hpPct}%"></i></div>

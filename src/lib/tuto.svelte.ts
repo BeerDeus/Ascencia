@@ -7,6 +7,7 @@ import { fiefTabOpen } from '../game/data/fief';
 import { claimable } from '../game/achievements';
 import { owned, drawCost } from '../game/arcanes';
 import { anchorsVisible } from '../game/resonance';
+import { depthsUnlocked } from '../game/depths';
 import { G, ui, paused, moment } from './game.svelte';
 
 type SubKey = 'heroTab' | 'fiefTab' | 'ascTab' | 'atelier';
@@ -83,6 +84,8 @@ export const STEPS: Step[] = [
     nav: 'Nouveau dans le Fief : l’atelier d’Alaric !', text: 'Alaric transforme vos récoltes en potions : de gros bonus pendant quelques minutes.' },
   { id: 'forge', when: s => fiefTabOpen(s, 'forge'), tab: 'fief', sub: [['fiefTab', 'ateliers'], ['atelier', 'forge']], target: 'atelier-forge', ok: true,
     nav: 'Kaelen ouvre sa forge !', text: 'Commandez l’objet de votre choix, au niveau de l’étage actuel, et forgez les panoplies d’Acte.' },
+  { id: 'profondeurs', when: s => depthsUnlocked(s) && s.ascensions > 0, tab: 'ascension', sub: [['ascTab', 'profondeurs']], target: 'asc-profondeurs', ok: true,
+    nav: 'Quelque chose respire sous les étages…', text: 'Les Profondeurs : 3 clés par jour, une descente sans fin. Chaque profondeur rapporte des Éclats d’abysse pour des bonus permanents.' },
   { id: 'resonance', when: anchorsVisible, tab: 'ascension', sub: [['ascTab', 'resonance']], target: 'asc-resonance', ok: true,
     nav: 'Les Ancres se révèlent…', text: 'Réunissez les trois Ancres pour la Résonance : un nouveau cycle, bien plus puissant.' },
 ];

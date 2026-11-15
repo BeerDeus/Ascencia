@@ -27,7 +27,7 @@ export const ui = $state({
   ready: false,
   tab: 'compagnons' as 'chronique' | 'heros' | 'compagnons' | 'fief' | 'ascension' | 'options',
   heroTab: 'heros' as 'heros' | 'sac' | 'bestiaire' | 'hf',
-  ascTab: 'rituel' as 'rituel' | 'arcanes' | 'resonance',
+  ascTab: 'rituel' as 'rituel' | 'arcanes' | 'profondeurs' | 'resonance',
   atelier: 'cuisine' as 'cuisine' | 'alchimie' | 'forge',
   fiefTab: 'village' as 'village' | 'jardin' | 'ateliers' | 'expeditions' | 'coffre' | 'metiers',
   buyMult: 1 as 1 | 10 | 25 | 0, // 0 = Max
@@ -93,7 +93,8 @@ function handle(e: GameEvent) {
     case 'loot': if (e.item.rarity >= 3) { toast(`${RARITIES[e.item.rarity].name} : ${e.item.name}`, e.item.rarity >= 4 ? 'crit' : 'up'); A.sfxUp(); } break;
     case 'story': ui.scenes.push(e.id); if (/^(kill:|ascension:|resonance:|defeat:)/.test(e.id)) moment('histoire'); break;
     case 'hunt':
-      if (e.id === 'saison') { if (e.won) banner('Victoire !', 'Boss de saison : +15 jetons', 'victoire'); else toast('Le boss de saison s’échappe…', 'info'); }
+      if (e.id === 'abysse') { const d = G.s.depths; toast(e.won ? `Profondeur ${(d?.depth ?? 1) - 1} franchie !` : `Retour à la surface · record ${d?.best ?? 0}`, e.won ? 'crit' : 'info'); }
+      else if (e.id === 'saison') { if (e.won) banner('Victoire !', 'Boss de saison : +15 jetons', 'victoire'); else toast('Le boss de saison s’échappe…', 'info'); }
       else toast(e.won ? 'Bête Primordiale vaincue !' : 'La Bête s’échappe…', e.won ? 'crit' : 'info');
       if (e.won) A.sfxBoss(); break;
     case 'auto-ascend': toast(`Ascension automatique : +${e.gain} Éclats`, 'up'); A.sfxAscend(); break;

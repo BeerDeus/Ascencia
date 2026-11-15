@@ -27,6 +27,8 @@
   import InfoModal from './ui/InfoModal.svelte';
   import TalentModal from './ui/TalentModal.svelte';
   import BestiaryPanel from './ui/BestiaryPanel.svelte';
+  import DepthsPanel from './ui/DepthsPanel.svelte';
+  import { depthsUnlocked } from './game/depths';
   const FIEF_LABELS = { village: 'Village', metiers: 'Métiers', jardin: 'Jardin', expeditions: 'Expéd.', ateliers: 'Ateliers', coffre: 'Coffre' } as const;
   const lockAt = (id: keyof typeof FIEF_TABS) => (fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}`);
   const FIEF_DOT: Partial<Record<keyof typeof FIEF_LABELS, (s: typeof G.s) => boolean>> = { village: dots.village, jardin: dots.jardin, expeditions: dots.expeditions, ateliers: ateliersDot };
@@ -81,8 +83,8 @@
         {:else if ui.fiefTab === 'metiers'}<JobsPanel />
         {:else}<ChestPanel />{/if}
       {:else if ui.tab === 'ascension'}
-        {#if G.s.ascensions > 0}<SubTabs name="asc" bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel', dot: dots.rituel(G.s) }, { id: 'arcanes', label: 'Arcanes', dot: dots.arcanes(G.s) }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance', dot: dots.resonance(G.s) }] : [])]} />{/if}
-        {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else if ui.ascTab === 'resonance' && anchorsVisible(G.s)}<ResonancePanel />{:else}<AscensionPanel />{/if}
+        {#if G.s.ascensions > 0}<SubTabs name="asc" bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel', dot: dots.rituel(G.s) }, { id: 'arcanes', label: 'Arcanes', dot: dots.arcanes(G.s) }, ...(depthsUnlocked(G.s) ? [{ id: 'profondeurs', label: 'Profondeurs', dot: (G.s.depths?.keys ?? 0) > 0 && !G.s.run.monster.hunt }] : []), ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance', dot: dots.resonance(G.s) }] : [])]} />{/if}
+        {#if ui.ascTab === 'profondeurs' && depthsUnlocked(G.s)}<DepthsPanel />{:else if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else if ui.ascTab === 'resonance' && anchorsVisible(G.s)}<ResonancePanel />{:else}<AscensionPanel />{/if}
       {:else}<OptionsPanel />{/if}
     </section>
     <Nav />

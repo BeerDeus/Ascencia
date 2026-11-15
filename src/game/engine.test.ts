@@ -10,6 +10,7 @@ import * as I from './items';
 import * as Q from './quests';
 import * as Tl from './talents';
 import * as Ev from './events';
+import * as Dp from './depths';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
@@ -372,6 +373,24 @@ describe('moteur', () => {
     expect(Ev.buyEventItem(s, 'trophee')).toBe(true);
     expect(Ev.buyEventItem(s, 'trophee')).toBe(false);
     expect(E.stats(s).global).toBeCloseTo(before * (1 + Ev.TROPHY_BONUS));
+  });
+  it('Profondeurs : une clé par descente, enchaînement, récompenses, arbre', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 120; s.ascensions = 1; E.newRun(s, 60);
+    Dp.depthsCheck(s);
+    expect(E.startDepths(s)).toBe(true);
+    expect(s.depths!.keys).toBe(Dp.KEYS_PER_DAY - 1);
+    expect(s.run.monster.hunt).toBe('abysse');
+    s.run.monster.hp = 1; E.tap(s);                       // profondeur 1 franchie → profondeur 2
+    expect(s.depths!.best).toBe(1);
+    expect(s.depths!.depth).toBe(2);
+    expect(s.run.monster.hunt).toBe('abysse');
+    expect(E.leaveDepths(s)).toBe(true);
+    expect(s.run.monster.hunt).toBeUndefined();
+    expect(s.run.floor).toBe(60);
+    s.depths!.shards = 10;
+    const before = E.stats(s).global;
+    expect(Dp.buyDepthNode(s, 'degats')).toBe(true);
+    expect(E.stats(s).global).toBeCloseTo(before * 1.05);
   });
   it('Quêtes de Lysandra : 3 du jour + 1 de la semaine, progression et récompense', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);
