@@ -13,25 +13,28 @@ export interface Quest { stat: Stat; target: number; base: number; gems: number;
 export interface Quests { day: string; week: string; daily: Quest[]; weekly: Quest | null }
 
 const always = () => true;
+// Objectifs calés sur ~30 min de jeu actif d'un joueur engagé (mesuré au simulateur, hors-ligne exclu).
 export const QUEST_DEFS: QuestDef[] = [
-  { stat: 'kills', text: n => `Vaincre ${n} monstres`, min: 200, max: 500, open: always },
-  { stat: 'bossKills', text: n => `Abattre ${n} boss`, min: 15, max: 40, open: always },
-  { stat: 'goldenKills', text: n => `Attraper ${n} Gobelins dorés`, min: 3, max: 6, open: always },
-  { stat: 'partitions', text: n => `Jouer ${n} Partitions`, min: 15, max: 35, open: s => s.bestFloor >= 5 },
-  { stat: 'parries', text: n => `Parer ${n} attaques de boss`, min: 3, max: 8, open: s => s.bestFloor >= 10 },
-  { stat: 'items', text: n => `Ramasser ${n} objets`, min: 6, max: 15, open: s => s.bestFloor > 10 },
-  { stat: 'harvests', text: n => `Récolter ${n} plantes`, min: 5, max: 12, open: s => fiefTabOpen(s, 'jardin') },
-  { stat: 'expeditions', text: n => `Terminer ${n} expédition${n > 1 ? 's' : ''}`, min: 1, max: 3, open: s => fiefTabOpen(s, 'expeditions') },
-  { stat: 'meals', text: n => `Cuisiner ${n} repas`, min: 1, max: 2, open: s => fiefTabOpen(s, 'cuisine') },
-  { stat: 'brewed', text: n => `Préparer ${n} potions`, min: 2, max: 5, open: s => fiefTabOpen(s, 'alchimie') },
-  { stat: 'orders', text: n => `Passer ${n} commande${n > 1 ? 's' : ''} à Kaelen`, min: 1, max: 3, open: s => fiefTabOpen(s, 'forge') },
+  { stat: 'kills', text: n => `Vaincre ${n} monstres`, min: 1200, max: 2000, open: always },
+  { stat: 'bossKills', text: n => `Abattre ${n} boss`, min: 100, max: 160, open: always },
+  { stat: 'goldenKills', text: n => `Attraper ${n} Gobelins dorés`, min: 30, max: 50, open: s => s.bestFloor >= 10 },
+  { stat: 'partitions', text: n => `Jouer ${n} Partitions`, min: 60, max: 100, open: s => s.bestFloor >= 15 },
+  { stat: 'parries', text: n => `Parer ${n} attaques de boss`, min: 20, max: 35, open: s => s.bestFloor >= 10 },
+  { stat: 'items', text: n => `Ramasser ${n} objets`, min: 40, max: 70, open: s => s.bestFloor > 10 },
+  { stat: 'harvests', text: n => `Récolter ${n} plantes`, min: 10, max: 18, open: s => fiefTabOpen(s, 'jardin') },
+  { stat: 'expeditions', text: n => `Terminer ${n} expéditions`, min: 2, max: 4, open: s => fiefTabOpen(s, 'expeditions') },
+  { stat: 'meals', text: n => `Cuisiner ${n} repas`, min: 2, max: 3, open: s => fiefTabOpen(s, 'cuisine') },
+  { stat: 'brewed', text: n => `Préparer ${n} potions`, min: 4, max: 8, open: s => fiefTabOpen(s, 'alchimie') },
+  { stat: 'orders', text: n => `Passer ${n} commandes à Kaelen`, min: 3, max: 5, open: s => fiefTabOpen(s, 'forge') },
 ];
+// La quête de la semaine : ~5 jours de jeu engagé.
 const WEEKLY: QuestDef[] = [
-  { stat: 'bossKills', text: n => `Abattre ${n} boss cette semaine`, min: 250, max: 400, open: always },
-  { stat: 'kills', text: n => `Vaincre ${n} monstres cette semaine`, min: 3000, max: 5000, open: always },
-  { stat: 'harvests', text: n => `Récolter ${n} plantes cette semaine`, min: 50, max: 80, open: s => fiefTabOpen(s, 'jardin') },
-  { stat: 'mutations', text: n => `Obtenir ${n} mutations cette semaine`, min: 3, max: 6, open: s => fiefTabOpen(s, 'jardin') },
-  { stat: 'expeditions', text: n => `Terminer ${n} expéditions cette semaine`, min: 10, max: 16, open: s => fiefTabOpen(s, 'expeditions') },
+  { stat: 'bossKills', text: n => `Abattre ${n} boss cette semaine`, min: 1000, max: 1400, open: always },
+  { stat: 'kills', text: n => `Vaincre ${n} monstres cette semaine`, min: 10000, max: 14000, open: always },
+  { stat: 'partitions', text: n => `Jouer ${n} Partitions cette semaine`, min: 600, max: 800, open: s => s.bestFloor >= 15 },
+  { stat: 'harvests', text: n => `Récolter ${n} plantes cette semaine`, min: 90, max: 120, open: s => fiefTabOpen(s, 'jardin') },
+  { stat: 'mutations', text: n => `Obtenir ${n} mutations cette semaine`, min: 20, max: 30, open: s => fiefTabOpen(s, 'jardin') },
+  { stat: 'expeditions', text: n => `Terminer ${n} expéditions cette semaine`, min: 18, max: 25, open: s => fiefTabOpen(s, 'expeditions') },
 ];
 export const defFor = (q: Quest, weekly = false) => (weekly ? WEEKLY : QUEST_DEFS).find(d => d.stat === q.stat)!;
 
@@ -50,14 +53,20 @@ export function questsCheck(s: GameState) {
     const r = seeded('q' + day);
     const pool = QUEST_DEFS.filter(d => d.open(s)).sort(() => r() - 0.5).slice(0, 3);
     q.day = day;
-    q.daily = pool.map(d => ({ stat: d.stat, target: target(d, r), base: s.stats[d.stat] as number, gems: 10 + Math.round(r() * 2) * 5, claimed: false }));
+    q.daily = pool.map(d => ({ stat: d.stat, target: target(d, r), base: s.stats[d.stat] as number, gems: 15 + Math.round(r() * 2) * 5, claimed: false }));
+  }
+  // un nouveau joueur n'a pas encore tout débloqué : on complète à 3 quêtes dès qu'une activité s'ouvre
+  if (q.daily.length < 3) {
+    const r = seeded('q+' + day + q.daily.length);
+    const more = QUEST_DEFS.filter(d => d.open(s) && !q.daily.some(x => x.stat === d.stat)).sort(() => r() - 0.5).slice(0, 3 - q.daily.length);
+    for (const d of more) q.daily.push({ stat: d.stat, target: target(d, r), base: s.stats[d.stat] as number, gems: 15 + Math.round(r() * 2) * 5, claimed: false });
   }
   if (q.week !== week) {
     const r = seeded('w' + week);
     const opts = WEEKLY.filter(d => d.open(s));
     const d = opts[Math.floor(r() * opts.length)];
     q.week = week;
-    q.weekly = { stat: d.stat, target: target(d, r), base: s.stats[d.stat] as number, gems: 80, seeds: 2, claimed: false };
+    q.weekly = { stat: d.stat, target: target(d, r), base: s.stats[d.stat] as number, gems: 120, seeds: 3, claimed: false };
   }
 }
 

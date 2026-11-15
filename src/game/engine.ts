@@ -862,14 +862,14 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
   // butin ramassé pendant l'absence (objets, ressources de Chasseur), au même rendement que les gains
   const kills = Math.floor((floors * (F.MOBS_PER_FLOOR + 1) + farmKills) * eff);
   if (floors) Co.gainAffinity(s, floors);
-  s.stats.kills += kills;
+  // (les victoires hors-ligne ne comptent pas dans les statistiques : quêtes et primes restent des objectifs de jeu actif)
   let items = 0, bestRarity = -1, metal = 0;
   if (I.lootUnlocked(s)) {
     const n = Math.min(20, Math.floor((floors * 0.5 + kills * 0.03) * lootMult(s)));
     const m0 = s.metal;
     for (let k = 0; k < n; k++) {
       const it = I.makeItem(s, r.floor, I.rollRarity(r.floor, rnd), rnd);
-      I.addItem(s, it); items++; s.stats.items++; bestRarity = Math.max(bestRarity, it.rarity);
+      I.addItem(s, it); items++; bestRarity = Math.max(bestRarity, it.rarity);
     }
     metal = s.metal - m0; // sac plein : le moins bon est recyclé
   }

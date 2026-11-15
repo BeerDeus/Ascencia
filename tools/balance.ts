@@ -408,6 +408,7 @@ console.log('\nRésonances :\n' + (resLog.join('\n') || '—'));
 console.log('Ancres terminées :', JSON.stringify(anchorDay));
 console.log('\nMétiers :', Object.entries(s.jobs).map(([j, x]) => `${j} ${level(s, j as never)}`).join(' · '));
 console.log('Artisanat :', JSON.stringify(craftLog));
+if (process.env.STATS) console.log('Stats/jour :', JSON.stringify(Object.fromEntries(Object.entries(s.stats).map(([k, v]) => [k, Math.round((v as number) / DAYS)]))));
 console.log('Mutations (1re fois) :', JSON.stringify(firstMutation));
 console.log('Panoplies complètes :', SETS.filter(d => Fo.setComplete(s, d.id)).map(d => d.id).join(', ') || '—');
 console.log('\nAscensions :\n' + ascLog.slice(0, 12).join('\n') + (ascLog.length > 12 ? `\n… (${ascLog.length})\n` + ascLog.slice(-4).join('\n') : ''));
