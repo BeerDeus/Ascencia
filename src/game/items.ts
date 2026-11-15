@@ -71,7 +71,7 @@ export function addItem(s: GameState, it: Item): Item | null {
   inv.push(it);
   let dropped: Item | null = null;
   if (inv.length > invMax(s)) {
-    const cands = inv.filter(i => !isEquipped(s, i) && i.id !== s.heritage && !i.bound).sort((a, b) => score(a) - score(b));
+    const cands = inv.filter(i => recyclable(s, i)).sort((a, b) => score(a) - score(b));
     if (cands[0]) { dropped = cands[0]; recycle(s, dropped.id); }
   }
   if (!s.run.equipped[it.slot] && canWear(s, it)) s.run.equipped[it.slot] = it.id; // emplacement vide : équipe d'office
@@ -94,11 +94,25 @@ export function equipBest(s: GameState): number {
 
 export function recycleValue(it: Item) { return Math.round((it.rarity + 1) ** 2 * (1 + it.ilvl / 25) * (1 + it.plus * 0.5)); }
 
+/** Recyclable : ni équipé, ni héritage, ni lié au compte, ni verrouillé. */
+export const recyclable = (s: GameState, it: Item) => !isEquipped(s, it) && it.id !== s.heritage && !it.bound && !it.locked;
+export function toggleLock(s: GameState, id: number): boolean {
+  const it = s.run.inventory.find(i => i.id === id);
+  if (!it) return false;
+  it.locked = !it.locked;
+  return true;
+}
+/** Recycle tout ce qui est recyclable. */
+export function recycleAll(s: GameState): { n: number; metal: number } {
+  let n = 0, metal = 0;
+  for (const it of [...s.run.inventory]) { const v = recycle(s, it.id); if (v) { n++; metal += v; } }
+  return { n, metal };
+}
 export function recycle(s: GameState, id: number): number {
   const inv = s.run.inventory, i = inv.findIndex(x => x.id === id);
   if (i < 0) return 0;
   const it = inv[i];
-  if (isEquipped(s, it) || it.id === s.heritage || it.bound) return 0;
+  if (!recyclable(s, it)) return 0;
   inv.splice(i, 1);
   const v = Math.round(recycleValue(it) * (1 + arc(s, 'metal')));
   s.metal += v;

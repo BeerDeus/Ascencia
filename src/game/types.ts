@@ -36,6 +36,7 @@ export interface Item {
   bound?: boolean;       // lié au compte : revient à chaque vie et suit l'étage
   minFloor?: number;     // record d'étage requis pour le porter
   cap?: number;          // étage au-delà duquel l'objet lié ne progresse plus
+  locked?: boolean;      // verrouillé par le joueur : jamais recyclé
 }
 
 export interface RunState {

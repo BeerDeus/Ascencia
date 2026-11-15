@@ -18,7 +18,17 @@
   const N = (x: number) => fmt(x, s.settings.notation);
 
   function equipBest() { const n = act(I.equipBest); toast(n ? `${n} objet(s) équipé(s)` : 'Déjà au mieux', 'up'); }
-  function recycleCommon() { const v = act(g => I.recycleBelow(g, 2)); if (v) { sfxGold(); toast(`+${v} métal`, 'gold'); } }
+  // Recycler tout : 1er tap = confirmation (combien, pour combien de métal), 2e tap = recycle
+  let confirmAll = $state(false);
+  const recyclables = $derived(s.run.inventory.filter(it => I.recyclable(s, it)));
+  const allValue = $derived(recyclables.reduce((t, it) => t + I.recycleValue(it), 0));
+  function recycleAll() {
+    if (!recyclables.length) { toast('Rien à recycler (verrouillez 🔒 ce que vous gardez)', 'info'); return; }
+    if (!confirmAll) { confirmAll = true; setTimeout(() => (confirmAll = false), 3000); return; }
+    confirmAll = false;
+    const r = act(I.recycleAll);
+    if (r.n) { sfxGold(); toast(`${r.n} objet(s) recyclé(s) : +${r.metal} métal`, 'gold'); selId = null; }
+  }
   function forge(it: Item) { if (act(g => I.upgrade(g, it.id))) sfxUp(); }
   function recycle(it: Item) { const v = act(g => I.recycle(g, it.id)); if (v) { sfxGold(); toast(`+${v} métal`, 'gold'); selId = null; } }
 </script>
@@ -43,7 +53,8 @@
 
     <div class="tools">
       <span class="metal"><img src={gfx('res/metal')} alt="" />{N(s.metal)}</span>
-      <button class="btn stone" onclick={recycleCommon}>Recycler &lt; Rare</button>
+      <button class="btn" class:stone={!confirmAll} class:blood={confirmAll} onclick={recycleAll}>
+        {confirmAll ? `Confirmer : ${recyclables.length} obj. +${N(allValue)}` : `Recycler tout (${recyclables.length})`}</button>
       <button class="btn" onclick={equipBest}>Équiper le mieux</button>
     </div>
 
@@ -56,7 +67,8 @@
           {#if better(it)}<i class="up">▲</i>{/if}
           {#if it.id === s.heritage}<i class="her">★</i>{/if}
           {#if it.bound}<i class="bnd">◆</i>{/if}
-          {#if !I.canWear(s, it)}<i class="lock">🔒</i>{/if}
+          {#if it.locked}<i class="lk">🔒</i>{/if}
+          {#if !I.canWear(s, it)}<i class="req">R{it.minFloor}</i>{/if}
         </button>
       {/each}
       {#if !inv.length}<p class="empty">Rien pour l’instant. Les boss lâchent du butin.</p>{/if}
@@ -85,10 +97,11 @@
         {#if !I.isEquipped(s, sel)}<button class="btn" disabled={!I.canWear(s, sel)} onclick={() => act(g => I.equip(g, sel.id))}>{I.canWear(s, sel) ? 'Équiper' : `Record ${sel.minFloor} requis`}</button>{/if}
         <button class="btn sky" disabled={sel.plus >= I.PLUS_MAX || I.upgradeCost(sel) > s.metal} onclick={() => forge(sel)}>
           Forger {sel.plus >= I.PLUS_MAX ? 'max' : '· ' + N(I.upgradeCost(sel))}<img src={gfx('res/metal')} alt="" /></button>
+        {#if !sel.bound}<button class="btn stone" class:on={sel.locked} onclick={() => act(g => I.toggleLock(g, sel.id))}>{sel.locked ? '🔒 Verrouillé' : '🔓 Verrouiller'}</button>{/if}
         {#if !sel.bound}<button class="btn stone" onclick={() => act(g => I.setHeritage(g, sel.id))}>{s.heritage === sel.id ? '★ Héritage' : '☆ Héritage'}</button>{/if}
-        {#if !I.isEquipped(s, sel) && sel.id !== s.heritage && !sel.bound}<button class="btn blood" onclick={() => recycle(sel)}>Recycler +{I.recycleValue(sel)}</button>{/if}
+        {#if I.recyclable(s, sel)}<button class="btn blood" onclick={() => recycle(sel)}>Recycler +{I.recycleValue(sel)}</button>{/if}
       </div>
-      <p class="hint">Héritage : cet objet survit à l’Ascension (1 seul).</p>
+      <p class="hint">Verrouillé : jamais recyclé, même sac plein. Héritage : survit à l’Ascension (1 seul).</p>
     </div>
   {/if}
 {/if}
@@ -108,7 +121,8 @@
   .cell b { position: absolute; right: 3px; bottom: 1px; font-size: 11px; color: var(--sky); }
   .up { position: absolute; right: 3px; top: 1px; font-size: 10px; color: var(--moss); font-style: normal; }
   .bnd { position: absolute; right: 3px; top: 1px; font-size: 10px; color: var(--ember); font-style: normal; }
-  .lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 16px; font-style: normal; }
+  .lk { position: absolute; left: 2px; top: 12px; font-size: 10px; font-style: normal; }
+  .req { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0 3px; font-size: 10px; font-style: normal; font-weight: 700; color: #fff; background: var(--blood); }
   .bound { font-size: 11px; color: var(--ember); }
   .her { position: absolute; left: 3px; bottom: 0; font-size: 11px; color: var(--gold); font-style: normal; }
   .tools { display: flex; align-items: center; gap: 6px; }

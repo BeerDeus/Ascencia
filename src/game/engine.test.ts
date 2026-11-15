@@ -343,6 +343,17 @@ describe('moteur', () => {
     expect(g.phase).toBe('lost');
   });
 
+  it('Verrouillage : « Recycler tout » épargne équipé, héritage et verrouillé', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 20; E.newRun(s, 20);
+    const r = () => 0.5;
+    const items = Array.from({ length: 5 }, () => { const it = I.makeItem(s, 20, 1, r, 'arme'); s.run.inventory.push(it); return it; });
+    s.run.equipped.arme = items[0].id; s.heritage = items[1].id;
+    I.toggleLock(s, items[2].id);
+    const res = I.recycleAll(s);
+    expect(res.n).toBe(2);
+    expect(res.metal).toBeGreaterThan(0);
+    expect(s.run.inventory.map(i => i.id).sort()).toEqual([items[0].id, items[1].id, items[2].id].sort());
+  });
   it('Packs d’étape : Aube liée au compte, record requis, survit à l’Ascension, niveau fixe', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 12; E.newRun(s, 12);
     expect(Sh.pendingOffer(s, false)).toBeUndefined();               // pas avant le tuto du Sac
