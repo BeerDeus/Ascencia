@@ -121,6 +121,7 @@ export interface GameState {
   tuto: string[];         // étapes du tutoriel terminées
   quests?: import('./quests').Quests; // quêtes de Lysandra
   talents?: Record<number, ('a' | 'b')[]>; // talents choisis par allié (définitifs)
+  bestiary?: Record<string, number>;      // victoires par monstre
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

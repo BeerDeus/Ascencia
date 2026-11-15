@@ -7,13 +7,14 @@ import { actFor, monsterName, storyBossAt, SEUIL_HARMONIQUE } from './data/world
 import { STAR_BY_ID, starCost } from './data/constellations';
 import { fmt } from './format';
 import * as I from './items';
-import { arc, familyMult } from './arcanes';
+import { arc, familyMult, synergy } from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
 import * as Rz from './resonance';
 import * as Jb from './jobs';
 import * as Q from './quests';
 import * as Tl from './talents';
+import * as Be from './bestiary';
 import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
 import { newGarden, harvest as harvestPlot } from './garden';
@@ -120,13 +121,13 @@ export function stats(s: GameState): Stats {
 
 function computeStats(s: GameState): Stats {
   const r = s.run, c = s.classId;
-  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s);
+  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s);
   const meal = Fi.mealActive(s);
-  const power = (1 + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur');
+  const power = (1 + sy.power + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s);
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + tb.comp) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
-  let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
+  let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + sy.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
   if (r && active(s, 'crescendo')) tapMult *= 1 + 2 * power;
   if (r && s.time < r.crescendoUntil) tapMult *= T.crescendoMult;
   const share = 0.03 + star(s, 'meute_frappe');
@@ -134,8 +135,8 @@ function computeStats(s: GameState): Stats {
   const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < T.seuilLegende;
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
-    critChance: Math.min(0.75, 0.02 + tb.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
-    critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
+    critChance: Math.min(0.75, 0.02 + tb.crit + sy.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
+    critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + sy.critdmg) * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
     goldMult: Jb.jobMult(s, 'jardinier') * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
@@ -226,7 +227,7 @@ export function tap(s: GameState) {
   r.tapsTotal++; s.stats.taps++; Fi.count(s, 'taps');
   r.lastTapAt = s.time;
   if (s.time >= r.crescendoUntil) {
-    r.ferveur += (s.classId === 'guerrier' ? T.ferveurGainWar : T.ferveurGain) * (1 + arc(s, 'ferveur'));
+    r.ferveur += (s.classId === 'guerrier' ? T.ferveurGainWar : T.ferveurGain) * (1 + arc(s, 'ferveur') + synergy(s).ferveur);
     if (r.ferveur >= 100) {
       r.ferveur = 0; cacheKey = null;
       r.crescendoUntil = s.time + T.crescendoDur + star(s, 'glaive_ferveur');
@@ -245,7 +246,7 @@ export function tap(s: GameState) {
 function kill(s: GameState) {
   const r = s.run, m = r.monster, st = stats(s);
   cacheKey = null;
-  s.stats.kills++; Fi.count(s, 'kills');
+  s.stats.kills++; Fi.count(s, 'kills'); if (m.kind !== 'golden') Be.bestiaryRecord(s, m.sprite);
   if (m.hunt) { endHunt(s, true); return; }
   resourceDrop(s, m);
   if (m.kind === 'boss') {
@@ -480,7 +481,7 @@ export function castPartition(s: GameState, i: number): boolean {
   const r = s.run, p = PARTITIONS[i], st = stats(s);
   if (!partitionUnlocked(s, i) || s.time < r.cooldowns[i] || r.mana < p.mana) return false;
   r.mana -= p.mana; cacheKey = null;
-  r.cooldowns[i] = s.time + p.cd * Math.max(0.3, 1 - star(s, 'grimoire_cd') - arc(s, 'cd'));
+  r.cooldowns[i] = s.time + p.cd * Math.max(0.3, 1 - star(s, 'grimoire_cd') - arc(s, 'cd') - synergy(s).cd);
   const dur = p.duration * (s.classId === 'mage' ? 1.5 : 1);
   if (dur) r.activeUntil[i] = s.time + dur;
   emit({ type: 'partition', index: i }); Fi.count(s, 'partitions'); s.stats.partitions++;

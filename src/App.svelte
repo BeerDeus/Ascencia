@@ -26,6 +26,7 @@
   import JobModal from './ui/JobModal.svelte';
   import InfoModal from './ui/InfoModal.svelte';
   import TalentModal from './ui/TalentModal.svelte';
+  import BestiaryPanel from './ui/BestiaryPanel.svelte';
   const FIEF_LABELS = { village: 'Village', metiers: 'Métiers', jardin: 'Jardin', expeditions: 'Expéd.', ateliers: 'Ateliers', coffre: 'Coffre' } as const;
   const lockAt = (id: keyof typeof FIEF_TABS) => (fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}`);
   const FIEF_DOT: Partial<Record<keyof typeof FIEF_LABELS, (s: typeof G.s) => boolean>> = { village: dots.village, jardin: dots.jardin, expeditions: dots.expeditions, ateliers: ateliersDot };
@@ -66,8 +67,8 @@
     <section class="panel">
       {#if ui.tab === 'chronique'}<Chronicle />
       {:else if ui.tab === 'heros'}
-        <SubTabs name="hero" bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : ''), dot: dots.hf(G.s) }]} />
-        {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else}<AchievementsPanel />{/if}
+        <SubTabs name="hero" bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac' }, { id: 'bestiaire', label: 'Bestiaire' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : ''), dot: dots.hf(G.s) }]} />
+        {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else if ui.heroTab === 'bestiaire'}<BestiaryPanel />{:else}<AchievementsPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
       {:else if ui.tab === 'fief'}
         {#if fiefUnlocked(G.s)}<SubTabs name="fief" bind:value={ui.fiefTab} tabs={fiefTabs} />{/if}

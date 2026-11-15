@@ -33,6 +33,19 @@
     </button>
   </div>
 
+  <div class="syn frame">
+    <div class="label">Synergies de classe · familles favorites</div>
+    {#each (['guerrier', 'archer', 'mage'] as const) as c}
+      <div class="sc" class:me={s.classId === c}>
+        <b>{c === 'guerrier' ? 'Guerrier' : c === 'archer' ? 'Archer' : 'Mage'}</b>
+        {#each Ar.SYNERGIES[c] as x}
+          <span class:on={complete.includes(x.family)} style="--c:{FAMILIES[x.family].color}">{FAMILIES[x.family].name} : {x.desc}{complete.includes(x.family) ? ' ✓' : ''}</span>
+        {/each}
+      </div>
+    {/each}
+    <small>Actif seulement pour la classe jouée : complétez les familles favorites de votre classe… ou changez de classe à l’Ascension.</small>
+  </div>
+
   {#each fams as f}
     {@const cards = ARCANES.filter(a => a.family === f)}
     <div class="fam" style="--c:{FAMILIES[f].color}">
@@ -112,4 +125,12 @@
   .rn { font-size: 40px; line-height: 1; }
   .rq { font-style: italic; color: var(--text-2); font-size: 16px; }
   .re { color: var(--moss); font-size: 15px; }
+  .syn { padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; }
+  .sc { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; font-size: 11.5px; color: var(--text-3); opacity: .6; }
+  .sc.me { opacity: 1; }
+  .sc b { width: 60px; color: var(--text); }
+  .sc span { color: var(--c); }
+  .sc span:not(.on) { filter: saturate(.4) brightness(.8); }
+  .sc span.on { font-weight: 700; }
+  .syn small { font-size: 10.5px; color: var(--text-3); }
 </style>
