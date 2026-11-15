@@ -16,13 +16,15 @@ import * as Q from './quests';
 import * as Tl from './talents';
 import * as Be from './bestiary';
 import * as Dp from './depths';
+import * as Co from './company';
 import * as Ev from './events';
 import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
 import { newGarden, harvest as harvestPlot } from './garden';
 import { FAMILY_DROPS, DEFAULT_DROP, STORY_RARES } from './data/resources';
 import { AUBE_BY_ID, AUBE_ROLL, GEM_ITEMS } from './data/packs';
-import { PACKS } from './data/shop';
+import { PACKS, BLESSINGS } from './data/shop';
+import { POTION_BY_ID } from './data/crafting';
 import { HUNTS, HUNT_TIME, COMPASS_FLOORS, NOYAU_FLOOR } from './data/resonance';
 import { CALENDAR, PARTITION_REFILL_COST, BOUNTY_REROLL_COST } from './data/shop';
 import { RARITIES } from './data/items';
@@ -103,8 +105,8 @@ export function masteryBonus(s: GameState): number {
 
 export function companionsDps(s: GameState): number {
   let d = 0;
-  s.run.companions.forEach((l, i) => { d += F.compDps(i, l) * Tl.ownMult(s, i); });
-  return d * (1 + star(s, 'meute_dps'));
+  s.run.companions.forEach((l, i) => { d += F.compDps(i, l) * Tl.ownMult(s, i) * Co.memberMult(s, i); });
+  return d * (1 + star(s, 'meute_dps')) * Co.harmonyMult(s);
 }
 
 // Cache optionnel (simulateur uniquement) : valable tant que la vie, l'heure de jeu et l'étage ne changent pas.
@@ -123,9 +125,9 @@ export function stats(s: GameState): Stats {
 
 function computeStats(s: GameState): Stats {
   const r = s.run, c = s.classId;
-  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s);
+  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s), au = Co.aura(s);
   const meal = Fi.mealActive(s);
-  const power = (1 + sy.power + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
+  const power = (1 + sy.power + au.power + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
   let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s) * Ev.trophyMult(s) * (1 + Dp.depthNode(s, 'degats'));
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + tb.comp) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
@@ -137,12 +139,12 @@ function computeStats(s: GameState): Stats {
   const seuilBlocked = !!r && r.floor === SEUIL_HARMONIQUE.floor && r.wave === 10 && s.legende < T.seuilLegende;
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
-    critChance: Math.min(0.75, 0.02 + tb.crit + sy.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
+    critChance: Math.min(0.75, 0.02 + tb.crit + sy.crit + au.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
     critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + sy.critdmg) * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
     goldMult: Jb.jobMult(s, 'jardinier') * (1 + Dp.depthNode(s, 'or')) * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
     manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
-    bossTime: Math.round((T.bossTime + tb.volonte + Dp.depthNode(s, 'volonte') + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
+    bossTime: Math.round((T.bossTime + tb.volonte + au.volonte + Dp.depthNode(s, 'volonte') + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
     autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0) + (s.shop && Sh.blessing(s, 'frenesie') ? 20 : 0),
   };
 }
@@ -254,7 +256,7 @@ function kill(s: GameState) {
   if (m.kind === 'boss') {
     const gold = F.bossGold(r.floor) * st.goldMult;
     addGold(s, gold);
-    s.stats.bossKills++; Fi.count(s, 'bosses');
+    s.stats.bossKills++; Fi.count(s, 'bosses'); Co.gainAffinity(s);
     log(s, 'boss', pick(BOSS_LINES).replace('{m}', m.name) + ` (+${fmt(gold)} or)`);
     emit({ type: 'kill', monster: m, gold });
     if (m.story) story(s, `kill:${m.story}`);
@@ -467,6 +469,7 @@ export function buyComp(s: GameState, i: number, n: number): boolean {
   const before = s.run.companions[i];
   s.run.gold -= c; s.run.companions[i] += n;
   if (before === 0) log(s, 'up', `${COMPANIONS[i].name} rejoint votre cause : « ${COMPANIONS[i].quote} »`);
+  if (Co.leaderOf(s) < 0) Co.setLeader(s, i);           // premier recruté = meneur par défaut
   for (let k = 0; k < MILESTONES.length; k++) {
     const t = MILESTONES[k];
     if (before < t && s.run.companions[i] >= t) {
@@ -844,6 +847,7 @@ export function applyOffline(s: GameState, seconds: number): OfflineReport | nul
   addGold(s, gold);
   // butin ramassé pendant l'absence (objets, ressources de Chasseur), au même rendement que les gains
   const kills = Math.floor((floors * (F.MOBS_PER_FLOOR + 1) + farmKills) * eff);
+  if (floors) Co.gainAffinity(s, floors);
   s.stats.kills += kills;
   let items = 0, bestRarity = -1, metal = 0;
   if (I.lootUnlocked(s)) {
@@ -888,6 +892,13 @@ function migrate(raw: any): GameState {
   s.forge ??= { sets: {} };
   s.vault ??= [];
   s.tuto ??= [];
+  // La Compagnie (ajout) : meneur = l'allié le plus monté, affinité rétroactive selon les boss déjà vaincus
+  if (!s.company) {
+    let best = -1; s.run.companions.forEach((l, i) => { if (l > 0 && (best < 0 || l >= s.run.companions[best])) best = i; });
+    const aff: Record<number, number> = {};
+    s.run.companions.forEach((l, i) => { if (l > 0) aff[i] = Math.floor((s.stats.bossKills ?? 0) / 2); });
+    s.company = { leader: best, affinity: aff };
+  }
   // offres refusées avant la vitrine : elles y reviennent pour 3 jours
   s.shop.offerUntil ??= Object.fromEntries(s.shop.offersSeen.filter(id => !s.shop.owned.includes(id)).map(id => [id, now() + Sh.OFFER_STANDS_MS]));
   // une seule instance par objet lié au compte (le Sac de la vie en cours pointe sur le coffre)
@@ -902,4 +913,33 @@ function migrate(raw: any): GameState {
   while (s.run.cooldowns.length < PARTITIONS.length) { s.run.cooldowns.push(0); s.run.activeUntil.push(0); }
   s.version = SAVE_VERSION;
   return s;
+}
+
+// ---------------------------------------------------------------- Lecture : d'où vient la puissance (écran Héros)
+/** Multiplicateurs de « tous les dégâts », source par source (seulement ceux qui comptent). */
+export function powerBreakdown(s: GameState): { label: string; mult: number }[] {
+  const out: { label: string; mult: number }[] = [
+    { label: 'Légende', mult: F.legendeMult(s.legende) },
+    { label: 'Maîtrises', mult: masteryBonus(s) },
+    { label: 'Arcanes', mult: (1 + arc(s, 'all')) * familyMult(s) },
+    { label: 'Harmoniques (Résonance)', mult: s.resonance ? Rz.harmonicMult(s) : 1 },
+    { label: 'Panoplies forgées', mult: s.forge ? permanentSetMult(s) : 1 },
+    { label: 'Chasseur (métier)', mult: Jb.jobMult(s, 'chasseur') },
+    { label: 'Bestiaire', mult: Be.bestiaryMult(s) },
+    { label: 'Trophées de saison', mult: Ev.trophyMult(s) },
+    { label: 'Profondeurs', mult: 1 + Dp.depthNode(s, 'degats') },
+    { label: 'Voie du Compagnon', mult: s.ending?.path === 'lier' ? 3 : 1 },
+    { label: 'Bénédictions', mult: (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) },
+    { label: 'Potions et repas', mult: (1 + (Fi.mealActive(s)?.all ?? 0)) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) },
+  ];
+  return out.filter(x => x.mult > 1.0001);
+}
+/** Effets temporaires actifs (bénédictions, potions, repas) avec leur fin (horodatage réel). */
+export function activeEffects(s: GameState): { name: string; icon: string; until: number }[] {
+  const out: { name: string; icon: string; until: number }[] = [];
+  const t = now();
+  for (const b of BLESSINGS) { const u = s.shop?.blessings[b.id] ?? 0; if (u > t) out.push({ name: `${b.name} · ${b.desc}`, icon: b.icon, until: u }); }
+  for (const [id, u] of Object.entries(s.buffs ?? {})) { const p = POTION_BY_ID[id]; if (p && u > t) out.push({ name: `${p.name} · ${p.desc}`, icon: p.sprite, until: u }); }
+  const m = Fi.mealActive(s); if (m && s.meal) out.push({ name: `${m.name} · ${m.desc}`, icon: m.sprite, until: s.meal.until });
+  return out.sort((a, b) => a.until - b.until);
 }

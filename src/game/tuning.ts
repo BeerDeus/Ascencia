@@ -16,6 +16,8 @@ export const T = {
   // Équipement
   gearBase: 0.5, gearIlvlDiv: 12,
   // Ferveur
+  // La Compagnie
+  leaderMult: 1.25, harmonyMax: 0.3, affinityPer: 0.04,
   ferveurGain: 2, ferveurGainWar: 3, ferveurDecay: 20, crescendoDur: 8, crescendoMult: 2,
 };
 export type Tuning = typeof T;

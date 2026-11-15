@@ -5,6 +5,7 @@
 // Jardin (croisements visés jusqu'à la Graine-Cœur), Alchimie, Cuisine, Expéditions, Forge et panoplies.
 import * as E from '../src/game/engine';
 import * as Tl from '../src/game/talents';
+import * as Co from '../src/game/company';
 import * as F from '../src/game/formulas';
 import * as I from '../src/game/items';
 import * as Ar from '../src/game/arcanes';
@@ -141,6 +142,8 @@ function shop() {
 function gear() {
   // talents : le bot prend toujours « renforce cet allié »
   s.run.companions.forEach((_, i) => { const k = Tl.pendingTalent(s, i); if (k >= 0) Tl.chooseTalent(s, i, k, 'a'); });
+  // meneur : l'allié qui fait le plus de dégâts
+  { let best = -1, bd = 0; s.run.companions.forEach((l, i) => { const d = F.compDps(i, l) * Tl.ownMult(s, i); if (d > bd) { bd = d; best = i; } }); if (best >= 0) Co.setLeader(s, best); }
   if (!I.lootUnlocked(s)) return;
   I.equipBest(s);
   if (s.run.inventory.length > 28) I.recycleBelow(s, 3);

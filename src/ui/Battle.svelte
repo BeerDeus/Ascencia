@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { G, ui, act, onGameEvent, paused } from '../lib/game.svelte';
+  import { G, ui, act, onGameEvent, paused, toast } from '../lib/game.svelte';
   import * as E from '../game/engine';
   import { actFor, SEUIL_HARMONIQUE } from '../game/data/world';
   import { RARITIES } from '../game/data/items';
@@ -24,6 +24,7 @@
   let clock = $state(Date.now());
   onMount(() => { const t = setInterval(() => (clock = Date.now()), 1000); return () => clearInterval(t); });
   const stands = $derived(standingOffers(G.s, clock).slice(0, 3));
+  const fx = $derived.by(() => { void clock; return E.activeEffects(G.s).slice(0, 6); }); // rafraîchi chaque seconde
   const leftOf = (id: string) => Math.max(0, ((s.shop.offerUntil?.[id] ?? 0) - clock) / 1000);
   const left = (t: number) => { const d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), mn = Math.floor((t % 3600) / 60), sc = Math.floor(t % 60);
     return d ? `${d}j ${h}h` : h ? `${h}h ${String(mn).padStart(2, '0')}` : `${mn}:${String(sc).padStart(2, '0')}`; };
@@ -123,6 +124,16 @@
     </button>
   {/if}
 
+  {#if fx.length}
+    <div class="fx">
+      {#each fx as e (e.name)}
+        <button class="fxi" onpointerdown={stop(() => toast(e.name, 'info'))} aria-label={e.name}>
+          <img src={gfx(e.icon)} alt="" /><span class="outline">{left((e.until - clock) / 1000)}</span>
+        </button>
+      {/each}
+    </div>
+  {/if}
+
   {#if stands.length}
     <div class="stands">
       {#each stands as o, k (o.id)}
@@ -212,6 +223,11 @@
   .sk-bar i.on { background: var(--gold); }
   .sk-bar i.now { background: var(--gold-hi); animation: blink .8s steps(2) infinite; }
   @keyframes blink { 50% { opacity: .3; } }
+  /* effets actifs (bénédictions, potions, repas) : au-dessus de la barre de vie */
+  .fx { position: absolute; right: 6px; bottom: 78px; z-index: 5; display: flex; gap: 3px; }
+  .fxi { position: relative; width: 26px; height: 26px; display: grid; place-items: center; background: rgba(22,19,28,.8); border: 1px solid var(--gold-lo); }
+  .fxi img { width: 20px; height: 20px; object-fit: contain; }
+  .fxi span { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); font-size: 8.5px; font-weight: 700; white-space: nowrap; color: #fff; }
   /* jusqu'à 3 offres en colonne, animations décalées */
   .stands { position: absolute; top: 34px; left: 8px; z-index: 6; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
   .stands .stand { pointer-events: auto; }

@@ -11,6 +11,8 @@ import * as Q from './quests';
 import * as Tl from './talents';
 import * as Ev from './events';
 import * as Dp from './depths';
+import * as Co from './company';
+import { T } from './tuning';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
@@ -391,6 +393,19 @@ describe('moteur', () => {
     const before = E.stats(s).global;
     expect(Dp.buyDepthNode(s, 'degats')).toBe(true);
     expect(E.stats(s).global).toBeCloseTo(before * 1.05);
+  });
+  it('La Compagnie : meneur par défaut, harmonie des rôles, affinité permanente', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60); s.run.gold = 1e30;
+    E.buyComp(s, 0, 10);
+    expect(Co.leaderOf(s)).toBe(0);                       // premier recruté = meneur
+    expect(Co.harmony(s)).toBe(0);                        // un seul rôle
+    E.buyComp(s, 1, 10); E.buyComp(s, 2, 10); E.buyComp(s, 3, 10);
+    expect(Co.harmony(s)).toBe(1);                        // Mêlée, Magie, Distance au même niveau
+    const before = E.companionsDps(s);
+    Co.gainAffinity(s, Co.AFFINITY_STEPS[0]);
+    expect(E.companionsDps(s)).toBeCloseTo(before * (1 + T.affinityPer));
+    E.newRun(s, 1);
+    expect(Co.affinityLevel(Co.affinityPts(s, 0))).toBe(1); // survit à la nouvelle vie
   });
   it('Quêtes de Lysandra : 3 du jour + 1 de la semaine, progression et récompense', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);

@@ -2,7 +2,7 @@
   import { G, ui, act } from '../lib/game.svelte';
   import * as E from '../game/engine';
   import { STARS, BRANCHES, starCost, type Branch } from '../game/data/constellations';
-  import { eclatsFor } from '../game/formulas';
+  import { eclatsFor, legendeMult } from '../game/formulas';
   import { fmt } from '../game/format';
   import { gfx } from '../lib/gfx';
   import { sfxUp } from '../lib/audio';
@@ -10,6 +10,8 @@
   const s = $derived(G.s);
   const N = (x: number) => fmt(x, s.settings.notation);
   const gain = $derived(E.ascensionGain(s));
+  // gain réel de puissance (la Légende multiplie tous les dégâts)
+  const boost = $derived(legendeMult(s.legende + gain) / legendeMult(s.legende) - 1);
   const nextAt = $derived.by(() => { let f = s.run.maxFloor + 1; const g = eclatsFor(s.run.maxFloor); while (eclatsFor(f) <= g && f < s.run.maxFloor + 50) f++; return f; });
   const branches = Object.keys(BRANCHES) as Branch[];
   let branch = $state<Branch>('glaive');
@@ -28,6 +30,9 @@
       <div class="label">Ascensionner maintenant</div>
       <div class="gain outline"><img src={gfx('res/eclats_ascension')} alt="" />+{N(gain)}</div>
       <div class="small">Record de cette vie : étage {s.run.maxFloor} · prochain Éclat à l’étage {nextAt}</div>
+      {#if gain > 0}
+        <div class="advice" class:good={boost >= 0.5}>Après le rituel : <b>tous les dégâts +{Math.round(boost * 100)} %</b> (Légende {N(s.legende)} → {N(s.legende + gain)}){boost >= 0.5 ? ' · conseillé !' : boost < 0.15 ? ' · encore un peu de patience' : ''}</div>
+      {/if}
       <button class="btn go" data-tuto="ascend" disabled={!E.canAscend(s)} onclick={() => (ui.classPicker = 'ascension')}>
         {E.canAscend(s) ? 'Entamer le rituel' : 'Atteindre l’étage 30'}
       </button>
@@ -95,4 +100,8 @@
   .star .btn { font-size: 13px; padding: 6px 8px; gap: 3px; }
   .star .btn img { width: 16px; height: 16px; }
   .max { font-size: 12px; color: var(--gold); font-weight: 700; text-transform: uppercase; }
+  .advice { margin: 4px 0; padding: 4px 6px; font-size: 12px; color: var(--text-2); background: var(--stone-2); }
+  .advice b { color: var(--text); }
+  .advice.good { background: #2c3a24; box-shadow: inset 2px 0 0 var(--moss); }
+  .advice.good b { color: var(--moss); }
 </style>

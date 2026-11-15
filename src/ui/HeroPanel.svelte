@@ -9,6 +9,7 @@
 
   const s = $derived(G.s);
   const st = $derived(E.stats(G.s));
+  const pb = $derived(E.powerBreakdown(G.s));
   const cls = $derived(CLASSES.find(c => c.id === s.classId)!);
   const N = (x: number) => fmt(x, s.settings.notation);
 </script>
@@ -42,6 +43,13 @@
     <div class="slot"><span class="label">Légende</span><b>{N(s.legende)} (×{N(legendeMult(s.legende))})</b></div>
     <div class="slot"><span class="label">Record</span><b>Étage {s.bestFloor}</b></div>
   </div>
+
+  {#if pb.length}
+    <div class="label sub">Sources de puissance · tous les dégâts ×{N(pb.reduce((t, x) => t * x.mult, 1))}</div>
+    <div class="pb">
+      {#each pb as x}<div><span>{x.label}</span><b>×{x.mult >= 100 ? N(x.mult) : x.mult.toFixed(2)}</b></div>{/each}
+    </div>
+  {/if}
 
   <div class="label sub">Maîtrises — +2 % de dégâts par niveau</div>
   {#each CLASSES as c}
@@ -78,4 +86,7 @@
   .ml { width: 46px; text-align: right; color: var(--text-2); }
   .go-allies { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 6px 10px; font-size: 13px; }
   .go-allies small { font-size: 10px; font-weight: 400; color: var(--text-3); }
+  .pb { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
+  .pb div { display: flex; justify-content: space-between; gap: 4px; padding: 3px 6px; font-size: 11.5px; background: var(--stone-2); color: var(--text-2); }
+  .pb b { color: var(--moss); }
 </style>

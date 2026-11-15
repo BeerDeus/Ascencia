@@ -125,6 +125,7 @@ export interface GameState {
   event?: import('./events').EventState;  // événement de saison en cours
   trophies?: number[];                    // trophées de saison (permanents)
   depths?: import('./depths').DepthsState; // les Profondeurs
+  company?: { leader: number; affinity: Record<number, number> }; // meneur et affinités (permanentes)
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

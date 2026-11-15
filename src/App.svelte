@@ -26,6 +26,7 @@
   import JobModal from './ui/JobModal.svelte';
   import InfoModal from './ui/InfoModal.svelte';
   import TalentModal from './ui/TalentModal.svelte';
+  import AllySheet from './ui/AllySheet.svelte';
   import BestiaryPanel from './ui/BestiaryPanel.svelte';
   import DepthsPanel from './ui/DepthsPanel.svelte';
   import { depthsUnlocked } from './game/depths';
@@ -104,6 +105,7 @@
   {:else if ui.job}<JobModal />
   {:else if ui.info}<InfoModal />
   {:else if ui.talent !== null}<TalentModal />
+  {:else if ui.ally !== null}<AllySheet />
   {:else if ui.offer}<OfferModal />{/if}
   {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}
