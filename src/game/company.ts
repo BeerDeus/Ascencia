@@ -26,19 +26,21 @@ export const SLOT_BONUS: [SlotStat, SlotStat, SlotStat][] = [
   ['volonte', 'comp', 'frappe'], ['comp', 'volonte', 'crit'], ['gold', 'power', 'comp'], ['comp', 'crit', 'frappe'],
   ['frappe', 'volonte', 'comp'], ['critdmg', 'power', 'volonte'], ['comp', 'frappe', 'gold'], ['volonte', 'frappe', 'comp'],
   ['power', 'comp', 'crit'], ['volonte', 'critdmg', 'frappe'], ['comp', 'critdmg', 'power'], ['frappe', 'comp', 'gold'],
+  ['gold', 'crit', 'critdmg'], ['comp', 'power', 'frappe'], ['frappe', 'volonte', 'comp'], ['power', 'critdmg', 'gold'],
+  ['critdmg', 'comp', 'crit'], ['comp', 'frappe', 'critdmg'],
 ];
 const msCount = (lv: number) => MILESTONES.filter(t => lv >= t).length;
 /** Valeur du bonus de place du compagnon i (niveau lv) à la place k. */
 export const slotBonusValue = (i: number, k: number, lv: number) => STAT_PER[SLOT_BONUS[i][k]] * (1 + msCount(lv));
 
 /** Étage (record) où chaque compagnon rejoint le roster, au fil de l'histoire. */
-export const COMP_UNLOCK = [1, 3, 8, 15, 24, 30, 38, 46, 54, 62, 70, 78, 88, 98, 108, 118, 132, 146, 160, 175, 195, 220, 245, 290];
+export const COMP_UNLOCK = [1, 3, 8, 15, 22, 29, 36, 43, 50, 57, 64, 71, 78, 86, 94, 102, 110, 118, 127, 136, 145, 155, 165, 175, 185, 195, 205, 215, 230, 250];
 
 // ---- Relations (paires) : 1 = amis, -1 = rivaux, 0 = neutres
 const key = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 const REL: Record<string, number> = {};
-const friends = [[0, 1], [0, 2], [1, 2], [1, 4], [2, 12], [2, 19], [3, 11], [4, 8], [4, 20], [5, 6], [7, 15], [8, 20], [12, 13], [14, 23], [16, 21], [17, 22], [6, 9], [3, 7]];
-const rivals = [[0, 9], [8, 16], [10, 17], [18, 22], [5, 10], [7, 14], [13, 19]];
+const friends = [[0, 1], [0, 2], [1, 2], [1, 4], [2, 12], [2, 19], [3, 11], [4, 8], [4, 20], [5, 6], [7, 15], [8, 20], [12, 13], [14, 23], [16, 21], [17, 22], [6, 9], [3, 7], [10, 25], [2, 29], [17, 27], [8, 28]];
+const rivals = [[0, 9], [8, 16], [10, 17], [18, 22], [5, 10], [7, 14], [13, 19], [6, 24], [16, 28], [26, 12]];
 for (const [a, b] of friends) REL[key(a, b)] = 1;
 for (const [a, b] of rivals) REL[key(a, b)] = -1;
 export const relation = (a: number, b: number) => REL[key(a, b)] ?? 0;
@@ -61,6 +63,9 @@ export const SYNERGIES: Synergy[] = [
   { ids: [16, 21], name: 'Serments', desc: '+3 s de Volonté', fx: { volonte: 3 } },
   { ids: [14, 23], name: 'Éternels', desc: 'Or +50 %', fx: { gold: 0.5 } },
   { ids: [17, 22], name: 'Lumière froide', desc: 'Frappe +40 %', fx: { frappe: 0.4 } },
+  { ids: [10, 25], name: 'Feu sacré', desc: 'Escouade ×1,3', fx: { squad: 0.3 } },
+  { ids: [2, 29], name: 'Deux forges', desc: 'Frappe +40 %', fx: { frappe: 0.4 } },
+  { ids: [17, 27], name: 'Hiver éternel', desc: '+3 s de Volonté', fx: { volonte: 3 } },
 ];
 export const ROLE_COMBOS: { test: (r: CompType[]) => boolean; name: string; desc: string; fx: Partial<Effects> }[] = [
   { test: r => new Set(r).size === 3, name: 'Escouade équilibrée', desc: '+2 s de Volonté', fx: { volonte: 2 } },
@@ -140,7 +145,7 @@ export function effects(s: GameState): Effects {
   if (!s.run?.companions) return e;
   const add = (fx: Partial<Effects>, k = 1) => { for (const [n, v] of Object.entries(fx)) (e as unknown as Record<string, number>)[n] += (v as number) * k; };
   const cm = cohesionMult(s);
-  for (const t of tiersReached(s)) add(t.fx, cm);
+  for (const t of tiersReached(s)) add(t.lv >= 800 && t.fx.squad ? { ...t.fx, squad: t.fx.squad * T.tierBoost } : t.fx, cm);
   for (const x of activeSynergies(s)) add(x.fx);
   const combo = activeCombo(s); if (combo) add(combo.fx);
   e.frappe += 0.15 * rivalPairs(s);                 // émulation entre rivaux

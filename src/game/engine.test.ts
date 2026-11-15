@@ -13,6 +13,7 @@ import * as Ev from './events';
 import * as Dp from './depths';
 import * as Co from './company';
 import { T } from './tuning';
+import { MEMORIES } from './data/memories';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
@@ -393,6 +394,12 @@ describe('moteur', () => {
     const before = E.stats(s).global;
     expect(Dp.buyDepthNode(s, 'degats')).toBe(true);
     expect(E.stats(s).global).toBeCloseTo(before * 1.05);
+  });
+  it('Tables de compagnons complètes (déblocages, bonus de place, souvenirs)', () => {
+    expect(Co.COMP_UNLOCK.length).toBe(COMPANIONS.length);
+    expect(Co.SLOT_BONUS.length).toBe(COMPANIONS.length);
+    expect(MEMORIES.length).toBe(COMPANIONS.length);
+    expect(MEMORIES.every(m => m.length === 3)).toBe(true);
   });
   it('Escouade : roster par l’histoire, 3 membres, places, paliers, relations, affinité', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 20; E.newRun(s, 20); s.run.gold = 1e30;

@@ -97,4 +97,28 @@ export const MEMORIES: string[][] = [
   ['« Tout recommence. Toi aussi. Moi aussi. C’est la seule promesse qui tienne. »',
    '« Je t’ai vu dans mille boucles. Dans chacune, tu choisis de te relever. »',
    '« Cette fois, la boucle se ferme sur une fin heureuse. Je m’en souviendrai. Toujours. »'],
+  // Le Collectionneur
+  ['« Tout a un prix. Même toi. Surtout toi, en fait. »',
+   '« J’ai acheté un souvenir de Larry, une fois. Il riait encore dedans. Je l’ai revendu à perte. »',
+   '« Ma plus belle pièce ? Une place à ta table. Elle n’est pas à vendre. »'],
+  // Dragonnet
+  ['« *crache une étincelle fière* » (Il a brûlé le tablier de Gaston. Exprès.)',
+   '« *ronronne comme une forge* » (Il dort roulé autour de votre sac.)',
+   '« *rugit pour la première fois* » (Les montagnes répondent. Il vous regarde, fier.)'],
+  // Géant des cimes
+  ['« PETIT. MAIS. FORT. » (Il parle de vous. C’est un compliment.)',
+   '« LES NEIGES. CHANTAIENT. AVANT. » (Il fredonne, et la vallée tremble.)',
+   '« AMI. PETIT. » (Il vous a porté sur son épaule toute une journée.)'],
+  // Liche repentie
+  ['« La mort m’ennuie. La vie, avec toi, beaucoup moins. »',
+   '« J’ai cherché l’éternité dans les grimoires. Elle était dans les gens. Quelle déception… et quel soulagement. »',
+   '« Quand tu tomberas, je ne te ramènerai pas. Je te promets de te laisser partir. C’est le plus beau cadeau que je connaisse. »'],
+  // La Chimère
+  ['« *des larmes de saphir* » (Le Chef-d’œuvre de Larry ne voulait pas être une arme.)',
+   '« *chant à trois voix* » (Ses têtes, enfin d’accord, fredonnent la même note.)',
+   '« *pose sa tête sur votre épaule* » (Elle a choisi son nom : Harmonie.)'],
+  // Forgeron Fantôme
+  ['« Je forge à nouveau du son. Chaque coup de marteau, une note qui revient au monde. »',
+   '« Kaelen m’a montré son éclat de minerai qui pleure. Je l’ai écouté. Il chante juste, maintenant. »',
+   '« Je n’ai plus de corps. J’ai un atelier, un apprenti, et toi. C’est assez pour rester. »'],
 ];
