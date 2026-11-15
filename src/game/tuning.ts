@@ -2,7 +2,7 @@
 // Valeurs validées par simulation (voir docs/EQUILIBRAGE.md).
 export const T = {
   // Monstres : PV ×1,34/étage jusqu’à 140, puis ×1,305
-  hpBase: 10, hpGrowth1: 1.34, hpBreak: 140, hpGrowth2: 1.305,
+  hpBase: 10, hpGrowth1: 1.34, hpBreak: 140, hpGrowth2: 1.315,
   bossHpMult: 8, bossTime: 30, goldRatio: 0.1,
   // Compagnons : chaque nouveau compagnon coûte ×8 mais ne frappe que ×3,5
   // → la puissance achetable prend du retard sur les PV : c'est ce qui crée le mur d'une vie.

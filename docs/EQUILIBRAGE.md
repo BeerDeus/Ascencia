@@ -129,6 +129,21 @@ Lecture :
   finies (trop tôt, peu de Fragments) — ce qui faisait passer les payeurs derrière le gratuit.
 - Simulateur ~2× plus rapide (cache de `stats()` activé par le bot seulement) : 15 sims de 60 jours ≈ 10 min sur 4 cœurs.
 
+### Validation avec le bot complet (17/11, 60 jours, Guerrier engagé, 4 tirages reproductibles)
+Le bot joue désormais tout : escouade composée au mieux (bonus de place, synergies), quêtes, événement de saison,
+Profondeurs (dès le record 250), arbre des abysses, trophées. Le Jardin est seedé (simulations reproductibles).
+Corrections : Profondeurs au record 250 (au lieu de 100), bonus de place ×(1 + 0,5 × paliers), cohésion ±15 %/paire,
+croissance des PV après l'étage 140 : 1,305 → **1,315**. Bot : le temps passé en Profondeurs ne déclenche plus l'Ascension.
+
+| Tirage | J7 | J30 | J60 | 1re Résonance | Étage 300 | Étage 350 |
+|---|---|---|---|---|---|---|
+| 1 | 222 | 300 | 383 | j28 | j26 | j40 |
+| 2 | 190 | 315 | 350 | j18 | j24 | j47 |
+| 3 | 226 | 315 | 343 | j23 | j27 | — |
+| 4 | 230 | 292 | 361 | j26 | j31 | j48 |
+
+1re Résonance ≈ j24 (objectif ~1 mois) ; étage 400 au-delà de J60 (objectif 2–3 mois).
+
 ## Points à surveiller
 - La 1re Ascension arrive vite (~12–25 min) : bon pour l'accroche, à confirmer en test réel.
 - Le joueur occasionnel progresse ~2× moins vite ; la Constellation *Somnambule* (montée hors-ligne) est son meilleur levier.
