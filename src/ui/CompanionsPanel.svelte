@@ -116,7 +116,7 @@
       </button>
       <div class="mid">
         <div class="nm">{c.name}{#if lv}&nbsp;<b>{lv}</b>{/if}{#each talentsOf(s, i) as p, t}{#if p && lv >= TALENT_TIERS[t]}<i class="tl" title={TALENTS[t][p === 'a' ? 0 : 1].name}>★</i>{/if}{/each}{#if best === i}<em class="tag">Meilleur choix</em>{/if}</div>
-        {#if pendingTalent(s, i) >= 0}<button class="talent" onclick={() => (ui.talent = i)}>★ Talent à choisir</button>
+        {#if pendingTalent(s, i) >= 0}<button class="talent" data-tuto="talent" onclick={() => (ui.talent = i)}>★ Talent à choisir</button>
         {:else}<div class="tt">{#if k >= 0}<span class="sq">{SLOT_TAG[k]}</span>{:else if lv}<span class="bench">Banc</span>{/if} <span class="t-{c.type}">{Co.ROLE_NAME[c.type]}</span> · {c.title}</div>{/if}
         <div class="dps">{#if k >= 0}{N(dpsOf(i))} DPS{:else if lv}ne combat pas{/if} <span class="gain">{gainOf(i) > 0 ? '+' + N(gainOf(i)) : ''}</span></div>
         {#if lv && nm}<div class="ms"><div class="bar"><i style="width:{((lv - prev) / (nm - prev)) * 100}%"></i></div><span>niv. {nm} : ×{nm < 200 ? '2,5' : '3'}</span></div>{/if}

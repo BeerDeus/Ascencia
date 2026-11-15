@@ -6,6 +6,9 @@
 import * as E from '../src/game/engine';
 import * as Tl from '../src/game/talents';
 import * as Co from '../src/game/company';
+import * as Q from '../src/game/quests';
+import * as Ev from '../src/game/events';
+import * as Dp from '../src/game/depths';
 import * as F from '../src/game/formulas';
 import * as I from '../src/game/items';
 import * as Ar from '../src/game/arcanes';
@@ -107,19 +110,49 @@ function gems() {
   while (Sh.adsLeft(s, 'gemmes') > 0 && Sh.adGems(s)) { /* pubs récompensées regardées */ }
   // bénédictions de combat entretenues quand on a de quoi
   for (const b of ['force', 'or'] as const) if (!Sh.blessing(s, b) && s.gems >= (b === 'force' ? 40 : 30)) Sh.buyBlessing(s, b);
+  // quêtes de Lysandra
+  Q.questsCheck(s);
+  if (s.quests) for (const q of [...s.quests.daily, ...(s.quests.weekly ? [s.quests.weekly] : [])]) Q.claimQuest(s, q, rnd);
+  // boutique d'événement : trophée d'abord, puis Furie et gemmes
+  Ev.eventCheck(s);
+  for (const id of ['trophee', 'furie', 'gemmes', 'graines']) while (Ev.buyEventItem(s, id)) { /* achats */ }
+  // arbre des abysses : le moins cher d'abord (clés en priorité)
+  if (s.depths) for (let k = 0; k < 20; k++) {
+    const opts = Dp.DEPTH_NODES.filter(n => (s.depths!.nodes[n.id] ?? 0) < n.max).sort((a, b) => (a.id === 'cles' ? -1 : 0) - (b.id === 'cles' ? -1 : 0) || Dp.nodeCost(a, s.depths!.nodes[a.id] ?? 0) - Dp.nodeCost(b, s.depths!.nodes[b.id] ?? 0));
+    if (!opts.length || !Dp.buyDepthNode(s, opts[0].id)) break;
+  }
+}
+
+/** Escouade : meilleure composition réelle (bonus de place, synergies, frappe), hors combat de boss. */
+function squad() {
+  if (!Co.canChangeSquad(s)) return;
+  Co.bestSquad(s, i => E.memberRaw(s, i), () => { E.invalidateStats(); const x = E.stats(s); return x.dps + x.tap * cps; });
+  E.invalidateStats();
+}
+
+/** Contenus quotidiens à combats : Profondeurs (clés) puis boss de saison, entre deux étages. */
+function dailyFights() {
+  if (s.run.monster.hunt || s.run.monster.kind === 'boss') return;
+  Dp.depthsCheck(s);
+  if (Dp.depthsUnlocked(s) && s.ascensions > 0 && (s.depths?.keys ?? 0) > 0) { E.startDepths(s); return; }
+  if ((s.event?.tries ?? 0) > 0 && Ev.eventOpen(s)) E.startSeasonBoss(s);
 }
 
 function shop() {
   const st = E.stats(s);
   // escouade : seuls les 3 combattent ; le bot recompose au mieux puis compare les gains (escouade recomposée)
-  Co.autoSquad(s, i => E.memberRaw(s, i));
+  if (Co.activeSquad(s).some(i => i < 0)) Co.autoSquad(s, i => E.memberRaw(s, i));
   const sq = Co.activeSquad(s), sm = [T.slotLead, T.slotRight, T.slotSupport];
   const raw = sq.reduce((a, i, k) => a + (i >= 0 ? E.memberRaw(s, i) * sm[k] : 0), 0);
   const compMult = raw > 0 ? st.dps / raw : st.global;
   const tapUnit = st.tap / F.frappeBase(s.run.heroLevel);
+  // dégâts bruts de chaque compagnon, calculés une fois par tour (le delta d'escouade se déduit des 3 meilleurs)
+  const top3 = (v: number[]) => { let a = 0, b = 0, c = 0; for (const x of v) { if (x > a) { c = b; b = a; a = x; } else if (x > b) { c = b; b = x; } else if (x > c) c = x; } return a * sm[0] + b * sm[1] + c * sm[2]; };
   for (let guard = 0; guard < 60; guard++) {
     let best: null | { ratio: number; act: () => boolean } = null;
     const L = s.run.heroLevel;
+    const raws = s.run.companions.map((l, k) => (l > 0 ? E.memberRaw(s, k) : 0));
+    const base = top3(raws);
     for (const n of [1, 10]) {
       const c = E.heroCostN(s, n);
       if (c <= s.run.gold) {
@@ -135,8 +168,11 @@ function shop() {
         if (n <= 0) continue;
         const c = E.compCostN(s, i, n);
         if (c > s.run.gold) continue;
-        const g = E.squadDeltaIf(s, i, n) * compMult + (l === 0 ? 1e-9 : 0);
-        if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => { const ok = E.buyComp(s, i, n); Co.autoSquad(s, k => E.memberRaw(s, k)); return ok; } };
+        const old = raws[i]; raws[i] = E.memberRaw(s, i, l + n);
+        const delta = top3(raws) - base + (l === 0 ? base * T.renownPer : 0);
+        raws[i] = old;
+        const g = delta * compMult + (l === 0 ? 1e-9 : 0);
+        if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => E.buyComp(s, i, n) };
       }
     });
     if (!best || !best.act()) break;
@@ -363,7 +399,7 @@ function playSession(seconds: number) {
     E.tick(s, DT);
     active += DT; wall += DT * 1000; acc += DT;
     if (acc >= 2) { acc = 0; shop(); }
-    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { buyOffers(); gems(); gear(); fief(); anchors(); }
+    if (Math.floor(active) % 30 === 0 && t % 30 < DT) { buyOffers(); gems(); gear(); fief(); anchors(); dailyFights(); squad(); }
     if (Math.floor(active) % 120 === 0 && t % 120 < DT) { garden(); workshops(); }
     const evs = E.drainEvents();
     for (const e of evs) if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') { ascend(); }
@@ -375,7 +411,7 @@ function playSession(seconds: number) {
       lastRecord = s.run.maxFloor; lastRecordAt = active;
     }
     if (s.bestFloor > (Object.keys(firstReach).length ? 0 : 0)) for (const m of MARKS) if (!firstReach[m] && s.bestFloor >= m) firstReach[m] = `j${day} (${h(active)})`;
-    if (E.canAscend(s) && s.ascensions > 0 && active - lastRecordAt > STALL_ASCEND) ascend();
+    if (E.canAscend(s) && s.ascensions > 0 && active - lastRecordAt > STALL_ASCEND && !s.run.monster.hunt) ascend();
   }
 }
 

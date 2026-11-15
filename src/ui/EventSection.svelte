@@ -20,7 +20,7 @@
 </script>
 
 {#if e}
-  <section class="frame ev" style="--c:{ev.color}">
+  <section class="frame ev" style="--c:{ev.color}" data-tuto="event">
     <div class="hd">
       <img class="boss" src={gfx(ev.boss)} alt="" />
       <div class="mi">

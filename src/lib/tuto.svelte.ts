@@ -8,6 +8,7 @@ import { claimable } from '../game/achievements';
 import { owned, drawCost } from '../game/arcanes';
 import { anchorsVisible } from '../game/resonance';
 import { depthsUnlocked } from '../game/depths';
+import { anyPendingTalent } from '../game/talents';
 import { G, ui, paused, moment } from './game.svelte';
 
 type SubKey = 'heroTab' | 'fiefTab' | 'ascTab' | 'atelier';
@@ -87,6 +88,14 @@ export const STEPS: Step[] = [
     nav: 'Nouveau dans le Fief : l’atelier d’Alaric !', text: 'Alaric transforme vos récoltes en potions : de gros bonus pendant quelques minutes.' },
   { id: 'forge', when: s => fiefTabOpen(s, 'forge'), tab: 'fief', sub: [['fiefTab', 'ateliers'], ['atelier', 'forge']], target: 'atelier-forge', ok: true,
     nav: 'Kaelen ouvre sa forge !', text: 'Commandez l’objet de votre choix, au niveau de l’étage actuel, et forgez les panoplies d’Acte.' },
+  { id: 'talent', when: s => anyPendingTalent(s), tab: 'compagnons', target: 'talent', ok: true,
+    nav: 'Un compagnon peut choisir un talent !', text: 'Au niveau 100, 200, 300 et 400, choisissez : renforcer ce compagnon, ou donner un bonus à toute l’équipe. Le choix est définitif.' },
+  { id: 'bestiaire', when: s => s.bestFloor >= 12 && Object.keys(s.bestiary ?? {}).length >= 6, tab: 'heros', sub: [['heroTab', 'bestiaire']], target: 'hero-bestiaire', ok: true,
+    nav: 'Votre Bestiaire se remplit.', text: 'Chaque monstre gagne des étoiles à 10, 100 et 1 000 victoires : +0,25 % de dégâts par étoile, pour toujours.' },
+  { id: 'evenement', when: s => fiefUnlocked(s) && !!s.event, tab: 'fief', sub: [['fiefTab', 'village']], target: 'event', ok: true,
+    nav: 'Un événement de saison a commencé !', text: 'Affrontez le boss de saison (3 fois par jour) pour gagner des jetons, et échangez-les à la boutique : le trophée donne +3 % de dégâts pour toujours.' },
+  { id: 'synergies', when: s => s.ascensions > 0 && owned(s) >= 3, tab: 'ascension', sub: [['ascTab', 'arcanes']], target: 'syn', ok: true,
+    nav: 'Vos Arcanes ont des affinités…', text: 'Chaque classe a deux familles d’Arcanes favorites : complétez-les pour un bonus propre à la classe jouée.' },
   { id: 'profondeurs', when: s => depthsUnlocked(s) && s.ascensions > 0, tab: 'ascension', sub: [['ascTab', 'profondeurs']], target: 'asc-profondeurs', ok: true,
     nav: 'Quelque chose respire sous les étages…', text: 'Les Profondeurs : 3 clés par jour, une descente sans fin. Chaque profondeur rapporte des Éclats d’abysse pour des bonus permanents.' },
   { id: 'resonance', when: anchorsVisible, tab: 'ascension', sub: [['ascTab', 'resonance']], target: 'asc-resonance', ok: true,

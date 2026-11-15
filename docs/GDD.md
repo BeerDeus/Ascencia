@@ -461,3 +461,31 @@ Le dossier `assets/` est un **pack** : on pioche ce qui sert, on ne cherche pas 
 
 ## 22. À discuter
 - **Jardin** (demande du 14/11) : un vrai système de plantations à terme (semis, croissance en temps réel, saisons, croisements, récoltes utilisées par Alaric/Gaston, Graine-Cœur d'Yggdrasil). À concevoir ensemble avant développement — sprites dispo : `garden/plants` (12 plantes × 3 stades), `garden/seasons`.
+
+## 23. Systèmes ajoutés (16–17/11/2026)
+Détails et chiffres : `docs/COMPAGNIE.md`, `docs/EQUILIBRAGE.md`, `docs/JARDIN_METIERS.md`.
+
+**La Compagnie (escouade de 3)** — remplace la liste d'alliés à la Tap Titans.
+- 30 compagnons rejoignent le roster au fil des étages, se recrutent et se montent à l'or (par vie).
+- Escouade : Meneur / Bras droit / Soutien, tous combattent ; chaque compagnon a un **bonus propre à chaque place**.
+- Niveau d'escouade (somme des 3) et ses paliers ; relations amis/rivaux (cohésion, émulation) ; synergies d'histoire et de rôles ;
+  Renommée (+4 % par compagnon recruté) ; Affinité permanente et 90 souvenirs ; talents aux niveaux 100/200/300/400.
+- Écran « L'escouade » : calcul des dégâts membre par membre et origine de chaque bonus.
+
+**Boucles quotidiennes et hebdomadaires**
+- Quêtes de Lysandra (3/jour + 1/semaine, ~30 min de jeu actif), primes du Village, calendrier et série de connexion.
+- Événements de saison (une semaine réelle chacun) : boss de saison 3×/jour, jetons, boutique, trophées permanents (+3 % chacun).
+- Les Profondeurs (record 100) : 3 clés/jour, descente sans fin à modificateurs, Éclats d'abysse et arbre de bonus permanents.
+
+**Collection et progression parallèle**
+- Métiers (6) : +1 % par niveau sur une stat chacun, paliers, fiches détaillées. Bestiaire (étoiles par monstre).
+- Synergies de classe (familles d'Arcanes favorites), talents des alliés.
+
+**Monétisation**
+- Packs d'étape liés au compte (niveau fixe, deviennent obsolètes), offres aux moments clés, vitrine de 3 offres (3 jours).
+- Packs de gemmes à bonus croissant (+12 à +50 %) avec bénédictions offertes ; Furie / Frénésie au Marché.
+
+**Confort (UX)**
+- Tutos en bulles pour chaque système ; pastilles sur les onglets et sous-onglets seulement s'il y a quelque chose à faire.
+- Fiches à l'appui long (objets, ressources, Partitions, plantes, compagnons) ; récapitulatif de retour avec « Tout récupérer ».
+- Héros : sources de puissance détaillées ; combat : effets actifs avec minuteur ; Ascension : conseil chiffré.

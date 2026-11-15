@@ -33,7 +33,7 @@
     </button>
   </div>
 
-  <div class="syn frame">
+  <div class="syn frame" data-tuto="syn">
     <div class="label">Synergies de classe · familles favorites</div>
     {#each (['guerrier', 'archer', 'mage'] as const) as c}
       <div class="sc" class:me={s.classId === c}>
