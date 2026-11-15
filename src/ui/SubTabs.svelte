@@ -1,10 +1,10 @@
 <script lang="ts">
-  let { value = $bindable(), tabs, name = '' }: { value: string; tabs: { id: string; label: string; locked?: string }[]; name?: string } = $props();
+  let { value = $bindable(), tabs, name = '' }: { value: string; tabs: { id: string; label: string; locked?: string; dot?: boolean }[]; name?: string } = $props();
 </script>
 <div class="sub">
   {#each tabs as t}
     <button class:on={value === t.id} class:locked={!!t.locked} disabled={!!t.locked} data-tuto={name ? `${name}-${t.id}` : undefined}
-      onclick={() => (value = t.id)}>{t.label}{#if t.locked}<small>{t.locked}</small>{/if}</button>
+      onclick={() => (value = t.id)}>{t.label}{#if t.locked}<small>{t.locked}</small>{/if}{#if t.dot && !t.locked}<i class="dot"></i>{/if}</button>
   {/each}
 </div>
 <style>
@@ -12,6 +12,8 @@
   button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; padding: 6px 2px; font-size: 12px; font-weight: 700; line-height: 1.1;
     color: var(--text-3); background: var(--stone-1); box-shadow: inset 0 -2px 0 var(--lo); }
   button.on { color: var(--text); background: var(--stone-3); box-shadow: inset 0 2px 0 var(--hi); }
+  button { position: relative; }
   button.locked { opacity: .45; }
+  .dot { position: absolute; top: 3px; right: 4px; width: 7px; height: 7px; background: var(--blood); box-shadow: 0 0 0 2px var(--ink-0); }
   small { font-size: 9.5px; font-weight: 400; }
 </style>

@@ -98,7 +98,8 @@ export function dismissOffer(s: GameState, id: string, nowMs: number) {
 /** Offres en vitrine (refusées, non achetées, pas expirées), la plus proche de l'expiration d'abord. */
 export function standingOffers(s: GameState, nowMs: number) {
   const u = s.shop.offerUntil ?? {};
-  return PACKS.filter(p => u[p.id] > nowMs && !s.shop.owned.includes(p.id)).sort((a, b) => u[a.id] - u[b.id]);
+  // les plus récentes d'abord : un nouveau pack remplace le plus ancien dans la vitrine (3 places)
+  return PACKS.filter(p => u[p.id] > nowMs && !s.shop.owned.includes(p.id)).sort((a, b) => u[b.id] - u[a.id]);
 }
 /** Offre contextuelle à présenter (une seule fois), ex. le Pack du Fief à son déblocage. */
 /** Rappel « coup de pouce » quand le joueur bloque : un pack débloqué non acheté, pas montré depuis 24 h. */

@@ -18,6 +18,7 @@
   import { fiefUnlocked } from './game/fief';
   import { FIEF_TABS, fiefTabOpen } from './game/data/fief';
   import Tuto from './ui/Tuto.svelte';
+  import { dots, ateliersDot } from './lib/dots';
   import SpellModal from './ui/SpellModal.svelte';
   import JobsPanel from './ui/JobsPanel.svelte';
   import CuisinePanel from './ui/CuisinePanel.svelte';
@@ -25,8 +26,9 @@
   import InfoModal from './ui/InfoModal.svelte';
   const FIEF_LABELS = { village: 'Village', metiers: 'Métiers', jardin: 'Jardin', expeditions: 'Expéd.', ateliers: 'Ateliers', coffre: 'Coffre' } as const;
   const lockAt = (id: keyof typeof FIEF_TABS) => (fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}`);
+  const FIEF_DOT: Partial<Record<keyof typeof FIEF_LABELS, (s: typeof G.s) => boolean>> = { village: dots.village, jardin: dots.jardin, expeditions: dots.expeditions, ateliers: ateliersDot };
   const fiefTabs = $derived((Object.keys(FIEF_LABELS) as (keyof typeof FIEF_LABELS)[]).map(id => ({ id, label: FIEF_LABELS[id],
-    locked: fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}` })));
+    locked: fiefTabOpen(G.s, id) ? undefined : `étage ${FIEF_TABS[id]}`, dot: FIEF_DOT[id]?.(G.s) ?? false })));
   import ArcanesPanel from './ui/ArcanesPanel.svelte';
   import SubTabs from './ui/SubTabs.svelte';
   import AchievementsPanel from './ui/AchievementsPanel.svelte';
@@ -62,7 +64,7 @@
     <section class="panel">
       {#if ui.tab === 'chronique'}<Chronicle />
       {:else if ui.tab === 'heros'}
-        <SubTabs name="hero" bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : '') }]} />
+        <SubTabs name="hero" bind:value={ui.heroTab} tabs={[{ id: 'heros', label: 'Héros' }, { id: 'sac', label: 'Sac & Forge' }, { id: 'hf', label: 'Hauts faits' + (claimable(G.s).length ? ` (${claimable(G.s).length})` : ''), dot: dots.hf(G.s) }]} />
         {#if ui.heroTab === 'heros'}<HeroPanel />{:else if ui.heroTab === 'sac'}<EquipmentPanel />{:else}<AchievementsPanel />{/if}
       {:else if ui.tab === 'compagnons'}<CompanionsPanel />
       {:else if ui.tab === 'fief'}
@@ -70,13 +72,13 @@
         {#if !fiefUnlocked(G.s) || ui.fiefTab === 'village' || !fiefTabOpen(G.s, ui.fiefTab)}<FiefPanel />
         {:else if ui.fiefTab === 'jardin'}<GardenPanel />
         {:else if ui.fiefTab === 'ateliers'}
-          <SubTabs name="atelier" bind:value={ui.atelier} tabs={[{ id: 'cuisine', label: 'Cuisine' }, { id: 'alchimie', label: 'Alchimie', locked: lockAt('alchimie') }, { id: 'forge', label: 'Forge', locked: lockAt('forge') }]} />
+          <SubTabs name="atelier" bind:value={ui.atelier} tabs={[{ id: 'cuisine', label: 'Cuisine', dot: dots.cuisine(G.s) }, { id: 'alchimie', label: 'Alchimie', locked: lockAt('alchimie') }, { id: 'forge', label: 'Forge', locked: lockAt('forge') }]} />
           {#if ui.atelier === 'forge' && fiefTabOpen(G.s, 'forge')}<ForgePanel />{:else if ui.atelier === 'alchimie' && fiefTabOpen(G.s, 'alchimie')}<AlchemyPanel />{:else}<CuisinePanel />{/if}
         {:else if ui.fiefTab === 'expeditions'}<ExpeditionsPanel />
         {:else if ui.fiefTab === 'metiers'}<JobsPanel />
         {:else}<ChestPanel />{/if}
       {:else if ui.tab === 'ascension'}
-        {#if G.s.ascensions > 0}<SubTabs name="asc" bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel' }, { id: 'arcanes', label: 'Arcanes' }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance' }] : [])]} />{/if}
+        {#if G.s.ascensions > 0}<SubTabs name="asc" bind:value={ui.ascTab} tabs={[{ id: 'rituel', label: 'Rituel', dot: dots.rituel(G.s) }, { id: 'arcanes', label: 'Arcanes', dot: dots.arcanes(G.s) }, ...(anchorsVisible(G.s) ? [{ id: 'resonance', label: 'Résonance', dot: dots.resonance(G.s) }] : [])]} />{/if}
         {#if ui.ascTab === 'arcanes' && G.s.ascensions > 0}<ArcanesPanel />{:else if ui.ascTab === 'resonance' && anchorsVisible(G.s)}<ResonancePanel />{:else}<AscensionPanel />{/if}
       {:else}<OptionsPanel />{/if}
     </section>

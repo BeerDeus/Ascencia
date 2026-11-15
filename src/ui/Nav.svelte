@@ -1,11 +1,10 @@
 <script lang="ts">
   import { G, ui } from '../lib/game.svelte';
   import * as E from '../game/engine';
-  import { fiefUnlocked, chestReady } from '../game/fief';
+  import { fiefUnlocked } from '../game/fief';
   import { claimable } from '../game/achievements';
-  import { mature } from '../game/garden';
-  import { isDone } from '../game/expeditions';
   import { gfx } from '../lib/gfx';
+  import { fiefDot, ascDot } from '../lib/dots';
   const s = $derived(G.s);
   const tabs = $derived([
     { id: 'chronique', label: 'Chronique', icon: 'icons/grimoire', dot: false },
@@ -13,9 +12,8 @@
     { id: 'compagnons', label: 'Alliés', icon: 'icons/standard',
       dot: E.heroCostN(s, 1) <= s.run.gold || s.run.companions.some((_, i) => E.compUnlocked(s, i) && E.compCostN(s, i, 1) <= s.run.gold) },
     { id: 'fief', label: 'Fief', icon: 'icons/village', locked: !fiefUnlocked(s),
-      dot: fiefUnlocked(s) && (chestReady(s) || s.daily?.bounties.some(b => !b.claimed && s.daily.c[b.c] >= b.target)
-        || s.garden.plots.some(p => mature(p)) || s.expeditions.some(isDone)) },
-    { id: 'ascension', label: 'Ascension', icon: 'icons/harmonie', dot: E.canAscend(s) },
+      dot: fiefDot(s) },
+    { id: 'ascension', label: 'Ascension', icon: 'icons/harmonie', dot: ascDot(s) },
   ] as { id: typeof ui.tab; label: string; icon: string; dot: boolean; locked?: boolean }[]);
 </script>
 
