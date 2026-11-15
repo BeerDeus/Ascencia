@@ -5,6 +5,7 @@ import { now } from './clock';
 import { dayKey } from './fief';
 import { fiefTabOpen } from './data/fief';
 import { PLANTS } from './data/garden';
+import { QUEST_TOKENS } from './events';
 
 type Stat = keyof GameState['stats'];
 export interface QuestDef { stat: Stat; text: (n: number) => string; min: number; max: number; open: (s: GameState) => boolean }
@@ -69,6 +70,7 @@ export function claimQuest(s: GameState, q: Quest, rnd: () => number = Math.rand
   if (!questDone(s, q)) return null;
   q.claimed = true;
   s.gems += q.gems;
+  if (s.event) s.event.tokens += QUEST_TOKENS; // les quêtes rapportent aussi des jetons de saison
   let seed: string | undefined;
   if (q.seeds) {
     const rares = PLANTS.filter(p => p.tier === 2);

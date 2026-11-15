@@ -122,6 +122,8 @@ export interface GameState {
   quests?: import('./quests').Quests; // quêtes de Lysandra
   talents?: Record<number, ('a' | 'b')[]>; // talents choisis par allié (définitifs)
   bestiary?: Record<string, number>;      // victoires par monstre
+  event?: import('./events').EventState;  // événement de saison en cours
+  trophies?: number[];                    // trophées de saison (permanents)
 }
 
 export type ChronicleKind = 'loot' | 'kill' | 'boss' | 'crit' | 'gold' | 'story' | 'larry' | 'info' | 'fail' | 'up';

@@ -2,6 +2,7 @@
   import { G, act, toast, ui } from '../lib/game.svelte';
   import * as Fi from '../game/fief';
   import * as Q from '../game/quests';
+  import EventSection from './EventSection.svelte';
   import { GEM_ICON } from '../game/data/shop';
   import * as E from '../game/engine';
   import { BOUNTY_TYPES } from '../game/data/fief';
@@ -79,6 +80,8 @@
           <div class="label wk">Quête de la semaine</div>
           {@render quest(s.quests.weekly, true)}
         {/if}
+
+    <EventSection />
       </section>
     {/if}
   </div>

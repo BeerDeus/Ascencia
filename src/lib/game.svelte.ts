@@ -9,6 +9,7 @@ import { RARITIES } from '../game/data/items';
 import { PARTITIONS } from '../game/data/heroes';
 import { dailyCheck, fiefUnlocked } from '../game/fief';
 import { questsCheck } from '../game/quests';
+import { eventCheck } from '../game/events';
 import { JOBS, JOB_STAT, type JobId } from '../game/data/resources';
 import { level } from '../game/jobs';
 import { JOB_INFO } from '../game/jobinfo';
@@ -91,7 +92,10 @@ function handle(e: GameEvent) {
     case 'heavy': buzz('heavy'); break;
     case 'loot': if (e.item.rarity >= 3) { toast(`${RARITIES[e.item.rarity].name} : ${e.item.name}`, e.item.rarity >= 4 ? 'crit' : 'up'); A.sfxUp(); } break;
     case 'story': ui.scenes.push(e.id); if (/^(kill:|ascension:|resonance:|defeat:)/.test(e.id)) moment('histoire'); break;
-    case 'hunt': toast(e.won ? 'Bête Primordiale vaincue !' : 'La Bête s’échappe…', e.won ? 'crit' : 'info'); if (e.won) A.sfxBoss(); break;
+    case 'hunt':
+      if (e.id === 'saison') { if (e.won) banner('Victoire !', 'Boss de saison : +15 jetons', 'victoire'); else toast('Le boss de saison s’échappe…', 'info'); }
+      else toast(e.won ? 'Bête Primordiale vaincue !' : 'La Bête s’échappe…', e.won ? 'crit' : 'info');
+      if (e.won) A.sfxBoss(); break;
     case 'auto-ascend': toast(`Ascension automatique : +${e.gain} Éclats`, 'up'); A.sfxAscend(); break;
   }
   if (e.type === 'story' && e.id === 'defeat:chef_doeuvre') ui.tab = 'ascension';
@@ -207,7 +211,7 @@ function frame(now: number) {
   }
   offerMomentCheck(now);
   jobWatch(now);
-  if (now - lastPersist > 10000) { dailyCheck(G.s); questsCheck(G.s); daily(); persist(); }
+  if (now - lastPersist > 10000) { dailyCheck(G.s); questsCheck(G.s); eventCheck(G.s); daily(); persist(); }
   requestAnimationFrame(frame);
 }
 

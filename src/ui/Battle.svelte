@@ -146,7 +146,7 @@
 
   <div class="hud frame" data-tuto="hud">
     <div class="line">
-      <span class="name" class:boss={m.kind === 'boss'} class:golden={m.kind === 'golden'}>{m.name}{#if m.locked} · scellée{/if}{#if m.hunt} · chasse{/if}</span>
+      <span class="name" class:boss={m.kind === 'boss'} class:golden={m.kind === 'golden'}>{m.name}{#if m.locked} · scellée{/if}{#if m.hunt === 'saison'} · événement{:else if m.hunt} · chasse{/if}</span>
       <span class="hpnum">{isFinite(m.hp) ? N(Math.max(0, m.hp)) : '∞'}</span>
     </div>
     <div class="bar hp"><i style="width:{hpPct}%"></i></div>

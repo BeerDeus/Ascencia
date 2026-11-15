@@ -9,6 +9,7 @@ import { fmt } from './format';
 import * as I from './items';
 import * as Q from './quests';
 import * as Tl from './talents';
+import * as Ev from './events';
 import * as Ar from './arcanes';
 import * as Fi from './fief';
 import * as Sh from './shop';
@@ -355,6 +356,22 @@ describe('moteur', () => {
     expect(E.companionsDps(s)).toBeCloseTo(before * 1.5);
     s.run.companions[0] = 50;                          // nouvelle vie : talent inactif sous le palier
     expect(Tl.ownMult(s, 0)).toBe(1);
+  });
+  it('Événement de saison : 3 essais/jour, jetons à la victoire, trophée permanent', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);
+    Ev.eventCheck(s);
+    expect(E.startSeasonBoss(s)).toBe(true);
+    expect(s.run.monster.hunt).toBe('saison');
+    s.run.monster.hp = 1; E.tap(s);
+    expect(s.event!.tokens).toBe(Ev.BOSS_TOKENS);
+    expect(s.run.monster.hunt).toBeUndefined();
+    s.event!.tries = 0;
+    expect(E.startSeasonBoss(s)).toBe(false);
+    s.event!.tokens = 500;
+    const before = E.stats(s).global;
+    expect(Ev.buyEventItem(s, 'trophee')).toBe(true);
+    expect(Ev.buyEventItem(s, 'trophee')).toBe(false);
+    expect(E.stats(s).global).toBeCloseTo(before * (1 + Ev.TROPHY_BONUS));
   });
   it('Quêtes de Lysandra : 3 du jour + 1 de la semaine, progression et récompense', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);

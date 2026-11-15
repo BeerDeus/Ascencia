@@ -15,6 +15,7 @@ import * as Jb from './jobs';
 import * as Q from './quests';
 import * as Tl from './talents';
 import * as Be from './bestiary';
+import * as Ev from './events';
 import { potion } from './crafting';
 import { wornSetBonus, permanentSetMult } from './forge';
 import { newGarden, harvest as harvestPlot } from './garden';
@@ -62,7 +63,7 @@ export function newGame(): GameState {
     jobs: {}, res: {}, garden: newGarden(), potions: {}, buffs: {}, expeditions: [], forge: { sets: {} }, vault: [], tuto: [],
   };
   s.run = newRun(s, 1);
-  Fi.dailyCheck(s); Q.questsCheck(s);
+  Fi.dailyCheck(s); Q.questsCheck(s); Ev.eventCheck(s);
   return s;
 }
 
@@ -124,7 +125,7 @@ function computeStats(s: GameState): Stats {
   const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s);
   const meal = Fi.mealActive(s);
   const power = (1 + sy.power + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
-  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s);
+  let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s) * Ev.trophyMult(s);
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + tb.comp) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
   let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + sy.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
@@ -573,12 +574,31 @@ export function startHunt(s: GameState, id: string): boolean {
   log(s, 'story', `Chasse : ${h.name}`);
   return true;
 }
+/** Boss de l'événement de saison : 3 essais par jour, 15 jetons par victoire. */
+export function startSeasonBoss(s: GameState): boolean {
+  Ev.eventCheck(s);
+  const r = s.run, e = s.event!, ev = Ev.currentEvent();
+  if (!Ev.eventOpen(s) || e.tries <= 0 || r.monster.hunt) return false;
+  e.tries--;
+  r.huntBack = { floor: r.floor, wave: r.wave === 10 ? 0 : r.wave, farming: r.farming };
+  const hp = F.bossFloorHp(Math.max(10, s.bestFloor - 2)) * 1.5 * bossHpMult(s);
+  r.monster = { sprite: ev.boss, name: ev.bossName, kind: 'boss', hp, maxHp: hp, hunt: 'saison' };
+  r.wave = 10; r.bossTime = stats(s).bossTime + 10; r.bossAttackIn = 6;
+  log(s, 'story', `Événement : ${ev.bossName} vous défie !`);
+  return true;
+}
 function endHunt(s: GameState, won: boolean) {
   const r = s.run, id = r.monster.hunt!, h = HUNTS.find(x => x.id === id)!;
   const back = r.huntBack ?? { floor: r.floor, wave: 0, farming: false };
   r.huntBack = null; r.floor = back.floor; r.wave = back.wave; r.farming = back.farming;
   r.monster = spawnMob(s);
   emit({ type: 'hunt', id, won });
+  if (id === 'saison') {
+    const ev = Ev.currentEvent();
+    if (won) { Ev.eventCheck(s); s.event!.tokens += Ev.BOSS_TOKENS; s.event!.wins++; log(s, 'boss', `${ev.bossName} est vaincu : +${Ev.BOSS_TOKENS} jetons de saison.`); }
+    else log(s, 'fail', `${ev.bossName} s’en sort… cette fois.`);
+    return;
+  }
   if (won) {
     s.anchors.hunts[id] = true; s.stats.hunts++;
     log(s, 'boss', `${h.name} est vaincu. Sa fureur s’ancre en vous.`);
@@ -834,7 +854,7 @@ function migrate(raw: any): GameState {
   s.resonance = { ...Rz.newResonance(), ...(s.resonance ?? {}) };
   s.arcanes ??= {}; s.meal ??= null; s.gems ??= 0; s.shop = { ...Sh.newShop(), ...(s.shop ?? {}) };
   s.messenger = null; s.nextMessengerAt ??= s.time + 240;
-  Fi.dailyCheck(s); Q.questsCheck(s);
+  Fi.dailyCheck(s); Q.questsCheck(s); Ev.eventCheck(s);
   while (s.run.cooldowns.length < PARTITIONS.length) { s.run.cooldowns.push(0); s.run.activeUntil.push(0); }
   s.version = SAVE_VERSION;
   return s;
