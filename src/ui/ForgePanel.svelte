@@ -1,7 +1,7 @@
 <script lang="ts">
   import { G, act, toast } from '../lib/game.svelte';
   import * as Fo from '../game/forge';
-  import { SETS, ORDER_STATS, orderMetal, orderCost } from '../game/data/forge';
+  import { SETS, ORDER_STATS, orderMetal, orderCost, SLOT_RECIPE } from '../game/data/forge';
   import { SLOTS, STATS, RARITIES, BASES, type Slot, type StatId } from '../game/data/items';
   import { affixValue, rarityOdds, AFFIX_COUNT } from '../game/items';
   import { canPay } from '../game/jobs';
@@ -35,8 +35,9 @@
     <p class="tip">Choisissez la pièce et sa stat principale : elle sera <b>garantie à 100 %</b>. Les autres stats (selon la rareté) sont tirées au hasard. Niveau d’objet : étage actuel ({s.run.floor}).</p>
     <div class="label">1 · La pièce</div>
     <div class="slots">
-      {#each SLOTS as x}<button class="sl slot" class:on={slot === x.id} onclick={() => (slot = x.id)}><img src={gfx(icon(x.id))} alt="" /><small>{x.name}</small></button>{/each}
+      {#each SLOTS as x}<button class="sl slot" class:on={slot === x.id} onclick={() => (slot = x.id)}><img src={gfx(icon(x.id))} alt="" /><small>{x.name}</small>{#if !SLOT_RECIPE[x.id].exp}<i class="hunt" title="Ressources de monstres uniquement">⚔</i>{/if}</button>{/each}
     </div>
+    <p class="tip">⚔ : ressources de monstres uniquement (le Chasseur suffit, pas besoin d’expédition).</p>
     <div class="label">2 · La stat garantie</div>
     <div class="chips">{#each ORDER_STATS as x}<button class:on={stat === x} onclick={() => (stat = x)}>{STATS[x].name}</button>{/each}</div>
     <div class="label">3 · Aperçu</div>
@@ -112,6 +113,8 @@
   .sl small { font-size: 10px; color: var(--text-3); }
   .sl.on { box-shadow: inset 0 0 0 2px var(--gold); background: #3d3423; }
   .sl.on small { color: var(--text); }
+  .sl { position: relative; }
+  .hunt { position: absolute; right: 3px; top: 1px; font-style: normal; font-size: 10px; color: #e3907a; }
   .preview { display: flex; gap: 8px; align-items: center; padding: 6px; background: var(--stone-2); }
   .preview img { width: 48px; height: 48px; object-fit: contain; }
   .pv { display: flex; flex-direction: column; font-size: 11.5px; color: var(--text-3); }

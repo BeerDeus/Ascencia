@@ -42,10 +42,10 @@ export function resUses(id: string): string[] {
   for (const m of MEALS) if (m.cost[id]) out.push(`Repas : ${m.name} (×${m.cost[id]})`);
   for (const d of SETS) if (d.cost[id]) out.push(`Panoplie : ${d.name} (×${d.cost[id]})`);
   // commandes à la Forge : matériau d'expédition (tous paliers) ou de monstre (un palier)
-  const slotsExp = SLOTS.filter(x => SLOT_RECIPE[x.id].exp === id).map(x => x.name);
+  const slotsExp = SLOTS.filter(x => SLOT_RECIPE[x.id].exp?.[0] === id).map(x => x.name);
   if (slotsExp.length) out.push(`Forge : ${slotsExp.join(', ')}`);
   for (const t of TIER_MATS) {
-    const sl = SLOTS.filter(x => t.mats[SLOT_RECIPE[x.id].mob] === id).map(x => x.name);
+    const sl = SLOTS.filter(x => SLOT_RECIPE[x.id].mob.some(([m]) => t.mats[m] === id)).map(x => x.name);
     if (sl.length) out.push(`Forge (dès l’étage ${t.from}) : ${sl.join(', ')}`);
   }
   return out;
