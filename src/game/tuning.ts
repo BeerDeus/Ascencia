@@ -17,7 +17,7 @@ export const T = {
   gearBase: 0.5, gearIlvlDiv: 12,
   // Ferveur
   // La Compagnie
-  slotLead: 2.2, slotRight: 1.8, slotSupport: 1.4, affinityPer: 0.025, renownPer: 0.06, tierBoost: 1,
+  slotLead: 1.6, slotRight: 1.3, slotSupport: 1.1, affinityPer: 0.025, renownPer: 0.04, tierBoost: 1,
   ferveurGain: 2, ferveurGainWar: 3, ferveurDecay: 20, crescendoDur: 8, crescendoMult: 2,
 };
 export type Tuning = typeof T;
