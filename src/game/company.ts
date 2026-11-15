@@ -75,12 +75,14 @@ export const SQUAD_TIERS: { lv: number; label: string; fx: Partial<Effects> }[] 
   { lv: 150, label: 'Bonus du Meneur +25 %', fx: { aura: 0.25 } },
   { lv: 300, label: 'Frappe +20 %', fx: { frappe: 0.2 } },
   { lv: 500, label: 'Bonus du Soutien +25 %', fx: { support: 0.25 } },
-  { lv: 800, label: 'Escouade ×1,15', fx: { squad: 0.15 } },
+  { lv: 800, label: 'Escouade ×1,25', fx: { squad: 0.25 } },
   { lv: 1200, label: 'Or +25 %', fx: { gold: 0.25 } },
-  { lv: 1800, label: 'Bonus du Meneur +25 %', fx: { aura: 0.25 } },
-  { lv: 2500, label: 'Frappe +20 %', fx: { frappe: 0.2 } },
-  { lv: 3500, label: 'Bonus du Soutien +25 %', fx: { support: 0.25 } },
-  { lv: 5000, label: 'Escouade ×1,15', fx: { squad: 0.15 } },
+  { lv: 1800, label: 'Escouade ×1,4', fx: { squad: 0.4 } },
+  { lv: 2500, label: 'Bonus du Meneur +25 %', fx: { aura: 0.25 } },
+  { lv: 3500, label: 'Escouade ×1,6', fx: { squad: 0.6 } },
+  { lv: 5000, label: 'Bonus du Soutien +25 %', fx: { support: 0.25 } },
+  { lv: 6500, label: 'Escouade ×2', fx: { squad: 1 } },
+  { lv: 8500, label: 'Escouade ×2', fx: { squad: 1 } },
 ];
 
 export interface Effects { squad: number; comp: number; volonte: number; crit: number; critdmg: number; power: number; regen: number; gold: number; frappe: number; aura: number; support: number }

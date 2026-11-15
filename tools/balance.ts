@@ -57,6 +57,7 @@ setClock(() => wall);
 let seed = Number(process.env.SEED ?? 12345);
 const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
 E.setRandom(rnd);
+Gd.setGardenRandom(rnd); // le Jardin aussi : simulations reproductibles
 
 const s: GameState = E.newGame();
 s.tuto.push('sac'); // le bot connaît déjà le Sac
@@ -400,6 +401,7 @@ for (; day <= DAYS; day++) {
   if ([1, 2, 3, 5, 7, 10, 14, 20, 25, 30, 40, 45, 50, 60, 75, 90, 120].includes(day)) console.log(`${String(day).padStart(4)} | ${h(active).padStart(5)} | ${String(s.bestFloor).padStart(6)} | ${String(s.ascensions).padStart(3)} | ${String(s.legende).padStart(7)} | ${String(Ar.owned(s)).padStart(7)} | ${stars}`);
 }
 console.log('\nJour 1, record à la fin de chaque session :', sessionFloors.join(' → '));
+console.log('Escouade finale :', Co.activeSquad(s).map(i => i >= 0 ? `${COMPANIONS[i].name} ${s.run.companions[i]}` : '—').join(' · '), '· niveau', Co.squadLevel(s));
 console.log(`Dépensé : ${spent.toFixed(2)} € ${payLog.length ? '(' + payLog.join(', ') + ')' : ''} · gemmes restantes ${s.gems}`);
 console.log('\nPremière arrivée :', MARKS.map(m => `${m}→${firstReach[m] ?? '—'}`).join('  '));
 console.log('\nRésonances :\n' + (resLog.join('\n') || '—'));
