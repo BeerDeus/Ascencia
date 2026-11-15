@@ -2,12 +2,14 @@
 // Principe : le temps s'achète, la puissance permanente non.
 export const GEM_ICON = 'packs/gem_pack_1';
 
-export interface Blessing { id: 'or' | 'force' | 'mains' | 'butin'; name: string; desc: string; minutes: number; cost: number; icon: string }
+export interface Blessing { id: 'or' | 'force' | 'mains' | 'butin' | 'furie' | 'frenesie'; name: string; desc: string; minutes: number; cost: number; icon: string }
 export const BLESSINGS: Blessing[] = [
   { id: 'or', name: 'Bénédiction de Fortune', desc: 'Or ×2', minutes: 60, cost: 30, icon: 'obj/bourse_or' },
   { id: 'force', name: 'Bénédiction de Guerre', desc: 'Tous les dégâts ×2', minutes: 60, cost: 40, icon: 'icons/force' },
   { id: 'mains', name: 'Mains infatigables', desc: '+8 frappes automatiques/s', minutes: 30, cost: 25, icon: 'partitions/staccato_vif' },
   { id: 'butin', name: 'Œil du chasseur', desc: 'Butin ×2', minutes: 60, cost: 30, icon: 'obj/sac_a_dos' },
+  { id: 'furie', name: 'Furie des Anciens', desc: 'Tous les dégâts ×3', minutes: 15, cost: 60, icon: 'partitions/crescendo_de_fureur' },
+  { id: 'frenesie', name: 'Frénésie', desc: '+20 frappes automatiques/s', minutes: 20, cost: 45, icon: 'partitions/staccato_vif' },
 ];
 
 /** Récompenses publicitaires (opt-in) et plafond quotidien. */
@@ -25,6 +27,7 @@ export const BOUNTY_REROLL_COST = 15;
 
 /** Packs en argent réel (prix indicatifs ; produits à créer dans la Play Console). */
 export interface Pack { id: string; name: string; icon: string; price: string; gems: number; desc: string; once?: boolean; offer?: string;
+  /** Packs de gemmes : % de gemmes en plus par rapport au plus petit, et bénédictions offertes (minutes). */ bonus?: number; blessings?: Partial<Record<Blessing['id'], number>>;
   /** Pack d'étape : pièces de l'Aube offertes, condition d'apparition. */ items?: string[]; floor?: number; fragments?: number }
 export const PACKS: Pack[] = [
   { id: 'aube1', name: 'Pack de l’Aube', icon: 'equip/longue_epee_de_chevalier', price: '0,99 €', gems: 50, once: true, floor: 10, items: ['aube_lame', 'aube_talisman'],
@@ -40,10 +43,10 @@ export const PACKS: Pack[] = [
   { id: 'starter', name: 'Pack du Voyageur', icon: 'packs/gem_pack_starter', price: '2,99 €', gems: 300, desc: '300 gemmes + 2 Bénédictions de Guerre', once: true, offer: 'floor:26' },
   { id: 'fief', name: 'Pack du Jardinier', icon: 'packs/gem_pack_monthly', price: '1,99 €', gems: 150, desc: '150 gemmes, 20 graines communes et 3 h de Bénédiction de Fortune', once: true, offer: 'fief' },
   { id: 'gems_80', name: 'Poignée de gemmes', icon: 'packs/gem_pack_1', price: '0,99 €', gems: 80, desc: '80 gemmes' },
-  { id: 'gems_450', name: 'Bourse de gemmes', icon: 'packs/gem_pack_5', price: '4,99 €', gems: 450, desc: '450 gemmes' },
-  { id: 'gems_1000', name: 'Coffret de gemmes', icon: 'packs/gem_pack_20', price: '9,99 €', gems: 1000, desc: '1 000 gemmes' },
-  { id: 'gems_2200', name: 'Trésor de gemmes', icon: 'packs/gem_pack_50', price: '19,99 €', gems: 2200, desc: '2 200 gemmes' },
-  { id: 'gems_6000', name: 'Magot du dragon', icon: 'packs/gem_pack_100', price: '49,99 €', gems: 6000, desc: '6 000 gemmes' },
+  { id: 'gems_450', name: 'Bourse de gemmes', icon: 'packs/gem_pack_5', price: '4,99 €', gems: 450, bonus: 12, blessings: { force: 60 }, desc: '450 gemmes' },
+  { id: 'gems_1000', name: 'Coffret de gemmes', icon: 'packs/gem_pack_20', price: '9,99 €', gems: 1000, bonus: 25, blessings: { force: 120, mains: 60 }, desc: '1 000 gemmes' },
+  { id: 'gems_2200', name: 'Trésor de gemmes', icon: 'packs/gem_pack_50', price: '19,99 €', gems: 2200, bonus: 36, blessings: { force: 240, mains: 120, or: 240, furie: 30 }, desc: '2 200 gemmes' },
+  { id: 'gems_6000', name: 'Magot du dragon', icon: 'packs/gem_pack_100', price: '49,99 €', gems: 6000, bonus: 50, blessings: { force: 720, mains: 360, or: 720, butin: 360, furie: 120, frenesie: 120 }, desc: '6 000 gemmes' },
   { id: 'pass', name: 'Bénédiction de Lysandra', icon: 'packs/gem_pack_monthly', price: '4,99 € / mois', gems: 0, desc: '50 gemmes/jour, +4 h hors-ligne, récompenses sans pub' },
   { id: 'noads', name: 'Sans publicité', icon: 'packs/no_ads', price: '3,99 €', gems: 0, desc: 'Toutes les récompenses publicitaires sans regarder de pub', once: true },
 ];

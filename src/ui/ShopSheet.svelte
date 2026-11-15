@@ -94,7 +94,8 @@
       {#each PACKS.filter(p => !(p.once && s.shop.owned.includes(p.id)) && Sh.packUnlocked(s, p, gardenUnlocked(s))) as p}
         <div class="row frame pack" class:aube={!!p.items}>
           <img src={gfx(p.icon)} alt="" />
-          <div class="mi"><b>{p.name}</b><span>{p.desc}</span>
+          <div class="mi"><b>{p.name}{#if p.bonus}<em class="bonus">+{p.bonus} %</em>{/if}</b><span>{p.desc}</span>
+            {#if p.blessings}<span class="gift">Offert : {Object.entries(p.blessings).map(([id, m]) => `${BLESSINGS.find(x => x.id === id)?.name} ${m! >= 60 ? m! / 60 + ' h' : m + ' min'}`).join(' · ')}</span>{/if}
             {#if p.items}<span class="pieces">{#each p.items as id}<img src={gfx(AUBE_BY_ID[id].base)} alt="" title={AUBE_BY_ID[id].name} />{/each}<em>liés au compte · boost de départ à chaque vie</em></span>{/if}</div>
           <button class="btn stone" onclick={() => buy(p.id)}>{p.price}</button>
         </div>
@@ -128,4 +129,6 @@
   .pieces img { width: 22px; height: 22px; object-fit: contain; }
   .pieces em { font-style: normal; color: var(--ember); font-size: 10.5px; }
   .note { font-size: 11px; color: var(--text-3); margin: 8px 2px; }
+  .bonus { margin-left: 6px; padding: 0 4px; font-size: 11px; font-style: normal; color: var(--parch-ink); background: var(--moss); }
+  .gift { font-size: 11px; color: var(--gold); }
 </style>
