@@ -139,20 +139,33 @@ export const activeCombo = (s: GameState) => {
   return ROLE_COMBOS.find(c => c.test(q.map(i => COMPANIONS[i].type)));
 };
 
-/** Tous les effets de l'escouade (paliers × cohésion, synergies, combinaison, Meneur, Soutien, rivalités). */
+/** Chaque source de bonus de l'escouade, avec son libellé (pour l'écran d'explication). */
+export function effectSources(s: GameState): { label: string; kind: 'palier' | 'synergie' | 'role' | 'rivaux' | 'renommee' | 'place'; fx: Partial<Effects> }[] {
+  const out: ReturnType<typeof effectSources> = [];
+  if (!s.run?.companions) return out;
+  const cm = cohesionMult(s);
+  let aura = 0, support = 0;
+  for (const t of tiersReached(s)) {
+    const base = t.lv >= 800 && t.fx.squad ? { ...t.fx, squad: t.fx.squad * T.tierBoost } : t.fx;
+    const fx = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, (v as number) * cm])) as Partial<Effects>;
+    aura += fx.aura ?? 0; support += fx.support ?? 0;
+    out.push({ label: `Palier ${t.lv} : ${t.label}`, kind: 'palier', fx });
+  }
+  for (const x of activeSynergies(s)) out.push({ label: `✦ ${x.name}`, kind: 'synergie', fx: x.fx });
+  const combo = activeCombo(s); if (combo) out.push({ label: `◆ ${combo.name}`, kind: 'role', fx: combo.fx });
+  if (rivalPairs(s)) out.push({ label: `Émulation (${rivalPairs(s)} paire${rivalPairs(s) > 1 ? 's' : ''} de rivaux)`, kind: 'rivaux', fx: { frappe: 0.15 * rivalPairs(s) } });
+  if (recruited(s)) out.push({ label: `Renommée (${recruited(s)} recrutés)`, kind: 'renommee', fx: { squad: T.renownPer * recruited(s) } });
+  const amp = [1 + aura, 1, 1 + support];
+  activeSquad(s).forEach((i, k) => {
+    if (i < 0) return;
+    out.push({ label: `${COMPANIONS[i].name} (${SLOTS[k]})`, kind: 'place', fx: { [SLOT_BONUS[i][k]]: slotBonusValue(i, k, s.run.companions[i]) * amp[k] } });
+  });
+  return out;
+}
+/** Tous les effets de l'escouade (somme des sources). */
 export function effects(s: GameState): Effects {
   const e = zero();
-  if (!s.run?.companions) return e;
-  const add = (fx: Partial<Effects>, k = 1) => { for (const [n, v] of Object.entries(fx)) (e as unknown as Record<string, number>)[n] += (v as number) * k; };
-  const cm = cohesionMult(s);
-  for (const t of tiersReached(s)) add(t.lv >= 800 && t.fx.squad ? { ...t.fx, squad: t.fx.squad * T.tierBoost } : t.fx, cm);
-  for (const x of activeSynergies(s)) add(x.fx);
-  const combo = activeCombo(s); if (combo) add(combo.fx);
-  e.frappe += 0.15 * rivalPairs(s);                 // émulation entre rivaux
-  e.squad += T.renownPer * recruited(s);              // Renommée : chaque compagnon recruté (banc compris) renforce l'escouade
-  // bonus de place de chaque membre (Meneur et Soutien amplifiés par les paliers)
-  const amp = [1 + e.aura, 1, 1 + e.support];
-  activeSquad(s).forEach((i, k) => { if (i >= 0) e[SLOT_BONUS[i][k]] += slotBonusValue(i, k, s.run.companions[i]) * amp[k]; });
+  for (const src of effectSources(s)) for (const [n, v] of Object.entries(src.fx)) (e as unknown as Record<string, number>)[n] += v as number;
   return e;
 }
 /** Multiplicateur de place dans l'escouade (0 = hors escouade). */

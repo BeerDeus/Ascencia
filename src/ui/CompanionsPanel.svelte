@@ -72,6 +72,7 @@
         </button>
       {/each}
     </div>
+    <button class="info" onclick={() => (ui.squadInfo = true)} aria-label="Détails de l’escouade">
     <div class="lv">
       <span>Escouade niv. <b>{lvl}</b></span>
       {#if nextTier}<div class="bar"><i style="width:{((lvl - prevTier) / (nextTier.lv - prevTier)) * 100}%"></i></div><span class="nt">{nextTier.lv} : {nextTier.label}</span>{/if}
@@ -83,6 +84,8 @@
       {#each syn as x}<span class="chip syn">✦ {x.name} · {x.desc}</span>{/each}
       {#if combo}<span class="chip syn">◆ {combo.name} · {combo.desc}</span>{/if}
     </div>
+    <span class="more">ⓘ Touchez pour le détail : calcul des dégâts, origine des bonus, paliers</span>
+    </button>
     <button class="auto" onclick={auto}>Composer au mieux</button>
   </div>
 
@@ -149,6 +152,9 @@
   .chips { display: flex; flex-wrap: wrap; gap: 3px; }
   .chip { padding: 1px 5px; font-size: 10px; color: var(--text-2); background: var(--stone-2); border: 1px solid var(--ink-0); }
   .chip.pos { color: var(--moss); } .chip.neg { color: #e07a6f; } .chip.syn { color: var(--gold-hi); }
+  .info { display: flex; flex-direction: column; gap: 5px; padding: 5px; text-align: left; background: rgba(0,0,0,.18); border: 1px dashed #4a3d5c; }
+  .info:active { background: rgba(255,255,255,.05); }
+  .more { font-size: 10px; color: var(--sky); }
   .auto { align-self: flex-end; padding: 3px 8px; font-size: 11px; font-weight: 700; color: var(--text-2); background: var(--stone-3); border: 1px solid var(--ink-0); }
   .roster { margin-top: 2px; }
   .c { display: flex; align-items: center; gap: 8px; padding: 5px 6px; }

@@ -47,6 +47,7 @@ export const ui = $state({
   talent: null as number | null, // choix de talent d'un allié
   ally: null as number | null,   // fiche d'un allié
   squadPick: null as number | null, // choix d'une place d'escouade
+  squadInfo: false,                 // explication de l'escouade
   job: null as null | import('../game/data/resources').JobId, // fiche d'un métier
   info: null as null | { kind: 'res' | 'potion' | 'meal'; id: string }, // fiche d'un objet (appui long)
   toasts: [] as { id: number; text: string; kind: string }[],
@@ -72,7 +73,7 @@ export function toast(text: string, kind = 'info') {
 }
 
 export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict
-  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null || ui.job !== null || ui.info !== null || ui.talent !== null || ui.ally !== null || ui.squadPick !== null;
+  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null || ui.job !== null || ui.info !== null || ui.talent !== null || ui.ally !== null || ui.squadPick !== null || ui.squadInfo;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {

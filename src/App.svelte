@@ -28,6 +28,7 @@
   import TalentModal from './ui/TalentModal.svelte';
   import AllySheet from './ui/AllySheet.svelte';
   import SquadPicker from './ui/SquadPicker.svelte';
+  import SquadInfo from './ui/SquadInfo.svelte';
   import BestiaryPanel from './ui/BestiaryPanel.svelte';
   import DepthsPanel from './ui/DepthsPanel.svelte';
   import { depthsUnlocked } from './game/depths';
@@ -108,6 +109,7 @@
   {:else if ui.talent !== null}<TalentModal />
   {:else if ui.ally !== null}<AllySheet />
   {:else if ui.squadPick !== null}<SquadPicker />
+  {:else if ui.squadInfo}<SquadInfo />
   {:else if ui.offer}<OfferModal />{/if}
   {#if ui.echo && !ui.scenes.length}<EchoFight />{/if}
   {#if adUi.open}<AdOverlay />{/if}
