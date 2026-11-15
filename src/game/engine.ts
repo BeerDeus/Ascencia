@@ -103,10 +103,22 @@ export function masteryBonus(s: GameState): number {
   return 1 + 0.02 * (F.masteryLevel(s.mastery.guerrier) + F.masteryLevel(s.mastery.archer) + F.masteryLevel(s.mastery.mage));
 }
 
+/** Dégâts « bruts » d'un compagnon à un niveau donné (talents, affinité ; sans sa place dans l'escouade). */
+export const memberRaw = (s: GameState, i: number, l = s.run.companions[i]) => F.compDps(i, l) * Tl.ownMult(s, i) * Co.affinityMult(s, i);
+/** Seuls les 3 membres de l'escouade combattent, selon leur place (Meneur, Bras droit, Soutien). */
 export function companionsDps(s: GameState): number {
   let d = 0;
-  s.run.companions.forEach((l, i) => { d += F.compDps(i, l) * Tl.ownMult(s, i) * Co.memberMult(s, i); });
-  return d * (1 + star(s, 'meute_dps')) * Co.harmonyMult(s);
+  for (const i of Co.activeSquad(s)) if (i >= 0) d += memberRaw(s, i) * Co.slotMult(s, i);
+  const fx = Co.effects(s);
+  return d * (1 + star(s, 'meute_dps')) * (1 + fx.squad) * (1 + fx.comp);
+}
+/** Gain de dégâts bruts (escouade recomposée au mieux) si le compagnon i gagne n niveaux : pour les conseils et le bot. */
+export function squadDeltaIf(s: GameState, i: number, n: number): number {
+  const val = (bump: number) => {
+    const v = s.run.companions.map((l, k) => (l + (k === i ? bump : 0) > 0 ? memberRaw(s, k, l + (k === i ? bump : 0)) : 0)).sort((a, b) => b - a);
+    return (v[0] ?? 0) * T.slotLead + (v[1] ?? 0) * T.slotRight + (v[2] ?? 0) * T.slotSupport;
+  };
+  return val(n) - val(0);
 }
 
 // Cache optionnel (simulateur uniquement) : valable tant que la vie, l'heure de jeu et l'étage ne changent pas.
@@ -125,13 +137,13 @@ export function stats(s: GameState): Stats {
 
 function computeStats(s: GameState): Stats {
   const r = s.run, c = s.classId;
-  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s), au = Co.aura(s);
+  const g = I.gearTotals(s), sb = wornSetBonus(s), tb = Tl.teamBonus(s), sy = synergy(s), au = Co.effects(s);
   const meal = Fi.mealActive(s);
   const power = (1 + sy.power + au.power + star(s, 'grimoire_puissance') + arc(s, 'power') + sb.power + (s.ending?.path === 'lier' ? 0.5 : 0)) * (c === 'mage' ? 1.5 : 1);
   let global = F.legendeMult(s.legende) * masteryBonus(s) * (1 + arc(s, 'all')) * familyMult(s) * (1 + (meal?.all ?? 0)) * (s.shop && Sh.blessing(s, 'force') ? 2 : 1) * (s.shop && Sh.blessing(s, 'furie') ? 3 : 1) * (s.resonance ? Rz.harmonicMult(s) : 1) * (1 + potion(s, 'all')) * (1 + potion(s, 'all3')) * (1 + sb.all) * (s.forge ? permanentSetMult(s) : 1) * (s.ending?.path === 'lier' ? 3 : 1) * Jb.jobMult(s, 'chasseur') * Be.bestiaryMult(s) * Ev.trophyMult(s) * (1 + Dp.depthNode(s, 'degats'));
   if (r && active(s, 'accord')) global *= 1 + 4 * power;
   const comp = r ? companionsDps(s) * Jb.jobMult(s, 'expedition') * (1 + tb.comp) * (1 + g.comp) * (1 + arc(s, 'comp')) * (1 + (meal?.comp ?? 0)) * (1 + potion(s, 'comp')) * (1 + sb.comp) : 0;
-  let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + sy.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
+  let tapMult = Jb.jobMult(s, 'forgeron') * (1 + tb.frappe) * (1 + sy.frappe) * (1 + au.frappe) * (1 + star(s, 'glaive_frappe')) * (1 + g.frappe) * (1 + arc(s, 'frappe')) * (1 + (meal?.frappe ?? 0)) * (1 + potion(s, 'frappe')) * (1 + sb.frappe) * (c === 'guerrier' ? 2 : 1);
   if (r && active(s, 'crescendo')) tapMult *= 1 + 2 * power;
   if (r && s.time < r.crescendoUntil) tapMult *= T.crescendoMult;
   const share = 0.03 + star(s, 'meute_frappe');
@@ -140,10 +152,10 @@ function computeStats(s: GameState): Stats {
   return {
     tap, dps: comp * global, power, global, seuilBlocked,
     critChance: Math.min(0.75, 0.02 + tb.crit + sy.crit + au.crit + g.crit + arc(s, 'crit') + (meal?.crit ?? 0) + potion(s, 'crit') + sb.crit + star(s, 'glaive_crit') + (c === 'archer' ? 0.08 : 0)),
-    critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + sy.critdmg) * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
-    goldMult: Jb.jobMult(s, 'jardinier') * (1 + Dp.depthNode(s, 'or')) * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
+    critMult: 4 * Jb.jobMult(s, 'alchimiste') * (1 + sy.critdmg) * (1 + au.critdmg) * (1 + star(s, 'glaive_critdmg')) * (1 + g.critdmg) * (1 + arc(s, 'critdmg')) * (1 + sb.critdmg) * (c === 'archer' ? 1.3 : 1),
+    goldMult: Jb.jobMult(s, 'jardinier') * (1 + Dp.depthNode(s, 'or')) * (1 + au.gold) * (1 + star(s, 'bourse_or')) * (1 + g.or) * (1 + arc(s, 'or')) * (1 + (meal?.or ?? 0)) * (s.shop && Sh.blessing(s, 'or') ? 2 : 1) * (s.resonance ? Rz.symGoldMult(s) : 1) * (1 + potion(s, 'or')) * (1 + sb.or) * (s.ending?.path === 'sceller' ? 3 : 1),
     manaMax: Math.round(100 + g.mana + arc(s, 'mana') + star(s, 'grimoire_mana')) + (c === 'mage' ? 50 : 0),
-    manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen')) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
+    manaRegen: (1 + star(s, 'grimoire_mana') / 100 + arc(s, 'regen') + au.regen) * (1 + potion(s, 'regen')) * (c === 'mage' ? 2 : 1),
     bossTime: Math.round((T.bossTime + tb.volonte + au.volonte + Dp.depthNode(s, 'volonte') + star(s, 'sentier_volonte') + g.volonte + arc(s, 'bosstime') + (meal?.volonte ?? 0) + potion(s, 'volonte') + sb.volonte + (s.ending?.path === 'sceller' ? 10 : 0)) * 10) / 10,
     autoTaps: (c === 'archer' ? 1 + Math.floor((r?.heroLevel ?? 0) / 150) : 0) + (r && active(s, 'staccato') ? 10 * power : 0) + (s.shop && Sh.blessing(s, 'mains') ? 8 : 0) + (s.shop && Sh.blessing(s, 'frenesie') ? 20 : 0),
   };
@@ -454,7 +466,8 @@ export function buyHero(s: GameState, n: number): boolean {
 }
 
 export const compDiscount = (s: GameState) => star(s, 'meute_cout');
-export function compUnlocked(s: GameState, i: number) { return i === 0 || s.run.companions[i - 1] > 0; }
+/** Un compagnon se recrute dès que l'histoire l'a fait rejoindre le roster. */
+export function compUnlocked(s: GameState, i: number) { return Co.compUnlockedByStory(s, i); }
 export function compCostN(s: GameState, i: number, n: number) {
   return F.compCost(i, s.run.companions[i], n, compDiscount(s));
 }
@@ -469,7 +482,7 @@ export function buyComp(s: GameState, i: number, n: number): boolean {
   const before = s.run.companions[i];
   s.run.gold -= c; s.run.companions[i] += n;
   if (before === 0) log(s, 'up', `${COMPANIONS[i].name} rejoint votre cause : « ${COMPANIONS[i].quote} »`);
-  if (Co.leaderOf(s) < 0) Co.setLeader(s, i);           // premier recruté = meneur par défaut
+  if (before === 0) { const q = Co.squadOf(s), k = q.findIndex(x => x < 0 || !(s.run.companions[x] > 0)); if (k >= 0 && !q.includes(i)) q[k] = i; } // place libre : il rejoint l'escouade
   for (let k = 0; k < MILESTONES.length; k++) {
     const t = MILESTONES[k];
     if (before < t && s.run.companions[i] >= t) {
@@ -740,7 +753,7 @@ export function resonate(s: GameState, classId: ClassId = s.classId ?? 'guerrier
 /** Achat automatique : meilleur rapport dégâts/coût entre Frappe et compagnons. */
 export function autoBuy(s: GameState) {
   const st = stats(s);
-  const raw = s.run.companions.reduce((a, l, i) => a + F.compDps(i, l), 0);
+  const raw = Co.activeSquad(s).reduce((a, i) => a + (i >= 0 ? memberRaw(s, i) * Co.slotMult(s, i) : 0), 0);
   const compMult = raw > 0 ? st.dps / raw : st.global;
   const tapUnit = st.tap / F.frappeBase(s.run.heroLevel);
   for (let guard = 0; guard < 40; guard++) {
@@ -748,12 +761,12 @@ export function autoBuy(s: GameState) {
     const L = s.run.heroLevel, hc = heroCostN(s, 1);
     if (hc <= s.run.gold) best = { ratio: (F.frappeBase(L + 1) - F.frappeBase(L)) * tapUnit * 3 / hc, act: () => buyHero(s, 1) };
     s.run.companions.forEach((l, i) => {
-      if (!compUnlocked(s, i)) return;
+      if (!compUnlocked(s, i) || Co.slotOf(s, i) < 0) return;    // l'achat automatique ne monte que l'escouade
       const nm = F.nextMilestone(l) ?? l + 1;
       for (const n of [1, nm - l]) {
         const c = compCostN(s, i, n);
         if (n <= 0 || c > s.run.gold) continue;
-        const g = (F.compDps(i, l + n) - F.compDps(i, l)) * compMult + (l === 0 ? 1e-9 : 0);
+        const g = (memberRaw(s, i, l + n) - memberRaw(s, i, l)) * Co.slotMult(s, i) * compMult + (l === 0 ? 1e-9 : 0);
         if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => buyComp(s, i, n) };
       }
     });
@@ -894,11 +907,11 @@ function migrate(raw: any): GameState {
   s.tuto ??= [];
   // La Compagnie (ajout) : meneur = l'allié le plus monté, affinité rétroactive selon les boss déjà vaincus
   if (!s.company) {
-    let best = -1; s.run.companions.forEach((l, i) => { if (l > 0 && (best < 0 || l >= s.run.companions[best])) best = i; });
     const aff: Record<number, number> = {};
     s.run.companions.forEach((l, i) => { if (l > 0) aff[i] = Math.floor((s.stats.bossKills ?? 0) / 2); });
-    s.company = { leader: best, affinity: aff };
+    s.company = { leader: -1, affinity: aff, squad: [-1, -1, -1] };
   }
+  if (!s.company.squad || s.company.squad.every(i => i < 0)) Co.autoSquad(s, i => memberRaw(s, i)); // escouade : les trois plus forts
   // offres refusées avant la vitrine : elles y reviennent pour 3 jours
   s.shop.offerUntil ??= Object.fromEntries(s.shop.offersSeen.filter(id => !s.shop.owned.includes(id)).map(id => [id, now() + Sh.OFFER_STANDS_MS]));
   // une seule instance par objet lié au compte (le Sac de la vie en cours pointe sur le coffre)

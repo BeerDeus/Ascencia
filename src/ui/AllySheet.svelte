@@ -19,15 +19,18 @@
   const pts = $derived(Co.affinityPts(s, i));
   const aff = $derived(Co.affinityLevel(pts));
   const lo = $derived(aff ? Co.AFFINITY_STEPS[aff - 1] : 0), hi = $derived(Co.AFFINITY_STEPS[aff] ?? lo);
-  const isLeader = $derived(Co.leaderOf(s) === i);
+  const at = $derived(Co.slotOf(s, i));
   const nm = $derived(nextMilestone(lv));
-  function lead() { if (act(g => Co.setLeader(g, i))) { sfxUp(); toast(`${c.name} mène la Compagnie`, 'crit'); } }
+  function place(k: number) {
+    if (!Co.canChangeSquad(s)) { toast('Pas pendant un combat de boss', 'info'); return; }
+    if (act(g => Co.setSlot(g, k, i))) { sfxUp(); toast(`${c.name} : ${Co.SLOTS[k]}`, 'crit'); }
+  }
 </script>
 
 <div class="veil" use:guard>
   <div class="box frame" role="dialog" aria-label={c.name}>
     <div class="hd">
-      <div class="pic slot" class:lead={isLeader}><img src={gfx(c.sprite)} alt="" />{#if isLeader}<span class="crown">♛</span>{/if}</div>
+      <div class="pic slot" class:lead={at === 0}><img src={gfx(c.sprite)} alt="" />{#if at === 0}<span class="crown">♛</span>{/if}</div>
       <div class="mi">
         <div class="gothic h">{c.name}</div>
         <span><b class="t-{c.type}">{Co.ROLE_NAME[c.type]}</b> · {c.title}</span>
@@ -41,18 +44,33 @@
           <div><span>Paliers atteints</span><b>×{N(milestoneMult(lv))}{#if nm} · prochain au niv. {nm}{/if}</b></div>
           <div><span>Talents</span><b>×{ownMult(s, i).toFixed(2)}</b></div>
           <div><span>Affinité</span><b>×{(1 + T.affinityPer * aff).toFixed(3).replace(/0$/, '')}</b></div>
-          {#if isLeader}<div><span>Meneur</span><b>×{String(T.leaderMult).replace('.', ',')}</b></div>{/if}
+          {#if at >= 0}<div><span>Place</span><b>{Co.SLOTS[at]} · ×{String([T.slotLead, T.slotRight, T.slotSupport][at]).replace('.', ',')}</b></div>{/if}
         {/if}
       </div>
 
-      <div class="label">Meneur de la Compagnie</div>
-      <p class="note">Rôle {Co.ROLE_NAME[c.type]} : dégâts ×{String(T.leaderMult).replace('.', ',')} et <b>{Co.AURA[c.type]}</b> pour tout le groupe.</p>
-      {#if isLeader}<div class="ok">♛ Mène actuellement la Compagnie</div>
-      {:else}<button class="btn" disabled={!lv} onclick={lead}>{lv ? 'Nommer meneur' : 'Recrutez-le d’abord'}</button>{/if}
+      <div class="label">Escouade</div>
+      <div class="places">
+        {#each [0, 1, 2] as k}<button class="btn" class:stone={at !== k} disabled={!lv || at === k} onclick={() => place(k)}>{k === 0 ? '♛ ' : ''}{Co.SLOTS[k]}</button>{/each}
+      </div>
+      <div class="sb">
+        {#each [0, 1, 2] as k}<div class:on={at === k}><span>{k === 0 ? '♛ ' : ''}{Co.SLOTS[k]}</span><b>{Co.fmtStat(Co.SLOT_BONUS[i][k], Co.slotBonusValue(i, k, Math.max(1, lv)))}</b></div>{/each}
+      </div>
+      <p class="note">Bonus de place : grandit à chaque palier de niveau du compagnon.{lv ? '' : ' Recrutez-le d’abord.'}</p>
+      {#if Co.friendsOf(i).length || Co.rivalsOf(i).length}
+        <div class="label">Relations</div>
+        <p class="note">{#each Co.friendsOf(i) as j}<em class="pos">♥ {COMPANIONS[j].name}</em> {/each}{#each Co.rivalsOf(i) as j}<em class="neg">⚔ {COMPANIONS[j].name}</em> {/each}</p>
+        <p class="note">Amis dans la même escouade : paliers d’escouade ×1,25 par paire. Rivaux : paliers ×0,75 mais frappe +15 % (émulation).</p>
+      {/if}
+      {#if Co.SYNERGIES.some(x => x.ids.includes(i))}
+        <div class="label">Synergies</div>
+        {#each Co.SYNERGIES.filter(x => x.ids.includes(i)) as x}
+          <div class="syn"><b>✦ {x.name}</b><span>{x.ids.map(id => COMPANIONS[id].name).join(' + ')} · {x.desc}</span></div>
+        {/each}
+      {/if}
 
       <div class="label">Affinité · niveau {aff}/{Co.AFFINITY_STEPS.length}</div>
       <div class="bar aff"><i style="width:{aff >= Co.AFFINITY_STEPS.length ? 100 : ((pts - lo) / Math.max(1, hi - lo)) * 100}%"></i></div>
-      <p class="note">{aff >= Co.AFFINITY_STEPS.length ? 'Lien indéfectible.' : `${pts - lo} / ${hi - lo} · +1 par boss vaincu ensemble. Chaque niveau : +${(T.affinityPer * 100).toString().replace('.', ',')} % de dégâts, pour toujours.`}</p>
+      <p class="note">{aff >= Co.AFFINITY_STEPS.length ? 'Lien indéfectible.' : `${pts - lo} / ${hi - lo} · +1 par boss vaincu dans l’escouade (+2 en Meneur). Chaque niveau : +${(T.affinityPer * 100).toString().replace('.', ',')} % de dégâts, pour toujours.`}</p>
 
       <div class="label">Souvenirs</div>
       {#each MEMORY_LEVELS as m, k}
@@ -89,8 +107,13 @@
   .rows div, .tal { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; font-size: 12.5px; background: var(--stone-2); }
   .rows b { color: var(--gold); }
   .note { margin: 0; font-size: 12px; color: var(--text-3); }
-  .note b { color: var(--text); }
-  .ok { font-size: 13px; color: var(--gold); }
+  .places { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .places .btn { font-size: 12px; padding: 6px 2px; }
+  .note em { font-style: normal; margin-right: 6px; }
+  .note .pos { color: var(--moss); } .note .neg { color: #e07a6f; }
+  .syn { display: flex; flex-direction: column; padding: 4px 6px; font-size: 12px; background: var(--stone-2); }
+  .syn b { color: var(--gold-hi); }
+  .syn span { color: var(--text-3); font-size: 11px; }
   .bar.aff { height: 8px; }
   .bar.aff > i { background: #f08b80; }
   .mem { padding: 6px 8px; font-family: var(--f-book); font-size: 14px; font-style: italic; color: var(--text); background: #2b2433; box-shadow: inset 2px 0 0 #f08b80; }
@@ -100,4 +123,8 @@
   .tal.on { color: var(--text); }
   .tal.on b { color: var(--gold); }
   .go { padding: 9px; }
+  .sb { display: flex; flex-direction: column; gap: 2px; }
+  .sb div { display: flex; justify-content: space-between; gap: 6px; padding: 4px 6px; font-size: 12px; color: var(--text-3); background: var(--stone-2); }
+  .sb div.on { color: var(--text); box-shadow: inset 2px 0 0 var(--gold); }
+  .sb b { color: var(--moss); }
 </style>

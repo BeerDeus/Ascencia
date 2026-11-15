@@ -394,18 +394,26 @@ describe('moteur', () => {
     expect(Dp.buyDepthNode(s, 'degats')).toBe(true);
     expect(E.stats(s).global).toBeCloseTo(before * 1.05);
   });
-  it('La Compagnie : meneur par défaut, harmonie des rôles, affinité permanente', () => {
-    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60); s.run.gold = 1e30;
-    E.buyComp(s, 0, 10);
-    expect(Co.leaderOf(s)).toBe(0);                       // premier recruté = meneur
-    expect(Co.harmony(s)).toBe(0);                        // un seul rôle
-    E.buyComp(s, 1, 10); E.buyComp(s, 2, 10); E.buyComp(s, 3, 10);
-    expect(Co.harmony(s)).toBe(1);                        // Mêlée, Magie, Distance au même niveau
+  it('Escouade : roster par l’histoire, 3 membres, places, paliers, relations, affinité', () => {
+    const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 20; E.newRun(s, 20); s.run.gold = 1e30;
+    expect(E.compUnlocked(s, 3)).toBe(true);              // étage 18 atteint
+    expect(E.compUnlocked(s, 4)).toBe(false);             // Lysandra : étage 26
+    E.buyComp(s, 0, 10); E.buyComp(s, 1, 10); E.buyComp(s, 2, 10); E.buyComp(s, 3, 10);
+    expect(Co.squadOf(s)).toEqual([0, 1, 2]);             // les 3 premiers recrutés forment l'escouade
+    const d = E.companionsDps(s);
+    expect(d).toBeGreaterThan(0);
+    s.run.companions[3] += 500;                           // l'Arbalétrière (banc) ne combat pas
+    expect(E.companionsDps(s)).toBeCloseTo(d);
+    expect(Co.setSlot(s, 2, 3)).toBe(true);               // elle remplace le Soutien
+    expect(Co.squadOf(s)).toEqual([0, 1, 3]);
+    expect(Co.activeSynergies(s).map(x => x.name)).toContain('Le Hameau tient bon');
+    expect(Co.cohesion(s)).toBe(1);                       // Garde + Elian amis
     const before = E.companionsDps(s);
-    Co.gainAffinity(s, Co.AFFINITY_STEPS[0]);
-    expect(E.companionsDps(s)).toBeCloseTo(before * (1 + T.affinityPer));
+    Co.gainAffinity(s, Co.AFFINITY_STEPS[0]);             // Meneur : x2
+    expect(Co.affinityLevel(Co.affinityPts(s, 0))).toBe(1);
+    expect(E.companionsDps(s)).toBeGreaterThan(before);
     E.newRun(s, 1);
-    expect(Co.affinityLevel(Co.affinityPts(s, 0))).toBe(1); // survit à la nouvelle vie
+    expect(Co.affinityLevel(Co.affinityPts(s, 0))).toBe(1); // l'affinité survit à la nouvelle vie
   });
   it('Quêtes de Lysandra : 3 du jour + 1 de la semaine, progression et récompense', () => {
     const s = E.newGame(); s.classId = 'guerrier'; s.bestFloor = 60; E.newRun(s, 60);

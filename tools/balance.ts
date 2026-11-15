@@ -110,7 +110,10 @@ function gems() {
 
 function shop() {
   const st = E.stats(s);
-  const raw = s.run.companions.reduce((a, l, i) => a + F.compDps(i, l), 0);
+  // escouade : seuls les 3 combattent ; le bot recompose au mieux puis compare les gains (escouade recomposée)
+  Co.autoSquad(s, i => E.memberRaw(s, i));
+  const sq = Co.activeSquad(s), sm = [T.slotLead, T.slotRight, T.slotSupport];
+  const raw = sq.reduce((a, i, k) => a + (i >= 0 ? E.memberRaw(s, i) * sm[k] : 0), 0);
   const compMult = raw > 0 ? st.dps / raw : st.global;
   const tapUnit = st.tap / F.frappeBase(s.run.heroLevel);
   for (let guard = 0; guard < 60; guard++) {
@@ -131,8 +134,8 @@ function shop() {
         if (n <= 0) continue;
         const c = E.compCostN(s, i, n);
         if (c > s.run.gold) continue;
-        const g = (F.compDps(i, l + n) - F.compDps(i, l)) * compMult + (l === 0 ? 1e-9 : 0);
-        if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => E.buyComp(s, i, n) };
+        const g = E.squadDeltaIf(s, i, n) * compMult + (l === 0 ? 1e-9 : 0);
+        if (!best || g / c > best.ratio) best = { ratio: g / c, act: () => { const ok = E.buyComp(s, i, n); Co.autoSquad(s, k => E.memberRaw(s, k)); return ok; } };
       }
     });
     if (!best || !best.act()) break;
@@ -142,8 +145,7 @@ function shop() {
 function gear() {
   // talents : le bot prend toujours « renforce cet allié »
   s.run.companions.forEach((_, i) => { const k = Tl.pendingTalent(s, i); if (k >= 0) Tl.chooseTalent(s, i, k, 'a'); });
-  // meneur : l'allié qui fait le plus de dégâts
-  { let best = -1, bd = 0; s.run.companions.forEach((l, i) => { const d = F.compDps(i, l) * Tl.ownMult(s, i); if (d > bd) { bd = d; best = i; } }); if (best >= 0) Co.setLeader(s, best); }
+
   if (!I.lootUnlocked(s)) return;
   I.equipBest(s);
   if (s.run.inventory.length > 28) I.recycleBelow(s, 3);

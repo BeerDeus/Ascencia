@@ -6,7 +6,8 @@ import * as A from './audio';
 import { buzz, storeSave, readSaves, onAppState, setHaptics } from './native';
 import { account, initCloud, onAuth, pullSave, pushSave, type CloudSave } from './cloud.svelte';
 import { RARITIES } from '../game/data/items';
-import { PARTITIONS } from '../game/data/heroes';
+import { PARTITIONS, COMPANIONS } from '../game/data/heroes';
+import { COMP_UNLOCK } from '../game/company';
 import { dailyCheck, fiefUnlocked } from '../game/fief';
 import { questsCheck } from '../game/quests';
 import { eventCheck } from '../game/events';
@@ -45,6 +46,7 @@ export const ui = $state({
   spellNew: false,
   talent: null as number | null, // choix de talent d'un allié
   ally: null as number | null,   // fiche d'un allié
+  squadPick: null as number | null, // choix d'une place d'escouade
   job: null as null | import('../game/data/resources').JobId, // fiche d'un métier
   info: null as null | { kind: 'res' | 'potion' | 'meal'; id: string }, // fiche d'un objet (appui long)
   toasts: [] as { id: number; text: string; kind: string }[],
@@ -70,7 +72,7 @@ export function toast(text: string, kind = 'info') {
 }
 
 export const paused = () => ui.scenes.length > 0 || !!ui.classPicker || !!ui.offline || ui.ritual > 0 || !!ui.conflict
-  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null || ui.job !== null || ui.info !== null || ui.talent !== null || ui.ally !== null;
+  || ui.calendar || !!ui.offer || ui.messenger || adUi.open || ui.echo || ui.spell !== null || ui.job !== null || ui.info !== null || ui.talent !== null || ui.ally !== null || ui.squadPick !== null;
 
 // ---------------------------------------------------------------- effets des événements
 function handle(e: GameEvent) {
@@ -83,7 +85,8 @@ function handle(e: GameEvent) {
       else A.sfxKill();
       break;
     case 'floor': A.setKey(actFor(e.floor).key); bossFails = 0; spellUnlockCheck(s);
-      if (e.floor === s.bestFloor && e.floor % 25 === 0 && e.floor > 25) banner(`Étage ${e.floor}`, 'Nouveau record !', 'record'); if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
+      if (e.floor === s.bestFloor && e.floor % 25 === 0 && e.floor > 25) banner(`Étage ${e.floor}`, 'Nouveau record !', 'record');
+      { const k = COMP_UNLOCK.indexOf(e.floor); if (k > 0 && e.floor === s.bestFloor) banner(COMPANIONS[k].name, 'rejoint la Compagnie !', 'record'); } if (MOMENT_FLOORS.some(f => e.floor >= f && e.floor - e.skipped - 1 < f)) moment('palier'); break;
     case 'boss-attack': A.sfxAttack(); buzz('heavy'); break;
     case 'parry': A.sfxParry(); buzz('medium'); break;
     case 'boss-fail': A.sfxFail(); if (++bossFails >= 3) { bossFails = 0; moment('bloque'); } break;
