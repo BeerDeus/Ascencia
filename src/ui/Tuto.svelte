@@ -44,6 +44,15 @@
       </div>
     </div>
   {/key}
+{:else if tuto.target && tuto.ok && !tuto.target.startsWith('nav-')}
+  <!-- élément introuvable : bulle centrée, pour pouvoir quand même la fermer -->
+  <div class="bubble center" style="left:{(vw - W) / 2}px; width:{W}px; bottom:96px">
+    <img src={gfx('portraits/lysandra')} alt="" />
+    <div class="txt">
+      <p class="book">{tuto.text}</p>
+      <button class="btn" onclick={acknowledge}>Compris</button>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -57,6 +66,7 @@
   .bubble::after { content: ''; position: absolute; left: calc(var(--ax) - 8px); width: 0; height: 0; border: 8px solid transparent; }
   .bubble.below::after { top: -18px; border-bottom-color: var(--ink-0); }
   .bubble:not(.below)::after { bottom: -18px; border-top-color: var(--ink-0); }
+  .bubble.center::after { display: none; }
   img { flex: none; width: 36px; height: 36px; object-fit: contain; image-rendering: pixelated; }
   .txt { flex: 1; display: flex; flex-direction: column; gap: 6px; }
   p { margin: 0; font-size: 15px; line-height: 1.25; }

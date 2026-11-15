@@ -61,9 +61,10 @@ export const STEPS: Step[] = [
     text: 'Vous repartez de l’étage 1, mais vos Éclats renforcent tous vos dégâts, pour toujours. Faites-la quand vous bloquez.',
     skip: s => s.ascensions > 0 },
   { id: 'etoiles', when: s => s.ascensions > 0 && s.eclats > 0, tab: 'ascension', sub: [['ascTab', 'rituel']], target: 'stars', ok: true,
-    nav: 'Des Éclats à dépenser !', text: 'Les Constellations : dépensez vos Éclats en bonus permanents.', skip: s => s.ascensions > 1 },
+    nav: 'Des Éclats à dépenser !', text: 'Les Constellations : dépensez vos Éclats en bonus permanents.', skip: s => s.ascensions > 1,
+    done: s => Object.values(s.constellations).some(v => v > 0) },
   { id: 'arcanes', when: s => s.ascensions > 0 && s.eclats >= drawCost(s), tab: 'ascension', sub: [['ascTab', 'arcanes']], target: 'asc-arcanes', ok: true,
-    nav: 'Les Arcanes sont ouverts !', text: 'Tirez des cartes d’Arcane avec vos Éclats : des effets permanents à collectionner.', skip: s => owned(s) > 0 },
+    nav: 'Les Arcanes sont ouverts !', text: 'Tirez des cartes d’Arcane avec vos Éclats : des effets permanents à collectionner.', skip: s => owned(s) > 0, done: s => owned(s) > 0 },
   { id: 'fief', when: fiefUnlocked, tab: 'fief', sub: [['fiefTab', 'village']], target: 'fief-village', ok: true,
     nav: 'Pont-la-Croisée vous ouvre ses portes : le Fief est débloqué !',
     text: 'Le Village : primes du jour et coffre quotidien. D’autres lieux ouvriront plus haut.' },
@@ -102,7 +103,8 @@ export function tutoTick() {
   const s = G.s;
   if (!s.tuto || !s.classId) return;
   let step = tuto.id ? STEPS.find(x => x.id === tuto.id) : undefined;
-  if (step?.done?.(s)) { finish(step.id); step = undefined; }
+  // fin : condition de fin atteinte, ou déclencheur retombé (ex. Éclats tous dépensés) → l'étape ne revient pas en boucle
+  if (step && (step.done?.(s) || !step.when(s))) { finish(step.id); step = undefined; }
   if (!step) {
     for (const x of STEPS) {
       if (isDone(s, x.id) || !x.when(s)) continue;
